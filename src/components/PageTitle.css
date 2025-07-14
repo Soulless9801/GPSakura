@@ -1,0 +1,18 @@
+.pageIntroContainer {
+  text-align: center;
+}
+
+.pageTitle {
+  font-size: 80px;
+}
+
+.pageDescript {
+  font-size: 16px;
+}
+
+.pageIntroDiv {
+	width:10%;
+	margin-left: auto;
+	margin-right: auto;
+	border-width: 2px;
+}

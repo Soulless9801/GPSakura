@@ -1,0 +1,90 @@
+select {
+  outline: none;
+}
+
+option {
+  outline: none;
+  background-color: var(--bg-color-secondary);
+}
+
+.table-wrapper {
+  width: 90%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.table-custom {
+	width: 100%;
+	table-layout: fixed;
+}
+
+.table-link {
+  transition: var(--transition-timers);
+	color: var(--primary-color);
+  text-decoration: none;
+}
+
+.table-link:hover {
+  color: var(--secondary-color);
+}
+
+th, td {
+	white-space: nowrap;
+  transition: var(--transition-timers);
+  color: var(--primary-color) !important;
+	background-color: var(--bg-color-secondary) !important;
+}
+
+/* Length Menu */
+
+div.dt-container .dt-input {
+  margin-right: 0.5em;
+}
+
+/* Search Bar */
+div.dt-container .dt-search input {
+  outline: none;
+	border-radius: var(--table-border-radius-secondary);
+}
+
+/* Pages */
+div.dt-container .dt-paging .dt-paging-button {
+  border-radius: var(--table-border-radius-secondary);
+  outline: none !important;
+  background-image: none !important;
+  transition: var(--transition-timers);
+  color: var(--primary-color) !important;
+}
+
+/* Current Page */
+div.dt-container .dt-paging .dt-paging-button.current {
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color);
+}
+
+div.dt-container .dt-paging .dt-paging-button:hover,
+div.dt-container .dt-paging .dt-paging-button.current:hover {
+  color: var(--primary-color) !important;
+  background-color: var(--bg-color-secondary);
+  border-color: var(--primary-color);
+}
+
+/* Disabled Pages */
+div.dt-container .dt-paging .dt-paging-button.disabled {
+  color: var(--disabled-color) !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button.disabled:hover {
+  color: var(--disabled-color) !important;
+}
+
+div.dt-container .dt-scroll-head {
+  border-top-left-radius: var(--table-border-radius-primary);
+  border-top-right-radius: var(--table-border-radius-primary);
+}
+
+div.dt-container .dt-scroll-body {
+  border-bottom-left-radius: var(--table-border-radius-primary);
+  border-bottom-right-radius: var(--table-border-radius-primary);
+}
