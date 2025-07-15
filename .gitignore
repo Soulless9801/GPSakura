@@ -67,12 +67,3 @@ Thumbs.db
 # TODO #
 ########
 TODO.txt
-
-# Python #
-##########
-cfsubpush.py
-.venv/
-
-# Codeforces #
-##############
-service_account.json
