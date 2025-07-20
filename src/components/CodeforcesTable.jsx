@@ -27,14 +27,14 @@ export default function CodeforcesTable() {
 
       useEffect(() => {
             fetch('/.netlify/functions/codeforces-sheet-data')
-            .then(r => r.text())
+            .then(res=> res.text())
             .then(text => {
                   const data = text.split(/\r?\n/).slice(1).filter(Boolean).map(line => {
                         const [rating, name, cfLink, subLink] = line.split(';');
                         return [
                               rating,
                               `<a href="${cfLink}" class="table-link">${name}</a>`,
-                               `<a href="${subLink}" class="table-link">Codeforces</a>`,
+                              `<a href="${subLink}" class="table-link">Codeforces</a>`,
                         ];
                   });
                   setRows(data);
