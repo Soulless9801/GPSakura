@@ -67,3 +67,7 @@ Thumbs.db
 # TODO #
 ########
 TODO.txt
+
+# Firebase #
+############
+service_account.json

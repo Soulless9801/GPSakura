@@ -1,5 +1,10 @@
-require('dotenv').config();
-const fs = require('fs');
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+import fs from 'fs';
+import path from 'path';
+
 
 const { GOOGLE_API_KEY, SPREADSHEET_ID } = process.env;
 
@@ -18,21 +23,18 @@ exports.handler = async (event, context) => {
     if (!data || !data.length) {
       return {
         statusCode: 404,
-        body: 'No data found in the Google Sheet.'
+        body: 'Empty Google Sheet'
       };
     }
     csv = data.map(row => row.join(';')).join('\n');
   } catch (error) {
-    console.error("Error fetching Google Sheets data:", error.message);
     try {
-      // Read the fallback CSV file. Ensure that this file is deployed with your function.
-      csv = fs.readFileSync('/cf/cfProblems.csv', 'utf8');
-      console.log("Using local CSV file.");
+      const filePath = path.resolve('./netlify/functions/data/cfProblems.csv');
+      csv = fs.readFileSync(filePath, 'utf8');
     } catch (fsError) {
-      console.error("Error reading local CSV file:", fsError.message);
       return {
         statusCode: 500,
-        body: 'Unable to fetch data from Google Sheets and local file.'
+        body: 'Unable to fetch Data'
       };
     }
   }
