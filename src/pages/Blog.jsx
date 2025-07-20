@@ -19,7 +19,8 @@ export default function Home(){
     return (
         <StrictMode>
             <Navbar />
-            <PageTitle title="Sakura" description="A project manifested"/>
+            <PageTitle title="Blog" description="I heart ranting"/>
+            <BlogApp />
         </StrictMode>
     )
 }

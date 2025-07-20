@@ -58,6 +58,7 @@ export default function Navbar() {
           <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
             <ul className="navbar-nav gap-3">
               <li className="nav-item"><Link className="nav-link" to="/">Home</Link></li>
+              <li className="nav-item"><Link className="nav-link" to="/blog">Blog</Link></li>
               <li className="nav-item dropdown"><Link className="nav-link dropdown-toggle" to="/" id="codingMenu" role="button" aria-expanded="false">Coding</Link>
                 <ul className="dropdown-menu hover-dropdown" aria-labelledby="codingMenu">
                   <li><Link className="dropdown-item" to="/usaco">USACO</Link></li>
