@@ -1,12 +1,11 @@
 .blogPostContainer {
-    padding: 20px;
+    padding: 10px;
     border: 1px solid;
     border-radius: 5px;
     margin-bottom: 20px;
 }
 .blogPostTitle {
     font-size: 2em;
-    margin-bottom: 10px;
 }
 .blogPostBody {
     font-size: 1.2em;
@@ -16,5 +15,5 @@
     transition: var(--transition-timers);
     font-size: 0.9em;
     color: var(--disabled-color);
-    margin-top: 10px;
+    margin-bottom: 10px;
 }
