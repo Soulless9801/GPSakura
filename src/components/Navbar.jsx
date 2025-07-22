@@ -31,20 +31,49 @@ export default function Navbar() {
       el.querySelector('.dropdown-menu')?.classList.add('show');
     };
     const onLeave = (el) => {
-      el.classList.remove('show');
-      el.querySelector('.dropdown-menu')?.classList.remove('show');
+      if (!el.dataset.openLocked) {
+        el.classList.remove('show');
+        el.querySelector('.dropdown-menu')?.classList.remove('show');
+      }
     };
 
-    items.forEach((el) => {
+    const onToggleClick = (el, ev) => {
+      ev.stopPropagation();
+      const locked = el.dataset.openLocked === 'true';
+      if (locked) {
+        delete el.dataset.openLocked;
+        onLeave(el);
+      } else {
+        el.dataset.openLocked = 'true';
+        onEnter(el);
+      }
+    };
+    
+    const onDocClick = () => {
+      items.forEach(el => {
+        if (el.dataset.openLocked) {
+          delete el.dataset.openLocked;
+          onLeave(el);
+        }
+      });
+    };
+    
+    items.forEach(el => {
+      const toggleBtn = el.querySelector('.dropdown-toggle') || el;
       el.addEventListener('mouseenter', () => onEnter(el));
       el.addEventListener('mouseleave', () => onLeave(el));
+      toggleBtn.addEventListener('click', (ev) => onToggleClick(el, ev));
     });
+    document.addEventListener('click', onDocClick);
 
     return () => {
-      items.forEach((el) => {
+      items.forEach(el => {
+        const toggleBtn = el.querySelector('.dropdown-toggle') || el;
         el.removeEventListener('mouseenter', () => onEnter(el));
         el.removeEventListener('mouseleave', () => onLeave(el));
+        toggleBtn.removeEventListener('click', (ev) => onToggleClick(el, ev));
       });
+      document.removeEventListener('click', onDocClick);
     };
   }, []);
   return (
@@ -59,7 +88,7 @@ export default function Navbar() {
             <ul className="navbar-nav gap-3">
               <li className="nav-item"><Link className="nav-link" to="/">Home</Link></li>
               <li className="nav-item"><Link className="nav-link" to="/blog">Blog</Link></li>
-              <li className="nav-item dropdown"><Link className="nav-link dropdown-toggle" to="/" id="codingMenu" role="button" aria-expanded="false">Coding</Link>
+              <li className="nav-item dropdown"><Link className="nav-link dropdown-toggle" id="codingMenu" role="button" aria-expanded="false">Coding</Link>
                 <ul className="dropdown-menu hover-dropdown" aria-labelledby="codingMenu">
                   <li><Link className="dropdown-item" to="/usaco">USACO</Link></li>
                   <li><Link className="dropdown-item" to="/cf">Codeforces</Link></li>
