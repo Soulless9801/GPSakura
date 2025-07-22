@@ -41,7 +41,7 @@ export default function BlogApp() {
     return (
         <div className="blogAppContainer">
             {posts.map(post => (
-                <BlogPost title={post.title} body={post.body} time={post.timestamp}/>
+                <BlogPost title={post.title} body={post.body} time={post.timestamp} key={post.id}/>
             ))}
         </div>
     );
