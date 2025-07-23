@@ -1,0 +1,6 @@
+.genericButton {
+    border: none;
+    background-color: var(--bg-color-primary) !important;
+    color: var(--primary-color) !important;
+    transition: var(--transition-timers) !important;
+}
