@@ -32,24 +32,23 @@ const LaTeXParser = ({ text }) => {
     );
 };
 
-export default function BlogPost({ title, body, time, postId }) {
-    const likeButtonToggle = ({ state }) => {
-        console.log("Like State: ", state);
-        return;
-    }
+const formatDate = (timestamp) => {
+    return timestamp.toDate().toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    });
+}
 
-    const pinButtonToggle = ({ state }) => {
-        console.log("Pin State: ", state);
-        return;
-    }
+export default function BlogPost({ title, body, creationTime, updateTime, postId, reorderFunc }) {
     return (
         <div className="container-fluid blogPostContainer">
             <div className="blogPostTitle">{title}</div>
-            <div className="blogPostTime">Posted {time.toDate().toLocaleDateString()}</div>
+            <div className="blogPostTime">Posted {formatDate(creationTime)}</div>
             <div className="blogPostBody"><TextParser text={body}/></div>
+            <div className="blogPostTime">Updated {formatDate(updateTime)}</div>
             <div className="blogPostLike">
-                <GenericButton postId={postId} type={'pin'} icon='fa-heart' onToggle={(state) => {likeButtonToggle(state={state})}}/>
-                <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up' onToggle={(state) => {pinButtonToggle(state={state})}}/>
+                <GenericButton postId={postId} type={'pin'} icon='fa-heart' onToggle={() => reorderFunc()}/>
+                <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up' onToggle={() => {}}/>
             </div>
         </div>
     );
