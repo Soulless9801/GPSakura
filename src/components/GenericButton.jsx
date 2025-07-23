@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import './GenericButton.css'
 
-export default function GenericButton({ postId, type, icon, onToggle }) {
+export default function GenericButton({ postId, type, icon, onToggle=null }) {
 
     const storageKey = `${type}_${postId}`;
 
@@ -11,13 +11,15 @@ export default function GenericButton({ postId, type, icon, onToggle }) {
     useEffect(() => {
         const stored = localStorage.getItem(storageKey);
         setState(stored === 'true');
-    }, [storageKey]);
+    }, []);
 
     const handleClick = async () => {
         const newState = !state;
-        onToggle(newState.toString());
         setState(newState);
         localStorage.setItem(storageKey, newState.toString());
+        if (newState !== state) {
+            onToggle();
+        }
     };
 
     return (

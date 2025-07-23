@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 import { getFirestore } from "firebase/firestore";
 import { initializeApp } from 'firebase/app';
@@ -26,14 +26,34 @@ export default function BlogApp() {
 
     const [posts, setPosts] = useState([]);
 
+    const cmp = useCallback((a, b) => {
+        const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
+        const bPinned = localStorage.getItem(`pin_${b.id}`) === 'true';
+        const aDate = a.updated.toDate()
+        const bDate = b.updated.toDate()
+        if (aPinned && bPinned) return bDate - aDate;
+        if (aPinned) return -1;
+        if (bPinned) return 1;
+        return bDate - aDate;
+    }, []);
+
+    const reorderPosts = useCallback(() => {
+        console.log("Reordering...");
+        setPosts(prev => [...prev].sort(cmp));
+    }, [cmp]);
+
     useEffect(() => {
         async function fetchPosts() {
             const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
             const snap = await getDocs(q);
+
             const len = snap.size;
+
             let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            posts = [posts[len - 1], ...posts.slice(0, len - 1)];
+            //posts = [posts[len - 1], ...posts.slice(0, len - 1)];
+            
             setPosts(posts);
+            reorderPosts();
         }
         fetchPosts();
     }, []);
@@ -41,7 +61,7 @@ export default function BlogApp() {
     return (
         <div className="blogAppContainer">
             {posts.map(post => (
-                <BlogPost title={post.title} body={post.body} time={post.timestamp} postId={post.id} key={post.id}/>
+                <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderPosts} key={post.id}/>
             ))}
         </div>
     );
