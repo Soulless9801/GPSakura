@@ -3,4 +3,7 @@
     flex-direction: column;
     align-items: center;
     padding: 20px;
+    position: relative;
+    overflow-anchor: none;
+    overflow-y: auto;
 }

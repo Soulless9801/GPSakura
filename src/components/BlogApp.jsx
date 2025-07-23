@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 
 import { getFirestore } from "firebase/firestore";
 import { initializeApp } from 'firebase/app';
@@ -25,6 +26,7 @@ const db = getFirestore(app);
 export default function BlogApp() {
 
     const [posts, setPosts] = useState([]);
+    const [reordering, setReordering] = useState(false);
 
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
@@ -38,8 +40,9 @@ export default function BlogApp() {
     }, []);
 
     const reorderPosts = useCallback(() => {
-        console.log("Reordering...");
+        setReordering(true);
         setPosts(prev => [...prev].sort(cmp));
+        setTimeout(() => setReordering(false), 300); // adjust
     }, [cmp]);
 
     useEffect(() => {
@@ -50,7 +53,6 @@ export default function BlogApp() {
             const len = snap.size;
 
             let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            //posts = [posts[len - 1], ...posts.slice(0, len - 1)];
             
             setPosts(posts);
             reorderPosts();
@@ -61,7 +63,11 @@ export default function BlogApp() {
     return (
         <div className="blogAppContainer">
             {posts.map(post => (
-                <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderPosts} key={post.id}/>
+                <AnimatePresence mode="popLayout" key={post.id}>
+                    <motion.div layout>
+                        <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderPosts}/>
+                    </motion.div>
+                </AnimatePresence>
             ))}
         </div>
     );
