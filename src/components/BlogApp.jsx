@@ -26,7 +26,6 @@ const db = getFirestore(app);
 export default function BlogApp() {
 
     const [posts, setPosts] = useState([]);
-    const [reordering, setReordering] = useState(false);
 
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
@@ -40,9 +39,7 @@ export default function BlogApp() {
     }, []);
 
     const reorderPosts = useCallback(() => {
-        setReordering(true);
         setPosts(prev => [...prev].sort(cmp));
-        setTimeout(() => setReordering(false), 300); // adjust
     }, [cmp]);
 
     useEffect(() => {

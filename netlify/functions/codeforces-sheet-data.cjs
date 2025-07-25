@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
   let csv;
   try {
     const TAB_NAME = 'Sheet1';
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/es/${TAB_NAME}?alt=json&key=${GOOGLE_API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${TAB_NAME}?alt=json&key=${GOOGLE_API_KEY}`;
 
     const response = await fetch(url);
     if (!response.ok) {
