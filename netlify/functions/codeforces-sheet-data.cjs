@@ -1,9 +1,9 @@
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 
 dotenv.config();
 
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
 
 const { GOOGLE_API_KEY, SPREADSHEET_ID } = process.env;
@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
   let csv;
   try {
     const TAB_NAME = 'Sheet1';
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${TAB_NAME}?alt=json&key=${GOOGLE_API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/es/${TAB_NAME}?alt=json&key=${GOOGLE_API_KEY}`;
 
     const response = await fetch(url);
     if (!response.ok) {
