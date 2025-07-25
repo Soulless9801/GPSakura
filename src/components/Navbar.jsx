@@ -40,10 +40,8 @@ export default function Navbar() {
         };
 
         const onToggleClick = (el, ev) => {
-            console.log('clicked');
             ev.stopPropagation();
             const locked = el.dataset.openLocked === 'true';
-            console.log(locked);
             if (locked) {
                 delete el.dataset.openLocked;
                 onLeave(el);
