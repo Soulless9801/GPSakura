@@ -10,13 +10,13 @@ import BlogPost from './BlogPost';
 import './BlogApp.css';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCFsyyWkEpZVkCZrF_bjJRtdvz1gk_SokA",
-  authDomain: "datagrab-363720.firebaseapp.com",
-  projectId: "datagrab-363720",
-  storageBucket: "datagrab-363720.firebasestorage.app",
-  messagingSenderId: "896726376620",
-  appId: "1:896726376620:web:2e67c17ad2a74250ce7f09",
-  measurementId: "G-WW0RKGE7QV"
+    apiKey: "AIzaSyCFsyyWkEpZVkCZrF_bjJRtdvz1gk_SokA",
+    authDomain: "datagrab-363720.firebaseapp.com",
+    projectId: "datagrab-363720",
+    storageBucket: "datagrab-363720.firebasestorage.app",
+    messagingSenderId: "896726376620",
+    appId: "1:896726376620:web:2e67c17ad2a74250ce7f09",
+    measurementId: "G-WW0RKGE7QV"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -26,6 +26,9 @@ const db = getFirestore(app);
 export default function BlogApp() {
 
     const [posts, setPosts] = useState([]);
+    const [window, setWindow] = useState([]);
+    const [page, setPage] = useState(0);
+    const [length, setLength] = useState(4);
 
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
@@ -51,21 +54,45 @@ export default function BlogApp() {
 
             let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
+            posts = posts.sort(cmp);
             setPosts(posts);
-            reorderPosts();
         }
         fetchPosts();
-    }, []);
+    }, [cmp]);
+
+    useEffect(() => {
+        setWindow(posts.slice(page * length, (page + 1) * length));
+    }, [posts, page, length]);
+
+    useEffect(() => {
+        const container = document.querySelector('.blogAppContainer');
+        if (container) {
+            container.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [page]);
 
     return (
         <div className="blogAppContainer">
-            {posts.map(post => (
-                <AnimatePresence mode="popLayout" key={post.id}>
-                    <motion.div layout>
-                        <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderPosts}/>
+            <AnimatePresence mode="wait">
+                {window.map(post => (
+                    <motion.div key={post.id} layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30, scale: 0.95 }} transition={{ duration: 0.3 }}>
+                        <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderPosts} />
                     </motion.div>
-                </AnimatePresence>
-            ))}
+                ))}
+            </AnimatePresence>
+            <div className="pagination" layout>
+                <button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page <= 0} className={`paginationButton${page <= 0 ? ' disabled' : ''}`}>
+                    &#8592;
+                </button>
+                {Array.from({ length: Math.ceil(posts.length / length) }, (_, i) => (
+                    <button key={i} onClick={() => setPage(i)} className={`paginationButton${page === i ? ' active' : ''}`}>
+                        {i + 1}
+                    </button>
+                ))}
+                <button onClick={() => setPage(prev => Math.min(Math.ceil(posts.length / length) - 1, prev + 1))} className={`paginationButton${page >= Math.ceil(posts.length / length) - 1 ? ' disabled' : ''}`}>
+                    &#8594;
+                </button>
+            </div>
         </div>
     );
 }
