@@ -71,13 +71,17 @@ export default function BlogApp() {
         }
     }, [page]);
 
+    function getWindowKey(window) {
+        return window.map(post => post.id).join('-');
+    }
+
     return (
         <div className="blogAppContainer">
             <div className="blogHeader">
                 <div className="blogLength">
                     <select id="blogLengthMenu" value={length}
                         onChange={e => {
-                            setPage(length * page / e.target.value);
+                            setPage(Math.floor(length * page / Number(e.target.value)));
                             setLength(Number(e.target.value));
                         }}
                         className="blogLengthMenu"
@@ -120,11 +124,11 @@ export default function BlogApp() {
                 </div>
             </div>
             <AnimatePresence mode="wait">
-                {window.map(post => (
-                    <motion.div key={post.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderFunc}/>
-                    </motion.div>
-                ))}
+                <motion.div key={getWindowKey(window)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                    {window.map(post => (
+                        <BlogPost key={post.id} title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderFunc}/>
+                    ))}
+                </motion.div>
             </AnimatePresence>
             <div className="blogPagination">
                 <button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page <= 0} className={`blogPaginationButton${page <= 0 ? ' disabled' : ''}`}>
