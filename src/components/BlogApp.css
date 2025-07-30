@@ -5,12 +5,12 @@
     padding: 20px;
     overflow-anchor: none;
 }
-.pagination {
+.blogPagination {
     display: flex;
     justify-content: center;
     margin-top: 20px;
 }
-.paginationButton {
+.blogPaginationButton {
     color: var(--primary-color);
     background-color: var(--bg-color-primary);
     border: 1px solid var(--bg-color-primary);
@@ -25,19 +25,52 @@
     text-align: center;
     text-decoration: none !important;
 }
-.paginationButton:hover {
+.blogPaginationButton:hover {
     border-color: var(--primary-color);
     background-color: var(--bg-color-hover);
 }
-.paginationButton.active {
+.blogPaginationButton.active {
     color: var(--primary-color) !important;
     border-color: var(--primary-color);
 }
-.paginationButton.disabled {
+.blogPaginationButton.disabled {
     color: var(--disabled-color) !important;
     cursor: default;
 }
-.paginationButton:disabled:hover {
+.blogPaginationButton.disabled:hover {
     color: var(--disabled-color) !important;
     background-color: var(--bg-color-primary) !important;
+    border-color: var(--bg-color-primary) !important;
+}
+.blogLengthLabel {
+    margin-left: 0.5em;
+}
+.blogLengthMenu {
+    border: 1px solid var(--primary-color);
+    border-radius: 3px;
+    padding: 5px;
+    background-color: transparent;
+    color: inherit;
+}
+.blogLength {
+
+}
+.blogHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.blogSort {
+
+}
+.blogSortMenu {
+    border: 1px solid var(--primary-color);
+    border-radius: 3px;
+    padding: 5px;
+    background-color: transparent;
+    color: inherit;
+}
+.blogSortLabel {
+    margin-right: 0.5em;
 }
