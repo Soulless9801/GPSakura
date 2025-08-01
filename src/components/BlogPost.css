@@ -1,8 +1,8 @@
 .blogPostContainer {
     padding: 10px;
-    border: 1px solid;
+    border: var(--border-width) solid var(--primary-color);
     border-radius: 5px;
-    margin-bottom: 20px;
+    margin-bottom: var(--sep-distance-primary);
 }
 .blogPostTitle {
     font-size: 2em;

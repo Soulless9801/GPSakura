@@ -33,6 +33,7 @@ export default function BlogApp() {
     const [window, setWindow] = useState([]);
     const [page, setPage] = useState(0);
     const [length, setLength] = useState(69);
+    const [order, setOrder] = useState('desc');
 
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
@@ -52,7 +53,7 @@ export default function BlogApp() {
 
     useEffect(() => {
         async function fetchPosts() {
-            const q = query(collection(db, 'posts'), orderBy('updated', 'desc'));
+            const q = query(collection(db, 'posts'), orderBy('updated', order));
             const snap = await getDocs(q);
 
             const len = snap.size;
@@ -62,7 +63,7 @@ export default function BlogApp() {
             setPosts(posts);
         }
         fetchPosts();
-    }, [cmp]);
+    }, []);
 
     useEffect(() => {
         setWindow(posts.slice(page * length, (page + 1) * length));
@@ -74,6 +75,12 @@ export default function BlogApp() {
             container.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }, [page]);
+
+    useEffect(() => {
+        setPosts(prev => {
+            return [...prev].reverse();
+        });
+    }, [order]);
 
     function getWindowKey(window) {
         return window.map(post => post.id).join('-');
@@ -99,10 +106,17 @@ export default function BlogApp() {
                         }}
                         className="blogLengthMenu"
                     />
-                    <label htmlFor="blogLengthMenu" className="blogLengthLabel">entries per page</label>
+                    <label htmlFor="blogLengthMenu" className="blogLengthLabel">{' '}entries per page</label>
                 </div>
                 <div className="blogSort">
-                    <label htmlFor="blogSortMenu" className="blogSortLabel">Sort by:</label>
+                    <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:{' '}</label>
+                    <button
+                        className="blogSortDirectionBtn"
+                        onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
+                    >
+                        {order === 'desc' ? 'Descending ↓' : 'Ascending ↑'}
+                    </button>
+                    <label htmlFor="blogSortMenu" className="blogSortLabel">Sort By:{' '}</label>
                     <Select
                         id="blogSortMenu"
                         options={[
