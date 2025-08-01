@@ -45,6 +45,7 @@
 
 .nav-item .custom-select__selected {
   border: none !important;
+  padding: 8px !important;
   background: transparent !important;
 }
 
