@@ -7,6 +7,10 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 import BlogPost from './BlogPost';
 
+import Select from './Select.jsx';
+
+import Pagination from './Pagination.jsx';
+
 import './BlogApp.css';
 
 const firebaseConfig = {
@@ -28,7 +32,7 @@ export default function BlogApp() {
     const [posts, setPosts] = useState([]);
     const [window, setWindow] = useState([]);
     const [page, setPage] = useState(0);
-    const [length, setLength] = useState(5);
+    const [length, setLength] = useState(69);
 
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
@@ -79,26 +83,37 @@ export default function BlogApp() {
         <div className="blogAppContainer">
             <div className="blogHeader">
                 <div className="blogLength">
-                    <select id="blogLengthMenu" value={length}
+                    <Select id="blogLengthMenu" value={length}
+                        options={[
+                            { value: '1', label: '1' },
+                            { value: '2', label: '2' },
+                            { value: '5', label: '5' },
+                            { value: '10', label: '10' },
+                            { value: '15', label: '15' },
+                            { value: '20', label: '20' },
+                        ]}
+                        defaultIndex = '2'
                         onChange={e => {
-                            setPage(Math.floor(length * page / Number(e.target.value)));
-                            setLength(Number(e.target.value));
+                            setPage(Math.floor(length * page / Number(e.value)));
+                            setLength(Number(e.value));
                         }}
                         className="blogLengthMenu"
-                    >
-                        {[1, 2, 5, 10, 15, 20].map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                    </select>
+                    />
                     <label htmlFor="blogLengthMenu" className="blogLengthLabel">entries per page</label>
                 </div>
                 <div className="blogSort">
                     <label htmlFor="blogSortMenu" className="blogSortLabel">Sort by:</label>
-                    <select
+                    <Select
                         id="blogSortMenu"
-                        className="blogSortMenu"
+                        options={[
+                            { value: 'updated', label: 'Last Updated' },
+                            { value: 'created', label: 'Creation Time' },
+                            { value: 'title', label: 'Title' },
+                            { value: 'pinned', label: 'Pinned' },
+                        ]}
+                        defaultIndex = '0'
                         onChange={e => {
-                            const value = e.target.value;
+                            const value = e.value;
                             setPosts(prev => {
                                 let sorted = [...prev];
                                 if (value === "updated") {
@@ -114,13 +129,8 @@ export default function BlogApp() {
                             });
                             setPage(0);
                         }}
-                        defaultValue="updated"
-                    >
-                        <option value="updated">Last Updated</option>
-                        <option value="created">Creation Time</option>
-                        <option value="title">Title</option>
-                        <option value="pinned">Pinned</option>
-                    </select>
+                        className="blogSortMenu"
+                    />
                 </div>
             </div>
             <AnimatePresence mode="wait">
@@ -130,19 +140,7 @@ export default function BlogApp() {
                     ))}
                 </motion.div>
             </AnimatePresence>
-            <div className="blogPagination">
-                <button onClick={() => setPage(prev => Math.max(0, prev - 1))} disabled={page <= 0} className={`blogPaginationButton${page <= 0 ? ' disabled' : ''}`}>
-                    &#8592;
-                </button>
-                {Array.from({ length: Math.ceil(posts.length / length) }, (_, i) => (
-                    <button key={i} onClick={() => setPage(i)} className={`blogPaginationButton${page === i ? ' active' : ''}`}>
-                        {i + 1}
-                    </button>
-                ))}
-                <button onClick={() => setPage(prev => Math.min(Math.ceil(posts.length / length) - 1, prev + 1))} className={`blogPaginationButton${page >= Math.ceil(posts.length / length) - 1 ? ' disabled' : ''}`}>
-                    &#8594;
-                </button>
-            </div>
+            <Pagination page={page} setPage={setPage} postsLength={posts.length} pageSize={length} />
         </div>
     );
 }
