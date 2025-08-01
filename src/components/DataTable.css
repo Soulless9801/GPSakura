@@ -36,16 +36,29 @@ th, td {
 	background-color: var(--bg-color-secondary) !important;
 }
 
-/* Length Menu */
-
-div.dt-container .dt-input {
-    margin-right: 0.5em;
+.table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
 }
 
-/* Search Bar */
-div.dt-container .dt-search input {
+.table-length{
+
+}
+
+.table-search {
+
+}
+
+.table-input {
+    padding: 4px 8px;
+    border: 1px solid var(--primary-color);
+    border-radius: 3px;
+    background-color: transparent;
+    color: inherit;
     outline: none;
-	border-radius: var(--table-border-radius-secondary);
+    transition: var(--transition-timers);
 }
 
 /* Pages */

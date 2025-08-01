@@ -43,26 +43,9 @@
   height: auto;
 }
 
-.nav-item.dropdown .dropdown-menu {
-  transition: var(--dropdown-timers);
-  opacity: 0;
-  padding: 0px;
-  transform: translateY(-10px);
-  padding: 6px;
-  display: block;
-  position: absolute;
-  visibility: hidden;
-}
-
-.nav-item.dropdown.show .dropdown-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.nav-item.dropdown .dropdown-menu li,
-.nav-item.dropdown .dropdown-menu li a.dropdown-item {
-  border-radius: inherit;
+.nav-item .custom-select__selected {
+  border: none !important;
+  background: transparent !important;
 }
 
 .navbar-toggler {

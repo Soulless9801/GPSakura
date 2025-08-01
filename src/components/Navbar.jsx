@@ -1,10 +1,13 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+
+import Select from './Select.jsx'
 
 import './Navbar.css';
 
 export default function Navbar() {
     const [theme, setTheme] = useState(localStorage.theme || 'light');
+    const navigate = useNavigate();
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -91,11 +94,19 @@ export default function Navbar() {
                         <ul className="navbar-nav gap-3">
                             <li className="nav-item"><Link className="nav-link" to="/">Home</Link></li>
                             <li className="nav-item"><Link className="nav-link" to="/blog">Blog</Link></li>
-                            <li className="nav-item dropdown"><Link className="nav-link dropdown-toggle" id="codingMenu" role="button" aria-expanded="false">Coding</Link>
-                                <ul className="dropdown-menu hover-dropdown" aria-labelledby="codingMenu">
-                                    <li><Link className="dropdown-item" to="/usaco">USACO</Link></li>
-                                    <li><Link className="dropdown-item" to="/cf">Codeforces</Link></li>
-                                </ul>
+                            <li className="nav-item">
+                                <Select
+                                    id="codingMenu"
+                                    options={[
+                                        { value: 'Coding', label: 'USACO', to: '/usaco' },
+                                        { value: 'Coding ', label: 'Codeforces', to: '/cf' },
+                                    ]}
+                                    defaultIndex='69'
+                                    onChange={e => navigate(e.to)}
+                                    fixedSelect={true}
+                                    placeholder="Coding"
+                                    className="nav-dropdown"
+                                />
                             </li>
                         </ul>
                         <button id="darkModeToggle" className="btn" onClick={() => setTheme((curr) => (curr === 'light' ? 'dark' : 'light'))}>
@@ -107,3 +118,10 @@ export default function Navbar() {
         </div>
     )
 }
+/*
+<Link className="nav-link dropdown-toggle" id="codingMenu" role="button" aria-expanded="false">Coding</Link>
+<ul className="dropdown-menu hover-dropdown" aria-labelledby="codingMenu">
+    <li><Link className="dropdown-item" to="/usaco">USACO</Link></li>
+    <li><Link className="dropdown-item" to="/cf">Codeforces</Link></li>
+</ul>
+*/
