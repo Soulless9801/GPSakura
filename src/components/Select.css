@@ -1,16 +1,19 @@
 .custom-select {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 .custom-select__selected {
-  transition: var(--transition-timers);
-  cursor: pointer;
-  padding: 8px;
-  background-color: var(--bg-color-primary);
-  border: 1px solid var(--primary-color);
-  border-radius: 3px;
-  user-select: none;
+    transition: var(--transition-timers);
+    cursor: pointer;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: var(--bg-color-primary);
+    border: 1px solid var(--primary-color);
+    border-radius: 3px;
+    user-select: none;
 }
 
 .custom-select__selected:hover {
@@ -18,45 +21,48 @@
 }
 
 .custom-select__arrow {
-  float: right;
-  margin-left: 0.5em;
+    float: right;
+    margin-left: 0.5em;
 }
 
 .custom-select__options {
-  transition: var(--dropdown-timers);
-  opacity: 0;
-  padding: 0px;
-  transform: translateY(-10px);
-  display: block;
-  pointer-events: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  min-width: 100%;
-  overflow-y: auto;
-  background: var(--bg-color-secondary);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  z-index: 1371;
-  border-radius: 3px;
+    transition: var(--dropdown-timers);
+    opacity: 0;
+    padding: 0px;
+    transform: translateY(-10px);
+    display: block;
+    pointer-events: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 100%;
+    overflow-y: auto;
+    background: var(--bg-color-secondary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1371;
+    border-radius: 3px;
 }
 
 .custom-select__options.show {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: all;
-  transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+    transform: translateY(0);
 }
 
 .custom-select__option {
-  transition: var(--transition-timers);
-  padding: 8px;
-  cursor: pointer;
-  margin: 3px;
-  border-radius: inherit;
-  text-align: left;
+    transition: var(--transition-timers);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    cursor: pointer;
+    margin: 4px;
+    border-radius: inherit;
+    text-align: left;
 }
 
 .custom-select__option:hover,
 .custom-select__option.selected {
-  background: var(--bg-color-hover);
+    background: var(--bg-color-hover);
 }
