@@ -13,8 +13,6 @@ import Navbar from '/src/components/Navbar.jsx'
 
 import PageTitle from '/src/components/PageTitle.jsx'
 
-import BlogApp from '/src/components/BlogApp.jsx'
-
 export default function Home(){
     return (
         <StrictMode>
