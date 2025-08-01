@@ -6,13 +6,10 @@
 .custom-select__selected {
     transition: var(--transition-timers);
     cursor: pointer;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: var(--padding-dropdown);
     background-color: var(--bg-color-primary);
-    border: 1px solid var(--primary-color);
-    border-radius: 3px;
+    border: var(--border-width) solid var(--primary-color);
+    border-radius: var(--table-border-radius-secondary);
     user-select: none;
 }
 
@@ -38,9 +35,8 @@
     min-width: 100%;
     overflow-y: auto;
     background: var(--bg-color-secondary);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    z-index: 1371;
-    border-radius: 3px;
+    z-index: 127;
+    border-radius: var(--table-border-radius-secondary);
 }
 
 .custom-select__options.show {
@@ -52,10 +48,7 @@
 
 .custom-select__option {
     transition: var(--transition-timers);
-    padding-top: 4px;
-    padding-bottom: 4px;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: var(--padding-dropdown);
     cursor: pointer;
     margin: 4px;
     border-radius: inherit;

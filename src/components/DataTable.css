@@ -52,9 +52,9 @@ th, td {
 }
 
 .table-input {
-    padding: 4px 8px;
-    border: 1px solid var(--primary-color);
-    border-radius: 3px;
+    padding: var(--padding-dropdown);
+    border: var(--border-width) solid var(--primary-color);
+    border-radius: var(--table-border-radius-secondary);
     background-color: transparent;
     color: inherit;
     outline: none;
