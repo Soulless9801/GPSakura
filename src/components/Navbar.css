@@ -31,7 +31,7 @@
 }
 
 .navbar-custom {
-  margin: 20px;
+  margin: var(--sep-distance-primary);
   display: inline-block;
   border-radius: 50px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);

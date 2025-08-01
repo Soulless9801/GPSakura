@@ -1,12 +1,12 @@
 .pagination {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    margin-top: var(--sep-distance-primary);
 }
 .paginationButton {
     color: var(--primary-color);
     background-color: var(--bg-color-primary);
-    border: 1px solid var(--bg-color-primary);
+    border: var(--border-width) solid var(--bg-color-primary);
     border-radius: var(--table-border-radius-secondary);
     transition: var(--transition-timers);
     cursor: pointer;

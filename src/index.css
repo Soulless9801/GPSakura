@@ -9,6 +9,10 @@
   --table-border-radius-secondary: 3px;
   --dropdown-timers: opacity 0.3s ease, transform 0.3s ease;
   --transition-timers: background-color 0.3s, color 0.3s, border-color 0.3s;
+  --sep-distance-primary: 20px;
+  --sep-distance-secondary: 8px;
+  --padding-dropdown: 4px 8px;
+  --border-width: 1px;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
