@@ -17,10 +17,11 @@
 }
 
 .navbar .nav-link,
-.navbar .navbar-brand, 
+.navbar .navbar-brand,
 .navbar .btn {
   transition: var(--transition-timers);
   color: var(--primary-color);
+  pointer-events: auto;
 }
 
 .navbar-wrapper {
@@ -28,6 +29,7 @@
   position: sticky;
   top: 0;
   z-index: 127;
+  pointer-events: none;
 }
 
 .navbar-custom {
@@ -46,6 +48,7 @@
 .nav-item .custom-select__selected {
   border: none !important;
   padding: 8px !important;
+  pointer-events: auto;
   background: transparent !important;
 }
 
