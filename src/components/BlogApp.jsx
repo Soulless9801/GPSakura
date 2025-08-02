@@ -87,9 +87,9 @@ export default function BlogApp() {
     }
 
     return (
-        <div className="blogAppContainer">
-            <div className="blogHeader">
-                <div className="blogLength">
+        <div className="blogAppContainer container-fluid">
+            <div className="blogHeader row row-cols-1 row-cols-lg-2 gy-3 gy-lg-0">
+                <div className="blogLength col text-center text-lg-start">
                     <Select id="blogLengthMenu" value={length}
                         options={[
                             { value: '1', label: '1' },
@@ -108,7 +108,7 @@ export default function BlogApp() {
                     />
                     <label htmlFor="blogLengthMenu" className="blogLengthLabel">{' '}entries per page</label>
                 </div>
-                <div className="blogSort">
+                <div className="blogSort col text-center text-lg-end">
                     <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:{' '}</label>
                     <button
                         className="blogSortDirectionBtn"
@@ -149,12 +149,20 @@ export default function BlogApp() {
             </div>
             <AnimatePresence mode="wait">
                 <motion.div key={getWindowKey(window)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                    {window.map(post => (
-                        <BlogPost key={post.id} title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderFunc}/>
-                    ))}
+                    <div className="row">
+                        {window.map(post => (
+                            <div key={post.id} className="col-12 mb-3">
+                                <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderFunc}/>
+                            </div>
+                        ))}
+                    </div>
                 </motion.div>
             </AnimatePresence>
-            <Pagination page={page} setPage={setPage} postsLength={posts.length} pageSize={length} />
+            <div className="row">
+                <div className="col-12 d-flex justify-content-center">
+                    <Pagination page={page} setPage={setPage} postsLength={posts.length} pageSize={length} />
+                </div>
+            </div>
         </div>
     );
 }
