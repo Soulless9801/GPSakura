@@ -88,8 +88,8 @@ export default function BlogApp() {
 
     return (
         <div className="blogAppContainer container-fluid">
-            <div className="blogHeader row row-cols-1 row-cols-lg-2 gy-3 gy-lg-0">
-                <div className="blogLength col text-center text-lg-start">
+            <div className="blogHeader row g-3">
+                <div className="blogLength col-12 col-md-3 text-center text-md-start">
                     <Select id="blogLengthMenu" value={length}
                         options={[
                             { value: '1', label: '1' },
@@ -108,43 +108,49 @@ export default function BlogApp() {
                     />
                     <label htmlFor="blogLengthMenu" className="blogLengthLabel">{' '}entries per page</label>
                 </div>
-                <div className="blogSort col text-center text-lg-end">
-                    <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:{' '}</label>
-                    <button
-                        className="blogSortDirectionBtn"
-                        onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
-                    >
-                        {order === 'desc' ? 'Descending ↓' : 'Ascending ↑'}
-                    </button>
-                    <label htmlFor="blogSortMenu" className="blogSortLabel">Sort By:{' '}</label>
-                    <Select
-                        id="blogSortMenu"
-                        options={[
-                            { value: 'updated', label: 'Last Updated' },
-                            { value: 'created', label: 'Creation Time' },
-                            { value: 'title', label: 'Title' },
-                            { value: 'pinned', label: 'Pinned' },
-                        ]}
-                        defaultIndex = '0'
-                        onChange={e => {
-                            const value = e.value;
-                            setPosts(prev => {
-                                let sorted = [...prev];
-                                if (value === "updated") {
-                                    sorted.sort((a, b) => b.updated.toDate() - a.updated.toDate());
-                                } else if (value === "created") {
-                                    sorted.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
-                                } else if (value === "title") {
-                                    sorted.sort((a, b) => a.title.localeCompare(b.title));
-                                } else if (value === "pinned") {
-                                    sorted.sort(cmp);
-                                }
-                                return sorted;
-                            });
-                            setPage(0);
-                        }}
-                        className="blogSortMenu"
-                    />
+                <div className="blogSort col-12 col-md-9">
+                    <div className="d-flex flex-column flex-md-row justify-content-md-end align-items-center gap-3">
+                        <div className="text-center text-lg-end">
+                            <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:{' '}</label>
+                            <button
+                                className="blogSortDirectionBtn "
+                                onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
+                            >
+                                {order === 'desc' ? 'Descending ↓' : 'Ascending ↑'}
+                            </button>
+                        </div>
+                        <div className="text-center text-lg-end">
+                            <label htmlFor="blogSortMenu" className="blogSortLabel">Sort By:{' '}</label>
+                            <Select
+                                id="blogSortMenu"
+                                options={[
+                                    { value: 'updated', label: 'Last Updated' },
+                                    { value: 'created', label: 'Creation Time' },
+                                    { value: 'title', label: 'Title' },
+                                    { value: 'pinned', label: 'Pinned' },
+                                ]}
+                                defaultIndex = '0'
+                                onChange={e => {
+                                    const value = e.value;
+                                    setPosts(prev => {
+                                        let sorted = [...prev];
+                                        if (value === "updated") {
+                                            sorted.sort((a, b) => b.updated.toDate() - a.updated.toDate());
+                                        } else if (value === "created") {
+                                            sorted.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
+                                        } else if (value === "title") {
+                                            sorted.sort((a, b) => a.title.localeCompare(b.title));
+                                        } else if (value === "pinned") {
+                                            sorted.sort(cmp);
+                                        }
+                                        return sorted;
+                                    });
+                                    setPage(0);
+                                }}
+                                className="blogSortMenu"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
             <AnimatePresence mode="wait">

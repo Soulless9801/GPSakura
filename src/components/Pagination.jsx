@@ -4,8 +4,6 @@ export default function Pagination({ page, setPage, postsLength, pageSize }) {
     const pageCount = Math.ceil(postsLength / pageSize);
     const maxButtons = 5;
 
-    console.log(`Page: ${page}, Page Count: ${pageCount}, Posts Length: ${postsLength}, Page Size: ${pageSize}`);
-
     const getPageNumbers = () => {
         if (pageCount <= maxButtons + 2) {
             return Array.from({ length: pageCount }, (_, i) => i);
