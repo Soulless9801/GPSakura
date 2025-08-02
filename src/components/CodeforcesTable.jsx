@@ -63,8 +63,8 @@ export default function CodeforcesTable() {
             <h1>Problem List</h1>
             <hr/>
             <br/><br/>
-            <div className="table-header">
-                <div className="table-length">
+            <div className="table-header row row-cols-1 row-cols-md-2 gy-3 gy-md-0">
+                <div className="table-length col text-center text-md-start">
                     <label>
                         Show{' '}
                         <Select
@@ -85,7 +85,7 @@ export default function CodeforcesTable() {
                         {' '}entries
                     </label>
                 </div>
-                <div className="table-search">
+                <div className="table-search col text-center text-md-end">
                     <label>
                         Search:{' '}
                         <input 
