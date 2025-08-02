@@ -89,7 +89,18 @@ export default function Navbar() {
             <nav className="navbar navbar-expand-lg navbar-custom">
                 <div className="container-fluid">
                     <Link className="navbar-brand ms-3 d-none d-lg-block" to="/"><img src="/favicon.png" alt="Logo" className="me-2 navbar-logo" id="navIcon"/></Link>
-                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span className="navbar-toggler-icon" /></button>
+                    <button
+                        className="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav"
+                        aria-controls="navbarNav"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation"
+                        onMouseDown={e => e.preventDefault()}
+                    >
+                        <span className="navbar-toggler-icon" />
+                    </button>
                     <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
                         <ul className="navbar-nav gap-3">
                             <li className="nav-item"><Link className="nav-link" to="/">Home</Link></li>
@@ -109,7 +120,12 @@ export default function Navbar() {
                                 />
                             </li>
                         </ul>
-                        <button id="darkModeToggle" className="btn" onClick={() => setTheme((curr) => (curr === 'light' ? 'dark' : 'light'))}>
+                        <button
+                            id="darkModeToggle"
+                            className="btn"
+                            onClick={() => setTheme((curr) => (curr === 'light' ? 'dark' : 'light'))}
+                            onMouseDown={e => e.preventDefault()}
+                        >
                             <i id="darkModeIcon" className={`navbar-icon fa-regular ${theme === 'dark' ? 'fa-moon' : 'fa-sun'}`}/>
                         </button>
                     </div>
