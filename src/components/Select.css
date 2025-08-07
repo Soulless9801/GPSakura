@@ -37,6 +37,7 @@
     background: var(--bg-color-secondary);
     z-index: 127;
     border-radius: var(--table-border-radius-secondary);
+    box-shadow: 2px 2px 2px 2px var(--bg-color-primary);
 }
 
 .custom-select__options.show {

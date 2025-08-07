@@ -3,7 +3,7 @@ import "./Select.css";
 
 export default function Select({ options = [], defaultIndex, onChange, fixedSelect=false, placeholder="Select an option" }) {
     const [open, setOpen] = useState(false);
-    const [value, setValue] = useState(69);
+    const [value, setValue] = useState({ value: '1', label: '1' });
 
     const ref = useRef();
 
@@ -19,9 +19,9 @@ export default function Select({ options = [], defaultIndex, onChange, fixedSele
     useEffect(() => {
         if (!fixedSelect) handleSelect(options[Number(defaultIndex)]);
         const handleClickOutside = (event) => {
-        if (ref.current && !ref.current.contains(event.target)) {
-            setOpen(false);
-        }
+            if (ref.current && !ref.current.contains(event.target)) {
+                setOpen(false);
+            }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
