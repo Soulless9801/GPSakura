@@ -66,7 +66,7 @@ export default function CodeforcesTable() {
             <div className="table-header row row-cols-1 row-cols-md-2 gy-3 gy-md-0">
                 <div className="table-length col text-center text-md-start">
                     <label>
-                        Show{' '}
+                        Showing{' '}
                         <Select
                             options={[
                                 { value: '5', label: '5' },

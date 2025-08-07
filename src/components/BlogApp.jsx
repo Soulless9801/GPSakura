@@ -34,6 +34,7 @@ export default function BlogApp() {
     const [page, setPage] = useState(0);
     const [length, setLength] = useState(69);
     const [order, setOrder] = useState('desc');
+    const [sortBy, setSortBy] = useState('updated');
 
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
@@ -47,16 +48,14 @@ export default function BlogApp() {
     }, []);
 
     const reorderFunc = useCallback(() => {
-        if (document.getElementById('blogSortMenu').value !== 'pinned') return;
+        if (sortBy !== 'pinned') return;
         setPosts(prev => {return [...prev].sort(cmp); });
-    }, [cmp]);
+    }, [cmp, sortBy]);
 
     useEffect(() => {
         async function fetchPosts() {
             const q = query(collection(db, 'posts'), orderBy('updated', order));
             const snap = await getDocs(q);
-
-            const len = snap.size;
 
             let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
@@ -68,13 +67,6 @@ export default function BlogApp() {
     useEffect(() => {
         setWindow(posts.slice(page * length, (page + 1) * length));
     }, [posts, page, length]);
-
-    useEffect(() => {
-        const container = document.querySelector('.blogAppContainer');
-        if (container) {
-            container.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }, [page]);
 
     useEffect(() => {
         setPosts(prev => {
@@ -132,6 +124,7 @@ export default function BlogApp() {
                                 defaultIndex = '0'
                                 onChange={e => {
                                     const value = e.value;
+                                    setSortBy(value);
                                     setPosts(prev => {
                                         let sorted = [...prev];
                                         if (value === "updated") {
