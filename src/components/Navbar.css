@@ -56,5 +56,25 @@
 .navbar-toggler {
   margin-left: auto;
   margin-right: auto;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.navbar-toggler:focus,
+.navbar-toggler:focus-visible {
   outline: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .navbar-wrapper {
+    width: 40%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .navbar-custom {
+    width: 100%;
+  }
 }

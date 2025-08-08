@@ -7,7 +7,10 @@ import './Navbar.css';
 
 export default function Navbar() {
     const [theme, setTheme] = useState(localStorage.theme || 'light');
+    const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
+
+    const toggle = () => setIsOpen(prev => !prev);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -86,20 +89,16 @@ export default function Navbar() {
 
     return (
         <div className="navbar-wrapper">
-            <nav className="navbar navbar-expand-lg navbar-custom">
+            <nav className="navbar navbar-expand-md navbar-custom">
                 <div className="container-fluid">
-                    <Link className="navbar-brand ms-3 d-none d-lg-block" to="/"><img src="/favicon.png" alt="Logo" className="me-2 navbar-logo" id="navIcon"/></Link>
-                    <button
-                        className="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#navbarNav"
-                        aria-controls="navbarNav"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation"
-                        onMouseDown={e => e.preventDefault()}
-                    >
-                        <span className="navbar-toggler-icon" />
+                    <Link className="navbar-brand ms-3 d-none d-md-block" to="/"><img src="/favicon.png" alt="Logo" className="me-2 navbar-logo" id="navIcon"/></Link>
+                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false">
+                        Menu{' '}
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <rect y="4" width="24" height="2" rx="1" fill="currentColor" />
+                            <rect y="11" width="24" height="2" rx="1" fill="currentColor" />
+                            <rect y="18" width="24" height="2" rx="1" fill="currentColor" />
+                        </svg>
                     </button>
                     <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
                         <ul className="navbar-nav gap-3">
@@ -134,10 +133,3 @@ export default function Navbar() {
         </div>
     )
 }
-/*
-<Link className="nav-link dropdown-toggle" id="codingMenu" role="button" aria-expanded="false">Coding</Link>
-<ul className="dropdown-menu hover-dropdown" aria-labelledby="codingMenu">
-    <li><Link className="dropdown-item" to="/usaco">USACO</Link></li>
-    <li><Link className="dropdown-item" to="/cf">Codeforces</Link></li>
-</ul>
-*/
