@@ -140,6 +140,7 @@ export default function BlogApp() {
                                     });
                                     setPage(0);
                                 }}
+                                align='right'
                                 className="blogSortMenu"
                             />
                         </div>

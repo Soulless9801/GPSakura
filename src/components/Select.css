@@ -4,6 +4,7 @@
 }
 
 .custom-select__selected {
+    text-align: left;
     transition: var(--transition-timers);
     cursor: pointer;
     padding: var(--padding-dropdown);
@@ -40,6 +41,11 @@
     box-shadow: 2px 2px 2px 2px var(--bg-color-primary);
 }
 
+.custom-select__options.right {
+    right: 0;
+    left: auto;
+}
+
 .custom-select__options.show {
     opacity: 1;
     visibility: visible;
@@ -53,6 +59,7 @@
     cursor: pointer;
     margin: 4px;
     border-radius: inherit;
+    white-space: nowrap;
     text-align: left;
 }
 
