@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import './GenericButton.css'
 
-export default function GenericButton({ postId, type, icon, onToggle=null }) {
+export default function GenericButton({ postId, type, icon }) {
 
     const storageKey = `${type}_${postId}`;
 
@@ -17,9 +17,6 @@ export default function GenericButton({ postId, type, icon, onToggle=null }) {
         const newState = !state;
         setState(newState);
         localStorage.setItem(storageKey, newState.toString());
-        if (newState !== state) {
-            onToggle();
-        }
     };
 
     return (

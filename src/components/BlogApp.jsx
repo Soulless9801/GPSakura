@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { getFirestore } from "firebase/firestore";
 import { initializeApp } from 'firebase/app';
@@ -32,7 +32,7 @@ export default function BlogApp() {
     const [posts, setPosts] = useState([]);
     const [window, setWindow] = useState([]);
     const [page, setPage] = useState(0);
-    const [length, setLength] = useState(69);
+    const [length, setLength] = useState(5);
     const [order, setOrder] = useState('desc');
     const [sortBy, setSortBy] = useState('updated');
 
@@ -47,10 +47,19 @@ export default function BlogApp() {
         return bDate - aDate;
     }, []);
 
-    const reorderFunc = useCallback(() => {
-        if (sortBy !== 'pinned') return;
-        setPosts(prev => {return [...prev].sort(cmp); });
-    }, [cmp, sortBy]);
+    const sortPosts = useCallback((posts, sortBy) => {
+        let sorted = [...posts];
+        if (sortBy === "pinned") {
+            sorted.sort(cmp);
+        } else if (sortBy === "updated") {
+            sorted.sort((a, b) => b.updated.toDate() - a.updated.toDate());
+        } else if (sortBy === "created") {
+            sorted.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
+        } else if (sortBy === "title") {
+            sorted.sort((a, b) => a.title.localeCompare(b.title));
+        }
+        return sorted;
+    }, [cmp]);
 
     useEffect(() => {
         async function fetchPosts() {
@@ -74,33 +83,42 @@ export default function BlogApp() {
         });
     }, [order]);
 
-    function getWindowKey(window) {
-        return window.map(post => post.id).join('-');
-    }
-
     return (
         <div className="blogAppContainer container-fluid">
             <div className="blogHeader row g-3">
-                <div className="blogLength col-12 col-md-3 text-center text-md-start">
-                    <Select id="blogLengthMenu" value={length}
-                        options={[
-                            { value: '1', label: '1' },
-                            { value: '2', label: '2' },
-                            { value: '5', label: '5' },
-                            { value: '10', label: '10' },
-                            { value: '15', label: '15' },
-                            { value: '20', label: '20' },
-                        ]}
-                        defaultIndex = '2'
-                        onChange={e => {
-                            setPage(Math.floor(length * page / Number(e.value)));
-                            setLength(Number(e.value));
-                        }}
-                        className="blogLengthMenu"
-                    />
-                    <label htmlFor="blogLengthMenu" className="blogLengthLabel">{' '}entries per page</label>
+                <div className="blogLength col-12 col-md-6">
+                    <div className="d-flex flex-column flex-md-row justify-content-md-endalign-items-center gap-3">
+                        <div className="text-center text-md-start">
+                            <button className="blogButton" onClick={() => {
+                                setPosts(prev => sortPosts(prev, sortBy));
+                                setPage(0);
+                            }}>
+                                Refresh &#8635;
+                            </button>
+                        </div>
+                        <div className="text-center text-md-start">
+                            <label htmlFor="blogLengthMenu" className="blogLengthLabel">Showing</label>
+                            <Select id="blogLengthMenu" value={length}
+                                options={[
+                                    { value: '1', label: '1' },
+                                    { value: '2', label: '2' },
+                                    { value: '5', label: '5' },
+                                    { value: '10', label: '10' },
+                                    { value: '15', label: '15' },
+                                    { value: '20', label: '20' },
+                                ]}
+                                defaultIndex = '2'
+                                onChange={e => {
+                                    setPage(Math.floor(length * page / Number(e.value)));
+                                    setLength(Number(e.value));
+                                }}
+                                className="blogLengthMenu"
+                            />
+                            <label htmlFor="blogLengthMenu" className="blogLengthLabel">{' '}entries per page</label>
+                        </div>
+                    </div>
                 </div>
-                <div className="blogSort col-12 col-md-9">
+                <div className="blogSort col-12 col-md-6">
                     <div className="d-flex flex-column flex-md-row justify-content-md-end align-items-center gap-3">
                         <div className="text-center text-lg-end">
                             <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:{' '}</label>
@@ -125,19 +143,7 @@ export default function BlogApp() {
                                 onChange={e => {
                                     const value = e.value;
                                     setSortBy(value);
-                                    setPosts(prev => {
-                                        let sorted = [...prev];
-                                        if (value === "updated") {
-                                            sorted.sort((a, b) => b.updated.toDate() - a.updated.toDate());
-                                        } else if (value === "created") {
-                                            sorted.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
-                                        } else if (value === "title") {
-                                            sorted.sort((a, b) => a.title.localeCompare(b.title));
-                                        } else if (value === "pinned") {
-                                            sorted.sort(cmp);
-                                        }
-                                        return sorted;
-                                    });
+                                    setPosts(prev => sortPosts(prev, value));
                                     setPage(0);
                                 }}
                                 align='right'
@@ -148,11 +154,11 @@ export default function BlogApp() {
                 </div>
             </div>
             <AnimatePresence mode="wait">
-                <motion.div key={getWindowKey(window)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <motion.div key={JSON.stringify(window.map(p => p.id))} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <div className="row">
                         {window.map(post => (
-                            <div key={post.id} className="col-12 mb-3">
-                                <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id} reorderFunc={reorderFunc}/>
+                            <div key={post.id} className="col-12">
+                                <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id}/>
                             </div>
                         ))}
                     </div>
