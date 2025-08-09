@@ -39,7 +39,7 @@ const formatDate = (timestamp) => {
     });
 }
 
-export default function BlogPost({ title, body, creationTime, updateTime, postId, reorderFunc }) {
+export default function BlogPost({ title, body, creationTime, updateTime, postId }) {
     return (
         <div className="container-fluid blogPostContainer">
             <div className="blogPostTitle">{title}</div>
@@ -47,8 +47,8 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
             <div className="blogPostBody"><TextParser text={body}/></div>
             <div className="blogPostTime">Updated {formatDate(updateTime)}</div>
             <div className="blogPostLike">
-                <GenericButton postId={postId} type={'pin'} icon='fa-heart' onToggle={() => reorderFunc()}/>
-                <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up' onToggle={() => {}}/>
+                <GenericButton postId={postId} type={'pin'} icon='fa-heart'/>
+                <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up'/>
             </div>
         </div>
     );
