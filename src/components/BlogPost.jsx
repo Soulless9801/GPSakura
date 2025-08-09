@@ -47,8 +47,8 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
             <div className="blogPostBody"><TextParser text={body}/></div>
             <div className="blogPostTime">Updated {formatDate(updateTime)}</div>
             <div className="blogPostLike">
-                <GenericButton postId={postId} type={'pin'} icon='fa-heart'/>
-                <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up'/>
+                <GenericButton postId={postId} type={'pin'} icon='fa-heart' fill='#ff0000'/>
+                <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up' fill='#00ff00'/>
             </div>
         </div>
     );
