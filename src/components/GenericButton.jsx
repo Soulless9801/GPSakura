@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import './GenericButton.css'
 
-export default function GenericButton({ postId, type, icon }) {
+export default function GenericButton({ postId, type, icon, fill }) {
 
     const storageKey = `${type}_${postId}`;
 
@@ -21,7 +21,7 @@ export default function GenericButton({ postId, type, icon }) {
 
     return (
         <button onClick={handleClick} className="genericButton">
-            <i className={`${icon} ${state ? 'fa-solid' : 'fa-regular'}`} />
+            <i className={`genericIcon ${icon} ${state ? 'fa-solid' : 'fa-regular'}`} style={{ '--icon-hover-color': fill, '--icon-active-color': fill }}/>
         </button>
     );
 }

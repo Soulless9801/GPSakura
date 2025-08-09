@@ -7,10 +7,7 @@ import './Navbar.css';
 
 export default function Navbar() {
     const [theme, setTheme] = useState(localStorage.theme || 'light');
-    const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
-
-    const toggle = () => setIsOpen(prev => !prev);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);

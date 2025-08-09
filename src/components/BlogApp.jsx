@@ -86,9 +86,9 @@ export default function BlogApp() {
     return (
         <div className="blogAppContainer container-fluid">
             <div className="blogHeader row g-3">
-                <div className="blogLength col-12 col-md-6">
-                    <div className="d-flex flex-column flex-md-row justify-content-md-endalign-items-center gap-3">
-                        <div className="text-center text-md-start">
+                <div className="blogLength col-12 col-lg-6">
+                    <div className="d-flex flex-column flex-md-row justify-content-center justify-content-lg-start align-items-center gap-3">
+                        <div className="text-center text-lg-start">
                             <button className="blogButton" onClick={() => {
                                 setPosts(prev => sortPosts(prev, sortBy));
                                 setPage(0);
@@ -96,7 +96,7 @@ export default function BlogApp() {
                                 Refresh &#8635;
                             </button>
                         </div>
-                        <div className="text-center text-md-start">
+                        <div className="text-center text-lg-start">
                             <label htmlFor="blogLengthMenu" className="blogLengthLabel">Showing</label>
                             <Select id="blogLengthMenu" value={length}
                                 options={[
@@ -118,8 +118,8 @@ export default function BlogApp() {
                         </div>
                     </div>
                 </div>
-                <div className="blogSort col-12 col-md-6">
-                    <div className="d-flex flex-column flex-md-row justify-content-md-end align-items-center gap-3">
+                <div className="blogSort col-12 col-lg-6">
+                    <div className="d-flex flex-column flex-md-row justify-content-center justify-content-lg-end align-items-center gap-3">
                         <div className="text-center text-lg-end">
                             <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:{' '}</label>
                             <button
