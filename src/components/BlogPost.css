@@ -17,3 +17,11 @@
     color: var(--disabled-color);
     margin-bottom: 10px;
 }
+.blogLink {
+    transition: var(--transition-timers);
+    text-decoration: none;
+    color: var(--primary-color);
+}
+.blogLink:hover {
+    color: var(--secondary-color);
+}
