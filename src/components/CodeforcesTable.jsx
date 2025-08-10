@@ -54,7 +54,15 @@ export default function CodeforcesTable() {
             {targets: 2, orderable: false},
         ],
         columns: [{ width: '10%' }, {width: '80%'}, {width: '10%'}],
-        lengthMenu: [5, 10, 20, 50, 100]
+        lengthMenu: [5, 10, 20, 50, 100],
+        language: {
+            paginate: {
+                last: '&#8608;',
+                first: '&#8606;',
+                next: '&#8594;',
+                previous: '&#8592;', 
+            }
+        }
     };
 
     return (

@@ -114,14 +114,14 @@ export default function BlogApp() {
                                 }}
                                 className="blogLengthMenu"
                             />
-                            <label htmlFor="blogLengthMenu" className="blogLengthLabel">{' '}entries per page</label>
+                            <label htmlFor="blogLengthMenu" className="blogLengthLabel">entries per page</label>
                         </div>
                     </div>
                 </div>
                 <div className="blogSort col-12 col-lg-6">
                     <div className="d-flex flex-column flex-md-row justify-content-center justify-content-lg-end align-items-center gap-3">
                         <div className="text-center text-lg-end">
-                            <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:{' '}</label>
+                            <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:</label>
                             <button
                                 className="blogSortDirectionBtn "
                                 onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
@@ -130,7 +130,7 @@ export default function BlogApp() {
                             </button>
                         </div>
                         <div className="text-center text-lg-end">
-                            <label htmlFor="blogSortMenu" className="blogSortLabel">Sort By:{' '}</label>
+                            <label htmlFor="blogSortMenu" className="blogSortLabel">Sort By:</label>
                             <Select
                                 id="blogSortMenu"
                                 options={[

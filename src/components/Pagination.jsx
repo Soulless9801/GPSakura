@@ -2,7 +2,7 @@ import './Pagination.css';
 
 export default function Pagination({ page, setPage, postsLength, pageSize }) {
     const pageCount = Math.ceil(postsLength / pageSize);
-    const maxButtons = 5;
+    const maxButtons = 3;
 
     const getPageNumbers = () => {
         if (pageCount <= maxButtons + 2) {
