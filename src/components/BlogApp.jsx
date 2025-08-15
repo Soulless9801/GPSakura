@@ -31,13 +31,10 @@ export default function BlogApp() {
 
     const [posts, setPosts] = useState([]);
     const [window, setWindow] = useState([]);
-    const [page, setPage] = useState(() => {
-        const raw = localStorage.getItem('blogPage');
-        return raw !== null ? JSON.parse(raw) : 0;
-    });
+    const [page, setPage] = useState(0);
     const [length, setLength] = useState(() => {
         const raw = localStorage.getItem('blogLength');
-        return raw !== null ? JSON.parse(raw) : 2;
+        return raw !== null ? JSON.parse(raw) : 5;
     });
     const [order, setOrder] = useState(() => {
         const raw = localStorage.getItem('blogOrder');
@@ -101,14 +98,20 @@ export default function BlogApp() {
 
     useEffect(() => {
         async function fetchPosts() {
-            const q = query(collection(db, 'posts'), orderBy(sortBy, (order ? 'asc' : 'desc')));
+            const q = query(collection(db, 'posts'));
             const snap = await getDocs(q);
 
             let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
+
+            posts = sortPosts(posts, sortBy);
+
+            if (order) posts.reverse();
+
             setPosts(posts);
         }
+
         fetchPosts();
+
     }, []);
 
     useEffect(() => {
@@ -116,12 +119,10 @@ export default function BlogApp() {
     }, [posts, page, length]);
 
     useEffect(() => {
-        console.log(page, length, order, sortBy);
-        localStorage.setItem('blogPage', JSON.stringify(page));
         localStorage.setItem('blogLength', JSON.stringify(length));
         localStorage.setItem('blogOrder', JSON.stringify(order));
         localStorage.setItem('blogSortBy', JSON.stringify(sortBy));
-    }, [page, length, order, sortBy]);
+    }, [length, order, sortBy]);
 
     return (
         <div className="blogAppContainer container-fluid">
