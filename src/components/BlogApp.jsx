@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence, getOriginIndex } from 'framer-motion';
 
 import { getFirestore } from "firebase/firestore";
 import { initializeApp } from 'firebase/app';
@@ -31,10 +31,48 @@ export default function BlogApp() {
 
     const [posts, setPosts] = useState([]);
     const [window, setWindow] = useState([]);
-    const [page, setPage] = useState(0);
-    const [length, setLength] = useState(5);
-    const [order, setOrder] = useState('desc');
-    const [sortBy, setSortBy] = useState('updated');
+    const [page, setPage] = useState(() => {
+        const raw = localStorage.getItem('blogPage');
+        return raw !== null ? JSON.parse(raw) : 0;
+    });
+    const [length, setLength] = useState(() => {
+        const raw = localStorage.getItem('blogLength');
+        return raw !== null ? JSON.parse(raw) : 2;
+    });
+    const [order, setOrder] = useState(() => {
+        const raw = localStorage.getItem('blogOrder');
+        return raw !== null ? JSON.parse(raw) : 0;
+    });
+    const [sortBy, setSortBy] = useState(() => {
+        const raw = localStorage.getItem('blogSortBy');
+        return raw !== null ? JSON.parse(raw) : 'updated';
+    });
+
+    const lengthOptions = [
+        { value: '1', label: '1' },
+        { value: '2', label: '2' },
+        { value: '5', label: '5' },
+        { value: '10', label: '10' },
+        { value: '15', label: '15' },
+        { value: '20', label: '20' },
+    ];
+
+    const sortByOptions = [
+        { value: 'updated', label: 'Last Updated' },
+        { value: 'timestamp', label: 'Creation Time' },
+        { value: 'title', label: 'Title' },
+        { value: 'pinned', label: 'Pinned' },
+    ];
+
+    const findIndex = useCallback((val, list, defaultIndex) => {
+        const idx = list.findIndex(item => item.value === String(val));
+        return idx !== -1 ? idx : defaultIndex;
+    }, []);
+
+    const reverseOrder = useCallback(() => {
+        setOrder(prev => 1 - prev);
+        setPosts(prev => [...prev].reverse());
+    }, []);
 
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
@@ -53,7 +91,7 @@ export default function BlogApp() {
             sorted.sort(cmp);
         } else if (sortBy === "updated") {
             sorted.sort((a, b) => b.updated.toDate() - a.updated.toDate());
-        } else if (sortBy === "created") {
+        } else if (sortBy === "timestamp") {
             sorted.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
         } else if (sortBy === "title") {
             sorted.sort((a, b) => a.title.localeCompare(b.title));
@@ -63,7 +101,7 @@ export default function BlogApp() {
 
     useEffect(() => {
         async function fetchPosts() {
-            const q = query(collection(db, 'posts'), orderBy('updated', order));
+            const q = query(collection(db, 'posts'), orderBy(sortBy, (order ? 'asc' : 'desc')));
             const snap = await getDocs(q);
 
             let posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -78,10 +116,12 @@ export default function BlogApp() {
     }, [posts, page, length]);
 
     useEffect(() => {
-        setPosts(prev => {
-            return [...prev].reverse();
-        });
-    }, [order]);
+        console.log(page, length, order, sortBy);
+        localStorage.setItem('blogPage', JSON.stringify(page));
+        localStorage.setItem('blogLength', JSON.stringify(length));
+        localStorage.setItem('blogOrder', JSON.stringify(order));
+        localStorage.setItem('blogSortBy', JSON.stringify(sortBy));
+    }, [page, length, order, sortBy]);
 
     return (
         <div className="blogAppContainer container-fluid">
@@ -99,15 +139,8 @@ export default function BlogApp() {
                         <div className="text-center text-lg-start">
                             <label htmlFor="blogLengthMenu" className="blogLengthLabel">Showing</label>
                             <Select id="blogLengthMenu" value={length}
-                                options={[
-                                    { value: '1', label: '1' },
-                                    { value: '2', label: '2' },
-                                    { value: '5', label: '5' },
-                                    { value: '10', label: '10' },
-                                    { value: '15', label: '15' },
-                                    { value: '20', label: '20' },
-                                ]}
-                                defaultIndex = '2'
+                                options={lengthOptions}
+                                defaultIndex={findIndex(length, lengthOptions, 2)}
                                 onChange={e => {
                                     setPage(Math.floor(length * page / Number(e.value)));
                                     setLength(Number(e.value));
@@ -124,22 +157,17 @@ export default function BlogApp() {
                             <label htmlFor="blogSortDirectionBtn" className="blogSortLabel">Sort Direction:</label>
                             <button
                                 className="blogSortDirectionBtn "
-                                onClick={() => setOrder(order === 'desc' ? 'asc' : 'desc')}
+                                onClick={() => reverseOrder()}
                             >
-                                {order === 'desc' ? 'Descending ↓' : 'Ascending ↑'}
+                                Reverse ↑↓
                             </button>
                         </div>
                         <div className="text-center text-lg-end">
                             <label htmlFor="blogSortMenu" className="blogSortLabel">Sort By:</label>
                             <Select
                                 id="blogSortMenu"
-                                options={[
-                                    { value: 'updated', label: 'Last Updated' },
-                                    { value: 'created', label: 'Creation Time' },
-                                    { value: 'title', label: 'Title' },
-                                    { value: 'pinned', label: 'Pinned' },
-                                ]}
-                                defaultIndex = '0'
+                                options={sortByOptions}
+                                defaultIndex={findIndex(sortBy, sortByOptions, 0)}
                                 onChange={e => {
                                     const value = e.value;
                                     setSortBy(value);
