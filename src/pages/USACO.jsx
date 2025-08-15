@@ -17,7 +17,7 @@ export default function USACO(){
     return (
         <StrictMode>
             <Navbar />
-            <PageTitle title="USACO" description="Thoughts about problems"/>
+            <PageTitle title="USACO" description="The cow says moo"/>
         </StrictMode>
     );
 }
