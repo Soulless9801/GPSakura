@@ -6,7 +6,7 @@ import './TextParser.css';
 const BlockLaTeXParser = ({ text }) => {
     const parts = text.split(/(\$\$[^$]*\$\$)/g);
     return (
-        <div>
+        <span>
             {parts.map((part, index) => {
                 if (part.startsWith('$$') && part.endsWith('$$')) {
                     const math = part.slice(2, -2);
@@ -15,7 +15,7 @@ const BlockLaTeXParser = ({ text }) => {
                     return <InlineLatexParser key={index} text={part} />;
                 }
             })}
-        </div>
+        </span>
     );
 };
 
@@ -75,10 +75,12 @@ const LinkParser = ({ text }) => {
 export default function TextParser({ text }){
     const blocks = text.split('\\n');
     return (
-        <span>
-            {blocks.map((block, index) => {
-                return <BlockLaTeXParser key={index} text={block}/>;
-            })}
-        </span>
+        <div>
+            {blocks.map((block, index) => (
+                <div key={index} className="textParserBlock">
+                    <BlockLaTeXParser text={block} />
+                </div>
+            ))}
+        </div>
     )
 }

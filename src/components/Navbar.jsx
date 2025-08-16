@@ -11,6 +11,7 @@ export default function Navbar() {
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
+        window.dispatchEvent(new Event('themeStorage'));
         localStorage.theme = theme;
 
         const icon = document.getElementById('darkModeIcon');
