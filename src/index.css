@@ -5,8 +5,12 @@
   --bg-color-secondary: #fffbf7; /* new */
   --bg-color-hover: #faf4ee;
   --disabled-color: rgba(0, 0, 0, 0.5);
+  --slider-filled-color: var(--primary-color);
+  --slider-bg-color: var(--bg-color-hover);
+  --slider-thumb-color: var(--primary-color);
   --table-border-radius-primary: 20px;
   --table-border-radius-secondary: 3px;
+  --slider-border-radius: 6px;
   --dropdown-timers: opacity 0.3s linear, transform 0.3s linear;
   --transition-timers: background-color 0.3s linear, color 0.3s linear, border-color 0.3s linear;
   --sep-distance-primary: 20px;

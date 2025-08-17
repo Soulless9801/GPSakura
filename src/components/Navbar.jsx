@@ -109,10 +109,23 @@ export default function Navbar() {
                                         { value: 'Coding', label: 'USACO', to: '/usaco' },
                                         { value: 'Coding ', label: 'Codeforces', to: '/cf' },
                                     ]}
-                                    defaultIndex='69'
+                                    defaultIndex='0'
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
                                     placeholder="Coding"
+                                    className="nav-dropdown"
+                                />
+                            </li>
+                            <li className="nav-item">
+                                <Select
+                                    id="experimentMenu"
+                                    options={[
+                                        { value: 'Experiments', label: 'Particle Network', to: '/particle' },
+                                    ]}
+                                    defaultIndex='0'
+                                    onChange={e => navigate(e.to)}
+                                    fixedSelect={true}
+                                    placeholder="Experiment"
                                     className="nav-dropdown"
                                 />
                             </li>
