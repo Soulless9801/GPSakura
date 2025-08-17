@@ -3,6 +3,7 @@ import Home from './pages/Home.jsx';
 import Codeforces from './pages/Codeforces.jsx';
 import USACO from './pages/USACO.jsx';
 import Blog from './pages/Blog.jsx';
+import Particle from './pages/Particle.jsx'
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
                 <Route path="cf" element={<Codeforces />} />
                 <Route path="usaco" element={<USACO />} />
                 <Route path="blog" element={<Blog />} />
+                <Route path="particle" element={<Particle />} />
             </Routes>
         </HashRouter>
     </div>

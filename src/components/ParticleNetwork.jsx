@@ -24,16 +24,18 @@ export default function ParticleNetwork({
     speed = 0.5,
     mouseRadius = 60,
     mouseStrength = 0.3,
-    interactive = true,
+    interactive = false,
     pointerEvents = false,
     colorTransition = 0.3,
     style = {},
+    className = "",
 }) {
     const wrapperRef = useRef(null);
     const canvasRef = useRef(null);
     const particlesRef = useRef([]);
     const rafRef = useRef(null);
     const mouseRef = useRef({ x: 0, y: 0, active: false });
+    const mouseDown = useRef(false);
 
     const currentColorRef = useRef([0, 0, 0]);
     const targetColorRef = useRef([0, 0, 0]);
@@ -79,6 +81,8 @@ export default function ParticleNetwork({
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height]);
 
+    const freezeTimer = 300;
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -91,13 +95,19 @@ export default function ParticleNetwork({
                 const angle = Math.random() * Math.PI * 2;
                 this.vx = Math.cos(angle) * this.s;
                 this.vy = Math.sin(angle) * this.s;
+                this.radius = particleRadius;
+                this.freeze = Date.now() + freezeTimer;
             }
             adjustSpeed(){
+                if (Math.abs(this.vx) == 0) {
+                    this.vx = Math.random() * speed;
+                }
                 const factor = Math.pow(this.s / Math.sqrt(this.vx ** 2 + this.vy ** 2), 0.5);
                 this.vx *= factor;
                 this.vy *= factor;
             }
             move(dt) {
+                if (this.freeze > Date.now()) return;
                 this.x += this.vx * dt * 60;
                 this.y += this.vy * dt * 60;
                 if (this.x <= particleRadius) {
@@ -120,17 +130,27 @@ export default function ParticleNetwork({
             }
             draw(ctx, fillCss) {
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, particleRadius, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = fillCss;
                 ctx.fill();
             }
         }
 
         const desired = Math.max(0, Math.floor(numParticles));
-        if (!particlesRef.current || particlesRef.current.length !== desired) {
-            particlesRef.current = Array.from({ length: desired }, () => new Particle());
+        const current = particlesRef.current.length;
+        for (let p of particlesRef.current) {
+            p.freeze = Date.now() + freezeTimer;
+            p.radius = particleRadius;
+            p.s = Math.random() * speed;
+            const oldSpeed = Math.sqrt(p.vx ** 2 + p.vy ** 2);
+            p.vx = p.vx * p.s / oldSpeed;
+            p.vy = p.vy * p.s / oldSpeed;
         }
-    }, [numParticles, particleRadius, speed]);
+        for (let i = 0; i < desired - current; i++) {
+            particlesRef.current.push(new Particle());
+        }
+        particlesRef.current.length = desired;
+    }, [numParticles, particleRadius, speed, connectionDistance]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -160,6 +180,11 @@ export default function ParticleNetwork({
         wrapper.addEventListener("mousemove", handlePointerMove);
         wrapper.addEventListener("pointerleave", handlePointerLeave);
         wrapper.addEventListener("mouseleave", handlePointerLeave);
+
+        const handleMouseDown = () => mouseDown.current = true;
+        const handleMouseUp = () => mouseDown.current = false;
+        wrapper.addEventListener('mousedown', handleMouseDown);
+        wrapper.addEventListener('mouseup', handleMouseUp);
 
         const handleTouchMove = (e) => {
             if (!interactive) return;
@@ -225,8 +250,8 @@ export default function ParticleNetwork({
                         const strength = mouseStrength * (t * t);
                         const ax = nx * strength * maxAccel * dt;
                         const ay = ny * strength * maxAccel * dt;
-                        p.vx += ax;
-                        p.vy += ay;
+                        p.vx += (mouseDown.current ? ax : -ax);
+                        p.vy += (mouseDown.current ? ay : -ay);
                     }
                 }
 
@@ -263,7 +288,7 @@ export default function ParticleNetwork({
 
         function run(now) {
             const last = lastTimeRef.current || now;
-            const dt = (now - last) / 1000;
+            const dt = Math.min((now - last) / 1000, 0.05);
             lastTimeRef.current = now;
             step(dt);
             rafRef.current = requestAnimationFrame(run);
@@ -277,6 +302,8 @@ export default function ParticleNetwork({
             wrapper.removeEventListener("mousemove", handlePointerMove);
             wrapper.removeEventListener("pointerleave", handlePointerLeave);
             wrapper.removeEventListener("mouseleave", handlePointerLeave);
+            wrapper.removeEventListener('mousedown', handleMouseDown);
+            wrapper.removeEventListener('mouseup', handleMouseUp);
             wrapper.removeEventListener("touchmove", handleTouchMove);
             wrapper.removeEventListener("touchend", handleTouchEnd);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -296,7 +323,7 @@ export default function ParticleNetwork({
     ]);
 
     return (
-        <div ref={wrapperRef} className={`relative overflow-hidden`} style={{ ...style, width, height, marginLeft: "auto", marginRight: "auto", minWidth: "200px"}}>
+        <div ref={wrapperRef} className={`relative overflow-hidden ${className}`} style={{ ...style, width, height, marginLeft: "auto", marginRight: "auto", minWidth: "200px"}}>
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ display: "block", width: "100%", height: "100%" }}  />
         </div>
     );
