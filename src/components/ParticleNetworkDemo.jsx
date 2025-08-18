@@ -1,5 +1,7 @@
 import { useState } from 'react';
+
 import ParticleNetwork from './ParticleNetwork.jsx';
+import Slider from './Slider.jsx';
 
 import './ParticleNetworkDemo.css';
 
@@ -25,8 +27,6 @@ export default function ParticleNetworkDemo() {
 	const minMouseStr = 0;
 	const maxMouseStr = 2;
 
-	const getSliderFill = (value, min, max) => ({ "--val": ((value - min) / (max - min)) * 100 });
-
 	return (
 		<div className='container-fluid particleDemoWrapper'>
 			<div className='row g-3 align-item-start'>
@@ -49,22 +49,10 @@ export default function ParticleNetworkDemo() {
 				<div className='col-12 col-md-6 col-lg-4 d-flex'>
 					<div className='p-3 particleControls'>
 						<div className='particleControlsSliders'>
-							<label className='particleSliderLabel'>
-								Particles: {numParticles}
-								<input type="range" className="particleSlider" min={minParticles} max={maxParticles} value={numParticles} style={getSliderFill(numParticles, minParticles, maxParticles)} onChange={e => setNumParticles(Number(e.target.value))} />
-							</label>
-							<label className='particleSliderLabel'>
-								Particle Size: {particleRadius}
-								<input type="range" className="particleSlider" min={minRadius} max={maxRadius} value={particleRadius} style={getSliderFill(particleRadius, minRadius, maxRadius)} onChange={e => setParticleRadius(Number(e.target.value))} />
-							</label>
-							<label className='particleSliderLabel'>
-								Distance: {connectionDistance}
-								<input type="range" className="particleSlider" min={minDist} max={maxDist} value={connectionDistance} style={getSliderFill(connectionDistance, minDist, maxDist)} onChange={e => setConnectionDistance(Number(e.target.value))} />
-							</label>
-							<label className='particleSliderLabel'>
-								Speed: {speed}
-								<input type="range" className="particleSlider" min={minSpeed} max={maxSpeed} step="0.01" value={speed} style={getSliderFill(speed, minSpeed, maxSpeed)} onChange={e => setSpeed(Number(e.target.value))} />
-							</label>
+							<Slider min={minParticles} max={maxParticles} value={numParticles} onChange={e => setNumParticles(e)} label="Particles"/>
+							<Slider min={minRadius} max={maxRadius} value={particleRadius} onChange={e => setParticleRadius(e)} label="Size" />
+							<Slider min={minDist} max={maxDist} value={connectionDistance} onChange={e => setConnectionDistance(e)} label="Distance" />
+							<Slider min={minSpeed} max={maxSpeed} step={0.01} value={speed} onChange={e => setSpeed(e)} label="Speed" />
 							<div>
 								<button className="particleButton" onClick={() => {
 									setInteractive(prev => !prev);
@@ -72,14 +60,8 @@ export default function ParticleNetworkDemo() {
 									Interactive
 								</button>
 							</div>
-							<label className={`particleSliderLabel${interactive ? '' : ' disabled'}`}>
-								Radius: {mouseRadius}
-								<input type="range" className="particleSlider" min={minMouseRadius} max={maxMouseRadius} value={mouseRadius} style={getSliderFill(mouseRadius, minMouseRadius, maxMouseRadius)} onChange={e => setMouseRadius(Number(e.target.value))} />
-							</label>
-							<label className={`particleSliderLabel${interactive ? '' : ' disabled'}`}>
-								Acceleration: {mouseStrength}
-								<input type="range" className="particleSlider" min={minMouseStr} max={maxMouseStr} step="0.01" value={mouseStrength} style={getSliderFill(mouseStrength, minMouseStr, maxMouseStr)} onChange={e => setMouseStrength(Number(e.target.value))} />
-							</label>
+							<Slider min={minMouseRadius} max={maxMouseRadius} value={mouseRadius} onChange={e => setMouseRadius(e)} label="Mouse Radius" disabled={!interactive}/>
+							<Slider min={minMouseStr} max={maxMouseStr} step={0.01} value={mouseStrength} onChange={e => setMouseStrength(e)} label="Mouse Str" disabled={!interactive}/>
 						</div>
 					</div>
 				</div>

@@ -10,7 +10,8 @@
   --slider-thumb-color: var(--primary-color);
   --table-border-radius-primary: 20px;
   --table-border-radius-secondary: 3px;
-  --slider-border-radius: 6px;
+  --slider-thumb-radius: 16px;
+  --slider-border-radius: 8px;
   --dropdown-timers: opacity 0.3s linear, transform 0.3s linear;
   --transition-timers: background-color 0.3s linear, color 0.3s linear, border-color 0.3s linear;
   --sep-distance-primary: 20px;
