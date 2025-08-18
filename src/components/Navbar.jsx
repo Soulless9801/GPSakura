@@ -125,7 +125,7 @@ export default function Navbar() {
                                     defaultIndex='0'
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
-                                    placeholder="Experiment"
+                                    placeholder="Experiments"
                                     className="nav-dropdown"
                                 />
                             </li>

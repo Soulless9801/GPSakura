@@ -41,8 +41,3 @@
     color: var(--disabled-color);
 }
 
-.disabled .particleSlider {
-    cursor: pointer;
-    pointer-events: none;
-}
-

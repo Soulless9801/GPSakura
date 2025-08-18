@@ -153,6 +153,12 @@ export default function ParticleNetwork({
     }, [numParticles, particleRadius, speed, connectionDistance]);
 
     useEffect(() => {
+        for (let p of particlesRef.current) {
+            p.freeze = Date.now() + freezeTimer;
+        }
+    }, [mouseRadius, mouseStrength]);
+
+    useEffect(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
         if (!canvas || !wrapper) return;

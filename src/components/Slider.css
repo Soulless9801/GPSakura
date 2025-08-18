@@ -1,0 +1,90 @@
+.customSliderWrapper {
+    width: 100%;
+}
+
+.customSlider {
+    width: 100%;
+    user-select: none;
+}
+
+.customSliderRow {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 1rem; 
+}
+
+.customSliderLabel {
+    transition: var(--transition-timers);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0; 
+    min-width: 150px; 
+}
+
+.customSliderForm {
+    transition: var(--transition-timers);
+    border: 1px solid var(--primary-color);
+    outline: none;
+    background: transparent;
+    border-radius: var(--table-border-radius-secondary);
+    color: var(--primary-color);
+}
+
+.disabled .customSliderForm {
+    border-color: transparent;
+    background: transparent;
+    color: var(--disabled-color);
+}
+
+.customSliderTrackWrapper {
+    transition: opacity 0.3s linear;
+    flex: 1; /* take up remaining space */
+    position: relative;
+    height: var(--slider-border-radius);
+}
+
+.customSliderTrack {
+    position: absolute;
+    width: 100%;
+    height: var(--slider-border-radius);
+    border-radius: var(--slider-border-radius);
+    display: flex;
+    cursor: pointer;
+}
+
+.customSliderTrackActive {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: var(--slider-border-radius);
+    transition: var(--transition-timers);
+}
+
+.customSliderTrackInactive {
+    height: 100%;
+    background: var(--bg-color-hover);
+    border-radius: var(--slider-border-radius);
+    transition: var(--transition-timers);
+}
+
+.customSliderThumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--slider-thumb-radius);
+    height: var(--slider-thumb-radius);
+    border-radius: var(--slider-thumb-radius);
+    background: var(--primary-color);
+    transition: var(--transition-timers);
+    cursor: pointer;
+}
+
+.disabled .customSliderLabel {
+    color: var(--disabled-color);
+}
+
+.disabled .customSliderTrackWrapper {
+    opacity: 0;
+    transition: opacity 0.3s linear;
+}
