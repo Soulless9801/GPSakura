@@ -56,7 +56,6 @@ export default function ParticleNetwork({
     useEffect(() => {
         const onStorage = () => {
             const newCol = readPrimaryColor();
-            console.log(newCol);
             const rgb = hexToRGB(newCol);
             targetColorRef.current = rgb;
             transitionProgressRef.current = 0;
@@ -102,7 +101,7 @@ export default function ParticleNetwork({
                 if (Math.abs(this.vx) == 0) {
                     this.vx = Math.random() * speed;
                 }
-                const factor = Math.pow(this.s / Math.sqrt(this.vx ** 2 + this.vy ** 2), 0.5);
+                const factor = Math.sqrt(this.s / Math.sqrt(this.vx ** 2 + this.vy ** 2));
                 this.vx *= factor;
                 this.vy *= factor;
             }
@@ -111,17 +110,17 @@ export default function ParticleNetwork({
                 this.x += this.vx * dt * 60;
                 this.y += this.vy * dt * 60;
                 if (this.x <= particleRadius) {
-                    this.x = particleRadius;
+                    //this.x = particleRadius;
                     this.vx *= -1;
                 } else if (this.x >= canvas.clientWidth - particleRadius) {
-                    this.x = canvas.clientWidth - particleRadius;
+                    //this.x = canvas.clientWidth - particleRadius;
                     this.vx *= -1;
                 }
                 if (this.y <= particleRadius) {
-                    this.y = particleRadius;
+                    //this.y = particleRadius;
                     this.vy *= -1;
                 } else if (this.y >= canvas.clientHeight - particleRadius) {
-                    this.y = canvas.clientHeight - particleRadius;
+                    //this.y = canvas.clientHeight - particleRadius;
                     this.vy *= -1;
                 }
 
@@ -135,7 +134,6 @@ export default function ParticleNetwork({
                 ctx.fill();
             }
         }
-
         const desired = Math.max(0, Math.floor(numParticles));
         const current = particlesRef.current.length;
         for (let p of particlesRef.current) {

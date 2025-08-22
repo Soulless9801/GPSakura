@@ -15,12 +15,15 @@ import PageTitle from '/src/components/PageTitle.jsx'
 
 import ParticleNetwork from '/src/components/ParticleNetwork.jsx';
 
+import Form from '/src/components/Form.jsx';
+
 export default function Home(){
     return (
         <StrictMode>
             <Navbar />
             <PageTitle title="Sakura" description="A project manifested"/>
             <ParticleNetwork numParticles={30} connectionDistance={90} width={"40vw"} height={"10vh"} style={{ maxWidth:"400px" }} />
+            <Form init={50} min={10} max={100}/>
         </StrictMode>
     )
 }

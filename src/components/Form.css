@@ -1,0 +1,57 @@
+.customNumberInput {
+    transition: var(--transition-timers);
+    color: var(--primary-color);
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    outline: none;
+    border-radius: var(--table-border-radius-secondary);
+    display: inline-flex;
+}
+
+.customNumberInput.disabled {
+    pointer-events: none;
+    cursor: default;
+    color: var(--disabled-color);
+    border-color: transparent;
+}
+
+.customNumberCaret {
+    padding: var(--padding-dropdown);
+    background: transparent;
+    color: var(--primary-color);
+    transition: var(--transition-timers);
+    outline: none;
+    border: none;
+    overflow-x: hidden;
+    width: 50px;
+}
+
+.disabled .customNumberCaret {
+    color: var(--disabled-color);
+}
+
+.customNumberButtons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.btn-up, .btn-down {
+    font-size: 0.8em;
+    padding: 0 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: var(--transition-timers);
+}
+.btn-up:hover, .btn-down:hover {
+    color: var(--secondary-color);
+}
+
+.disabled .btn-up,
+.disabled .btn-down {
+    color: transparent;
+}
