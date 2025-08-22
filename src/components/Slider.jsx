@@ -1,26 +1,31 @@
 import { useState, useRef, useEffect } from "react";
+
+import Form from './Form.jsx';
+
 import "./Slider.css";
 
-export default function Slider({ min, max, value, onChange, label, step = 1, disabled = false}) {
+export default function Slider({ min, max, value, onChange, label, step = 1, places = 0, disabled = false}) {
     const [internalValue, setInternalValue] = useState(value);
-    const [inputValue, setInputValue] = useState(value);
     const trackRef = useRef(null);
+
 
     useEffect(() => {
         if (value !== undefined) {
-            setInternalValue(value);
-            setInputValue(value);
+            updateValue(value);
         }
     }, [value]);
+
+    useEffect(() => {
+        onChange?.(internalValue);
+    }, [internalValue]);
 
     const percent = ((internalValue - min) / (max - min)) * 100;
 
     const updateValue = (newValue) => {
         newValue = Math.min(max, Math.max(min, newValue));
         newValue = Math.round(newValue / step) * step;
-        newValue = newValue.toFixed(2); //subject to change
-        setInputValue(newValue);
-        if (onChange) onChange(newValue);
+        newValue = newValue.toFixed(places);
+        setInternalValue(newValue);
     };
 
     const handleMove = (e) => {
@@ -46,51 +51,13 @@ export default function Slider({ min, max, value, onChange, label, step = 1, dis
         window.addEventListener("mouseup", stop);
     };
 
-
-    const commitInput = () => {
-        const parsed = parseFloat(inputValue);
-        if (!isNaN(parsed)) {
-            updateValue(parsed);
-        } else {
-            setInputValue(internalValue);
-        }
-    };
-
-    const handleInputChange = (e) => {
-        const raw = e.target.value;
-        setInputValue(raw);
-        const parsed = parseFloat(raw);
-        if (!isNaN(parsed)){
-            updateValue(parsed);
-            setInputValue(String(Number(parsed)));
-        }
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter") {
-            commitInput();
-            e.target.blur();
-        }
-    };
-
     return (
         <div className="customSliderWrapper">
             <div className={`customSlider ${disabled ? " disabled" : ""}`}>
                 <div className="customSliderRow">
                     <div className="customSliderLabel">
                         <span>{label}:</span>
-                        <input
-                            type="number"
-                            className="customSliderForm"
-                            value={inputValue}
-                            min={min}
-                            max={max}
-                            step={step}
-                            disabled={disabled}
-                            onChange={handleInputChange}
-                            onKeyDown={handleKeyDown}
-                            onBlur={commitInput}
-                        />
+                        <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => setInternalValue(e)} />
                     </div>
                     <div className="customSliderTrackWrapper" onMouseDown={startDrag}>
                         <div className="customSliderTrack"  ref={trackRef}>

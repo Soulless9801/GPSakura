@@ -7,6 +7,11 @@
     user-select: none;
 }
 
+.customSlider.disabled {
+    pointer-events: none;
+    cursor: default;
+}
+
 .customSliderRow {
     display: flex;
     align-items: center;
@@ -21,21 +26,6 @@
     gap: 0.5rem;
     flex-shrink: 0; 
     min-width: 150px; 
-}
-
-.customSliderForm {
-    transition: var(--transition-timers);
-    border: 1px solid var(--primary-color);
-    outline: none;
-    background: transparent;
-    border-radius: var(--table-border-radius-secondary);
-    color: var(--primary-color);
-}
-
-.disabled .customSliderForm {
-    border-color: transparent;
-    background: transparent;
-    color: var(--disabled-color);
 }
 
 .customSliderTrackWrapper {

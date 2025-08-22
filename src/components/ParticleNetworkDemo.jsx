@@ -52,7 +52,7 @@ export default function ParticleNetworkDemo() {
 							<Slider min={minParticles} max={maxParticles} value={numParticles} onChange={e => setNumParticles(e)} label="Particles"/>
 							<Slider min={minRadius} max={maxRadius} value={particleRadius} onChange={e => setParticleRadius(e)} label="Size" />
 							<Slider min={minDist} max={maxDist} value={connectionDistance} onChange={e => setConnectionDistance(e)} label="Distance" />
-							<Slider min={minSpeed} max={maxSpeed} step={0.01} value={speed} onChange={e => setSpeed(e)} label="Speed" />
+							<Slider min={minSpeed} max={maxSpeed} step={0.01} places={2} value={speed} onChange={e => setSpeed(e)} label="Speed" />
 							<div>
 								<button className="particleButton" onClick={() => {
 									setInteractive(prev => !prev);
@@ -61,7 +61,7 @@ export default function ParticleNetworkDemo() {
 								</button>
 							</div>
 							<Slider min={minMouseRadius} max={maxMouseRadius} value={mouseRadius} onChange={e => setMouseRadius(e)} label="Mouse Radius" disabled={!interactive}/>
-							<Slider min={minMouseStr} max={maxMouseStr} step={0.01} value={mouseStrength} onChange={e => setMouseStrength(e)} label="Mouse Str" disabled={!interactive}/>
+							<Slider min={minMouseStr} max={maxMouseStr} step={0.01} places={2} value={mouseStrength} onChange={e => setMouseStrength(e)} label="Mouse Str" disabled={!interactive}/>
 						</div>
 					</div>
 				</div>
