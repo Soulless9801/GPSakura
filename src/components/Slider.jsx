@@ -43,12 +43,12 @@ export default function Slider({ min, max, value, onChange, label, step = 1, pla
 
         const move = (ev) => handleMove(ev);
         const stop = () => {
-            window.removeEventListener("mousemove", move);
-            window.removeEventListener("mouseup", stop);
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", stop);
         };
 
-        window.addEventListener("mousemove", move);
-        window.addEventListener("mouseup", stop);
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", stop);
     };
 
     return (

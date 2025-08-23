@@ -14,19 +14,34 @@ function rgbToCss(rgb) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
+function calc(coord, max, off, v){
+    coord = Number(coord);
+    max = Number(max);
+    off = Number(off);
+    v = Number(v);
+    coord -= off;
+    coord %= (2 * max); 
+    if (coord < 0) coord = coord + 2 * max;
+    if (coord > max) {
+        coord = 2 * max - coord;
+        v *= -1;
+    }
+    return [coord + off, v];
+}
+
 export default function ParticleNetwork({
     numParticles = 100,
     particleRadius = 2,
-    maxAccel = 120,
+    maxAccel = 0.12,
     width = "100vw",
     height = "100vh",
     connectionDistance = 120,
     speed = 0.5,
-    mouseRadius = 60,
-    mouseStrength = 0.3,
+    pointerRadius = 60,
+    pointerStrength = 0.3,
     interactive = false,
     pointerEvents = false,
-    colorTransition = 0.3,
+    colorTransition = 300,
     style = {},
     className = "",
 }) {
@@ -34,8 +49,8 @@ export default function ParticleNetwork({
     const canvasRef = useRef(null);
     const particlesRef = useRef([]);
     const rafRef = useRef(null);
-    const mouseRef = useRef({ x: 0, y: 0, active: false });
-    const mouseDown = useRef(false);
+    const pointerRef = useRef({ x: 0, y: 0, active: false });
+    const pointerDown = useRef(false);
 
     const currentColorRef = useRef([0, 0, 0]);
     const targetColorRef = useRef([0, 0, 0]);
@@ -105,23 +120,11 @@ export default function ParticleNetwork({
             move(dt) {
                 if (this.freeze > Date.now()) return;
 
-                this.x += this.vx * dt * 60;
-                this.y += this.vy * dt * 60;
+                this.x += this.vx * dt / 16;
+                this.y += this.vy * dt / 16;
 
-                if (this.x <= this.radius) {
-                    this.x = Number(this.radius);
-                    this.vx *= -1;
-                } else if (this.x >= canvas.clientWidth - this.radius) {
-                    this.x = canvas.clientWidth - this.radius;
-                    this.vx *= -1;
-                }
-                if (this.y <= this.radius) {
-                    this.y = Number(this.radius);
-                    this.vy *= -1;
-                } else if (this.y >= canvas.clientHeight - this.radius) {
-                    this.y = canvas.clientHeight - this.radius;
-                    this.vy *= -1;
-                }
+                if (this.x <= this.radius || this.x >= canvas.clientWidth - this.radius) [this.x, this.vx] = calc(this.x, canvas.clientWidth - 2 * this.radius, this.radius, this.vx);
+                if (this.y <= this.radius || this.y >= canvas.clientHeight - this.radius) [this.y, this.vy] = calc(this.y, canvas.clientHeight - 2 * this.radius, this.radius, this.vy);
 
                 this.adjustSpeed();
 
@@ -153,7 +156,7 @@ export default function ParticleNetwork({
         for (let p of particlesRef.current) {
             p.freeze = Date.now() + freezeTimer;
         }
-    }, [mouseRadius, mouseStrength]);
+    }, [pointerRadius, pointerStrength]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -170,45 +173,26 @@ export default function ParticleNetwork({
         const handlePointerMove = (ev) => {
         if (!interactive) return;
             const rect = wrapper.getBoundingClientRect();
-            mouseRef.current.x = ev.clientX - rect.left;
-            mouseRef.current.y = ev.clientY - rect.top;
-            mouseRef.current.active = true;
+            pointerRef.current.x = ev.clientX - rect.left;
+            pointerRef.current.y = ev.clientY - rect.top;
+            pointerRef.current.active = true;
         };
 
         const handlePointerLeave = () => {
-            mouseRef.current.active = false;
+            pointerRef.current.active = false;
         };
 
         wrapper.addEventListener("pointermove", handlePointerMove);
-        wrapper.addEventListener("mousemove", handlePointerMove);
         wrapper.addEventListener("pointerleave", handlePointerLeave);
-        wrapper.addEventListener("mouseleave", handlePointerLeave);
 
-        const handleMouseDown = () => mouseDown.current = true;
-        const handleMouseUp = () => mouseDown.current = false;
-        wrapper.addEventListener('mousedown', handleMouseDown);
-        wrapper.addEventListener('mouseup', handleMouseUp);
-
-        const handleTouchMove = (e) => {
-            if (!interactive) return;
-            const t = e.touches[0];
-            if (!t) return;
-            const rect = wrapper.getBoundingClientRect();
-            mouseRef.current.x = t.clientX - rect.left;
-            mouseRef.current.y = t.clientY - rect.top;
-            mouseRef.current.active = true;
-        };
-
-        const handleTouchEnd = () => {
-            mouseRef.current.active = false;
-        };
-
-        wrapper.addEventListener("touchmove", handleTouchMove, { passive: true });
-        wrapper.addEventListener("touchend", handleTouchEnd);
+        const handlePointerDown = () => pointerDown.current = true;
+        const handlePointerUp = () => pointerDown.current = false;
+        wrapper.addEventListener('pointerdown', handlePointerDown);
+        wrapper.addEventListener('pointerup', handlePointerUp);
 
         const ctx = canvas.getContext("2d");
 
-        const localMouse = mouseRef;
+        const localPointer = pointerRef;
         const localParticles = particlesRef;
         const localTarget = targetColorRef;
 
@@ -240,21 +224,21 @@ export default function ParticleNetwork({
             const strokeRgb = currentColorRef.current.map(v => Math.round(v)).join(",");
 
             for (const p of localParticles.current) {
-                if (interactive && localMouse.current.active) {
-                    const mx = localMouse.current.x;
-                    const my = localMouse.current.y;
+                if (interactive && localPointer.current.active) {
+                    const mx = localPointer.current.x;
+                    const my = localPointer.current.y;
                     const dx = p.x - mx;
                     const dy = p.y - my;
                     const dist = Math.hypot(dx, dy);
-                    if (dist > 0 && dist < mouseRadius) {
+                    if (dist > 0 && dist < pointerRadius) {
                         const nx = dx / dist;
                         const ny = dy / dist;
-                        const t = Math.min(0.8, 1 - dist / mouseRadius);
-                        const strength = mouseStrength * (t * t);
+                        const t = Math.min(0.8, 1 - dist / pointerRadius);
+                        const strength = pointerStrength * (t * t);
                         const ax = nx * strength * maxAccel * dt;
                         const ay = ny * strength * maxAccel * dt;
-                        p.vx += (mouseDown.current ? ax : -ax);
-                        p.vy += (mouseDown.current ? ay : -ay);
+                        p.vx += (pointerDown.current ? ax : -ax);
+                        p.vy += (pointerDown.current ? ay : -ay);
                     }
                 }
 
@@ -291,7 +275,7 @@ export default function ParticleNetwork({
 
         function run(now) {
             const last = lastTimeRef.current || now;
-            const dt = Math.min((now - last) / 1000, 0.05);
+            const dt = now - last;
             lastTimeRef.current = now;
             step(dt);
             rafRef.current = requestAnimationFrame(run);
@@ -301,14 +285,10 @@ export default function ParticleNetwork({
 
         return () => {
             window.removeEventListener("resize", resizeCanvas);
+            wrapper.removeEventListener("pointerdown", handlePointerDown);
             wrapper.removeEventListener("pointermove", handlePointerMove);
-            wrapper.removeEventListener("mousemove", handlePointerMove);
+            wrapper.removeEventListener("pointerup", handlePointerUp);
             wrapper.removeEventListener("pointerleave", handlePointerLeave);
-            wrapper.removeEventListener("mouseleave", handlePointerLeave);
-            wrapper.removeEventListener('mousedown', handleMouseDown);
-            wrapper.removeEventListener('mouseup', handleMouseUp);
-            wrapper.removeEventListener("touchmove", handleTouchMove);
-            wrapper.removeEventListener("touchend", handleTouchEnd);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
     }, [
@@ -317,8 +297,8 @@ export default function ParticleNetwork({
         pointerEvents,
         colorTransition,
         connectionDistance,
-        mouseRadius,
-        mouseStrength,
+        pointerRadius,
+        pointerStrength,
         particleRadius,
         numParticles,
         speed,
