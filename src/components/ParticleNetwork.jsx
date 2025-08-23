@@ -98,29 +98,28 @@ export default function ParticleNetwork({
                 this.freeze = Date.now() + freezeTimer;
             }
             adjustSpeed(){
-                if (Math.abs(this.vx) == 0) {
-                    this.vx = Math.random() * speed;
-                }
                 const factor = Math.sqrt(this.s / Math.sqrt(this.vx ** 2 + this.vy ** 2));
                 this.vx *= factor;
                 this.vy *= factor;
             }
             move(dt) {
                 if (this.freeze > Date.now()) return;
+
                 this.x += this.vx * dt * 60;
                 this.y += this.vy * dt * 60;
-                if (this.x <= particleRadius) {
-                    //this.x = particleRadius;
+
+                if (this.x <= this.radius) {
+                    this.x = Number(this.radius);
                     this.vx *= -1;
-                } else if (this.x >= canvas.clientWidth - particleRadius) {
-                    //this.x = canvas.clientWidth - particleRadius;
+                } else if (this.x >= canvas.clientWidth - this.radius) {
+                    this.x = canvas.clientWidth - this.radius;
                     this.vx *= -1;
                 }
-                if (this.y <= particleRadius) {
-                    //this.y = particleRadius;
+                if (this.y <= this.radius) {
+                    this.y = Number(this.radius);
                     this.vy *= -1;
-                } else if (this.y >= canvas.clientHeight - particleRadius) {
-                    //this.y = canvas.clientHeight - particleRadius;
+                } else if (this.y >= canvas.clientHeight - this.radius) {
+                    this.y = canvas.clientHeight - this.radius;
                     this.vy *= -1;
                 }
 
