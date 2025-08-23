@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import "./Form.css";
 
-export default function Form({ init, min, max,  onChange, step = 1, places = 0 ,disabled = false }) {
+export default function Form({ init, min, max,  onChange, step = 1, places = 0, disabled = false }) {
   const [value, setValue] = useState(init);
   const [draft, setDraft] = useState(String(init));
   const [focus, setFocus] = useState(false);
@@ -10,7 +10,7 @@ export default function Form({ init, min, max,  onChange, step = 1, places = 0 ,
 
   useEffect(() => {
     if (init !== undefined) {
-      updateValue(init);
+      setValue(updateValue(init));
     }
   }, [init]);
 
@@ -27,49 +27,81 @@ export default function Form({ init, min, max,  onChange, step = 1, places = 0 ,
     newValue = Math.min(max, Math.max(min, newValue));
     newValue = Math.round(newValue / step) * step;
     newValue = newValue.toFixed(places);
-    setValue(newValue);
+    return newValue;
   };
 
-  const commit = (raw, off = 0) => {
-    let num = parseFloat(raw);
+  const commit = useCallback((off = 0) => {
+    let num = parseFloat(draft);
     if (!isNaN(num)) {
       num = num + off;
-      updateValue(num);
+      setValue(updateValue(num));
+    } else {
+      setDraft(String(value));
     }
-    setDraft(String(value));
-  };
+  }, [draft, value]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (disabled || !focus) return;
     if (e.key === "Enter") {
       setFocus(false);
     }
     if (e.key === "ArrowUp") {
-      commit(draft, step);
+      setValue(prev => updateValue(Number(prev) + step));
     }
     if (e.key === "ArrowDown") {
-      commit(draft, -step);
+      setValue(prev => updateValue(Number(prev) - step));
     }
-  };
+  }, [disabled, focus]);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (disabled) return;
     setFocus(true);
-  };
+  }, [disabled]);
 
   const handleBlur = () => {
-    setFocus(false);
-    commit(draft);
+    commit();
+  };
+
+  const holdInterval = useRef(null);
+  const holdTimeout = useRef(null);
+
+  const startHold = (inc) => {
+    if (disabled) return;
+    setValue(prev => updateValue(Number(prev) + inc));
+    holdTimeout.current = setTimeout(() => {
+      holdInterval.current = setInterval(() => {
+        setValue(prev => updateValue(Number(prev) + inc));
+      }, 30);
+    }, 500);
+  };
+
+  const stopHold = () => {
+    clearTimeout(holdTimeout.current);
+    clearInterval(holdInterval.current);
   };
 
   return (
-    <div className={`customNumberInput ${disabled ? "disabled" : ""}`} tabIndex={0} onClick={handleClick} onKeyDown={handleKeyDown} onBlur={handleBlur}>
-      <input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)} onFocus={() => setFocus(true)} onBlur={handleBlur}/>
+    <div className={`customNumberInput ${disabled ? "disabled" : ""}`} onClick={handleClick} onBlur={handleBlur} >
+      <input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)} onFocus={() => setFocus(true)} onKeyDown={handleKeyDown} />
       <div className="customNumberButtons">
-        <div className="btn-up" onMouseDown={(e) => { e.preventDefault(); commit(draft, step); setFocus(false); }}>
+        <div
+          className="btn-up"
+          onMouseDown={e => { e.preventDefault(); startHold(step);  }}
+          onMouseUp={stopHold}
+          onMouseLeave={stopHold}
+          onTouchStart={e => { e.preventDefault(); startHold(step); }}
+          onTouchEnd={stopHold}
+        >
           ▲
         </div>
-        <div className="btn-down" onMouseDown={(e) => { e.preventDefault(); commit(draft, -step); setFocus(false); }}>
+        <div
+          className="btn-down"
+          onMouseDown={e => { e.preventDefault(); startHold(-step); }}
+          onMouseUp={stopHold}
+          onMouseLeave={stopHold}
+          onTouchStart={e => { e.preventDefault(); startHold(-step); }}
+          onTouchEnd={stopHold}
+        >
           ▼
         </div>
       </div>
