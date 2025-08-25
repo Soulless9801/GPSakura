@@ -13,14 +13,14 @@ import Navbar from '/src/components/Navbar.jsx'
 
 import PageTitle from '/src/components/PageTitle.jsx'
 
-import ParticleNetwork from '/src/components/ParticleNetwork.jsx';
+import GameOfLifeDemo from '/src/components/GameOfLifeDemo.jsx';
 
-export default function Home(){
+export default function Particle(){
     return (
         <StrictMode>
             <Navbar />
-            <PageTitle title="Sakura" description="A project manifested"/>
-            <ParticleNetwork numParticles={30} connectionDistance={90} width={"40vw"} height={"10vh"} style={{ maxWidth:"400px", marginLeft: "auto", marginRight: "auto" }} />
+            <PageTitle title="Cell Automata" description="A game of life"/>
+            <GameOfLifeDemo />
         </StrictMode>
     )
 }

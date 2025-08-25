@@ -31,6 +31,7 @@
   top: 0;
   z-index: 127;
   pointer-events: none;
+  min-width: 250px;
 }
 
 .navbar-custom {
@@ -71,6 +72,7 @@
 @media (max-width: 768px) {
   .navbar-wrapper {
     width: 40%;
+    display: flex;
     margin-left: auto;
     margin-right: auto;
   }

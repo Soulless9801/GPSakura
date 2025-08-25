@@ -106,8 +106,8 @@ export default function Navbar() {
                                 <Select
                                     id="codingMenu"
                                     options={[
-                                        { value: 'Coding', label: 'USACO', to: '/usaco' },
-                                        { value: 'Coding ', label: 'Codeforces', to: '/cf' },
+                                        { value: 'USACO', label: 'USACO', to: '/usaco' },
+                                        { value: 'Codeforces', label: 'Codeforces', to: '/cf' },
                                     ]}
                                     defaultIndex='0'
                                     onChange={e => navigate(e.to)}
@@ -120,7 +120,8 @@ export default function Navbar() {
                                 <Select
                                     id="experimentMenu"
                                     options={[
-                                        { value: 'Experiments', label: 'Particle Network', to: '/particle' },
+                                        { value: 'Particle', label: 'Particle Network', to: '/particle' },
+                                        { value: 'Cell', label: 'Cell Automata', to: '/cell' },
                                     ]}
                                     defaultIndex='0'
                                     onChange={e => navigate(e.to)}
