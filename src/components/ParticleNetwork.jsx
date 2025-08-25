@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
 
 function hexToRGB(hex) {
     const parsed = hex.replace("#", "");
@@ -94,6 +94,10 @@ export default function ParticleNetwork({
         const ctx = canvas.getContext("2d");
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height]);
+
+    useEffect(() => {
+        resizeCanvas();
+    }, []);
 
     const freezeTimer = 300;
 
@@ -306,8 +310,8 @@ export default function ParticleNetwork({
     ]);
 
     return (
-        <div ref={wrapperRef} className={`relative overflow-hidden ${className}`} style={{ ...style, width, height, marginLeft: "auto", marginRight: "auto", minWidth: "200px"}}>
-            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ display: "block", width: "100%", height: "100%" }}  />
+        <div ref={wrapperRef} className={`relative d-flex justify-content-center align-items-center ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ display: "block" , width: "100%", height: "100%"}}  />
         </div>
     );
 }

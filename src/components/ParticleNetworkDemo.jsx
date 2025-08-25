@@ -31,7 +31,7 @@ export default function ParticleNetworkDemo() {
 		<div className='container-fluid particleDemoWrapper'>
 			<div className='row g-3 align-item-start'>
 				<div className='col-12 col-md-6 col-lg-8'>
-					<div style={{ width: '100%', position: 'relative' }}>
+					<div style={{ width: '100%', height: '60vh', position: 'relative' }}>
 						<ParticleNetwork
 							numParticles={numParticles}
 							particleRadius={particleRadius}
@@ -41,7 +41,7 @@ export default function ParticleNetworkDemo() {
 							mouseStrength={mouseStrength}
 							interactive={interactive}
 							width="100%"
-							height="60vh"
+							height="100%"
 							style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
 						/>
 					</div>
