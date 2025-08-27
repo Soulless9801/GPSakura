@@ -22,13 +22,13 @@
     justify-content: space-between;
     white-space: nowrap;
 }
-
 .cellButton {
     transition: var(--transition-timers);
     background: transparent;
     border: var(--border-width) solid var(--primary-color);
     color: var(--primary-color);
     cursor: pointer;
+    width: 100%;
     padding: var(--padding-dropdown);
     border-radius: var(--table-border-radius-secondary);
 }

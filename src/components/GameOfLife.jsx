@@ -19,7 +19,8 @@ export default forwardRef(function GameOfLife(
 		width,
 		height,
 		speed,
-		cellSize = 20,
+		zoom,
+		initCellSize = 20,
 		running = true,
 		wrap = true,
 		showGrid = true,
@@ -79,7 +80,6 @@ export default forwardRef(function GameOfLife(
 			targetPrimary.current = rgb[0];
 			targetSecondary.current = rgb[1];
 			transitionProgressRef.current = 0;
-			console.log(rgb);
 		};
 		window.addEventListener("themeStorage", onStorage);
 		return () => window.removeEventListener("themeStorage", onStorage);
@@ -103,11 +103,13 @@ export default forwardRef(function GameOfLife(
 		runningRef.current = running;
 	}, [running])
 
+	const [cellSize, setCellSize] = useState(initCellSize);
+
 	const [cols, setCols] = useState(Math.floor(calcWidth / cellSize));
 	const [rows, setRows] = useState(Math.floor(calcHeight / cellSize));
 
 	const [grid, setGrid] = useState(
-		() => new Uint8Array(Math.floor(calcHeight / cellSize) * Math.floor(calcWidth / cellSize))
+		() => new Uint8Array(rows * cols)
 	);
 	const gridRef = useRef(grid);
 	gridRef.current = grid;
@@ -202,7 +204,7 @@ export default forwardRef(function GameOfLife(
 
 		function loop(now) {
 			const last = lastTimeRef.current || now;
-			const dt = now - last;
+			const dt = Math.min(now - last, stepInterval); // stop lag
 			lastTimeRef.current = now;
 
 			if (runningRef.current) {
@@ -217,7 +219,6 @@ export default forwardRef(function GameOfLife(
 
 			if (opacityProgressRef.current < 1) {
 				opacityProgressRef.current = Math.min(1, opacityProgressRef.current + inc);
-				console.log(opacityProgressRef.current);
 			}
 
 			if (transitionProgressRef.current < 1) {
@@ -251,6 +252,10 @@ export default forwardRef(function GameOfLife(
 			rafRef.current = null;
 		};
 	}, [speed, stepGeneration, draw]);
+
+	useEffect(() => {
+		setCellSize(initCellSize * zoom / 100);
+	}, [zoom]);
 
 	const toggleCellAt = useCallback(
 		(clientX, clientY, isSet = null) => {
@@ -296,6 +301,10 @@ export default forwardRef(function GameOfLife(
 		cssW = cssW + borderWidth.current;
 		cssH = cssH + borderWidth.current;
 
+		//console.log(rect.width, rect.height);
+
+		//console.log(cssW, cssH, cellSize);
+
 		const dpr = window.devicePixelRatio || 1;
 		canvas.width = cssW * dpr;
 		canvas.height = cssH * dpr;
@@ -304,6 +313,10 @@ export default forwardRef(function GameOfLife(
         const ctx = canvas.getContext("2d");
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height, cellSize]);
+
+	useEffect(() => {
+		resizeCanvas();
+	}, [cellSize])
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -375,7 +388,7 @@ export default forwardRef(function GameOfLife(
 	}, [clearGrid, stepGeneration]);
 
 	return (
-		<div ref={wrapperRef} className={`relative d-flex justify-content-center align-items-center ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+		<div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: interactive ? 'none' : 'auto' }}>
 			<canvas
 				ref={canvasRef}
 				style={{ display: 'block' }}
