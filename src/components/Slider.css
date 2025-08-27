@@ -31,6 +31,7 @@
 .customSliderTrackWrapper {
     transition: opacity 0.3s linear;
     flex: 1; /* take up remaining space */
+    touch-action: none; /* prevent scrolling */
     position: relative;
     height: var(--slider-border-radius);
 }

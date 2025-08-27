@@ -310,8 +310,8 @@ export default function ParticleNetwork({
     ]);
 
     return (
-        <div ref={wrapperRef} className={`relative d-flex justify-content-center align-items-center ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ display: "block" , width: "100%", height: "100%"}}  />
+        <div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: interactive ? 'none' : 'auto'  }}>
+            <canvas ref={canvasRef} style={{ display: "block" , width: "100%", height: "100%"}}  />
         </div>
     );
 }
