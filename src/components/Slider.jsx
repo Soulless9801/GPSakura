@@ -4,7 +4,7 @@ import Form from './Form.jsx';
 
 import "./Slider.css";
 
-export default function Slider({ min, max, value, onChange, label, step = 1, places = 0, disabled = false}) {
+export default function Slider({ min, max, value, onChange, label, unit, step = 1, places = 0, disabled = false}) {
     const [internalValue, setInternalValue] = useState(value);
     const trackRef = useRef(null);
 
@@ -58,6 +58,7 @@ export default function Slider({ min, max, value, onChange, label, step = 1, pla
                     <div className="customSliderLabel">
                         <span>{label}:</span>
                         <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => setInternalValue(e)} />
+                        <span>{unit ? unit : ""}</span>
                     </div>
                     <div className="customSliderTrackWrapper" onMouseDown={startDrag}>
                         <div className="customSliderTrack"  ref={trackRef}>

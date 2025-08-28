@@ -85,7 +85,7 @@ export default function GameOfLifeDemo() {
                                     </button>
                                 </div>
                             </div>
-                            <Slider min={50} max={300} value={zoom} onChange={e => setZoom(e)} label="Zoom"/>
+                            <Slider min={25} max={300} value={zoom} unit={"%"} onChange={e => setZoom(e)} label="Zoom"/>
                             <div className='row g-1'>
                                 <div className='col-6'>
                                     <button className="cellButton" onClick={() => setZoom(prev => Math.min(Number(prev) + 10, 300))}>

@@ -20,6 +20,10 @@ export default forwardRef(function GameOfLife(
 		height,
 		speed,
 		zoom,
+		rules = {
+			survive: [2, 3],
+			birth: [3]
+		},
 		initCellSize = 20,
 		running = true,
 		wrap = true,
@@ -72,9 +76,7 @@ export default forwardRef(function GameOfLife(
 		currentSecondary.current = rgb[1];
 		targetSecondary.current = rgb[1];
 		transitionProgressRef.current = 1;
-	}, [readColor]);
 
-	useEffect(() => {
 		const onStorage = () => {
 			const rgb = readColor();
 			targetPrimary.current = rgb[0];
@@ -83,13 +85,10 @@ export default forwardRef(function GameOfLife(
 		};
 		window.addEventListener("themeStorage", onStorage);
 		return () => window.removeEventListener("themeStorage", onStorage);
+
 	}, [readColor]);
 
 	const canvasRef = useRef(null);
-
-	useEffect(() => {
-		opacityProgressRef.current = 0;
-	}, [showGrid]);
 
 	const rafRef = useRef(null);
 	const lastTimeRef = useRef(performance.now());
@@ -103,57 +102,70 @@ export default forwardRef(function GameOfLife(
 		runningRef.current = running;
 	}, [running])
 
+	const MAX = 200; // lmao
+
 	const [cellSize, setCellSize] = useState(initCellSize);
 
 	const [cols, setCols] = useState(Math.floor(calcWidth / cellSize));
 	const [rows, setRows] = useState(Math.floor(calcHeight / cellSize));
 
 	const [grid, setGrid] = useState(
-		() => new Uint8Array(rows * cols)
+		() => new Uint8Array(MAX * MAX)
 	);
 	const gridRef = useRef(grid);
 	gridRef.current = grid;
 
+	const [display, setDisplay] = useState(
+		() => new Uint8Array(rows * cols)
+	);
+	const displayRef = useRef(display);
+	displayRef.current = display;
+
+	useEffect(() => {
+		const newDisplay = new Uint8Array(rows * cols);
+		const xDiff = Math.floor((MAX - cols) / 2);
+		const yDiff = Math.floor((MAX - rows) / 2);
+		for (let i = 0; i < rows; i++) {
+			for (let j = 0; j < cols; j++) {
+				newDisplay[i * cols + j] = grid[(i + yDiff) * MAX + (j + xDiff)];
+			}
+		}
+		setDisplay(newDisplay);
+	}, [grid, rows, cols]);
+
 	const clearGrid = useCallback(() => {
-		const g = new Uint8Array(rows * cols);
+		const g = new Uint8Array(MAX * MAX);
 		setGrid(g);
-	}, [rows, cols]);
+	}, []);
 
 	const randomizeGrid = useCallback((prob = randomProbability) => {
-		const g = new Uint8Array(rows * cols);
+		const g = new Uint8Array(MAX * MAX);
 		for (let i = 0; i < g.length; i++) {
 			g[i] = Math.random() < prob ? 1 : 0;
 		}
 		setGrid(g);
-	}, [rows, cols, randomProbability]);
+	}, [randomProbability]);
 
 	const stepGeneration = useCallback(() => {
-		const out = new Uint8Array(rows * cols);
-		for (let r = 0; r < rows; r++) {
-			for (let c = 0; c < cols; c++) {
+		const out = new Uint8Array(MAX * MAX);
+		for (let r = 0; r < MAX; r++) {
+			for (let c = 0; c < MAX; c++) {
 				let n = 0;
 				for (let dr = -1; dr <= 1; dr++) {
 					for (let dc = -1; dc <= 1; dc++) {
 						if (dr === 0 && dc === 0) continue;
 						let rr = r + dr;
 						let cc = c + dc;
-						if (wrap) {
-							if (rr < 0) rr = rows - 1;
-							else if (rr >= rows) rr = 0;
-							if (cc < 0) cc = cols - 1;
-							else if (cc >= cols) cc = 0;
-						} else {
-							if (rr < 0 || rr >= rows || cc < 0 || cc >= cols) continue;
-						}
-						n += grid[rr * cols + cc];
+						if (rr < 0 || rr >= MAX || cc < 0 || cc >= MAX) continue;
+						n += grid[rr * MAX + cc];
 					}
 				}
-				const alive = grid[r * cols + c] === 1;
-				out[r * cols + c] = (alive && (n === 2 || n === 3)) || (!alive && n === 3) ? 1 : 0;
+				const alive = grid[r * MAX + c] === 1;
+				out[r * MAX + c] = (alive && rules.survive.includes(n)) || (!alive && rules.birth.includes(n)) ? 1 : 0;
 			}
 		}
 		return out;
-	}, [grid, rows, cols, wrap]);
+	}, [grid, rules]);
 
 	const draw = useCallback(() => {
 		const canvas = canvasRef.current;
@@ -164,7 +176,7 @@ export default forwardRef(function GameOfLife(
 
 		ctx.fillStyle = rgbToCss(currentPrimary.current);
 
-		const g = gridRef.current;
+		const g = displayRef.current;
 
 		for (let r = 0; r < rows; r++) {
 			const y = r * cellSize;
@@ -175,10 +187,9 @@ export default forwardRef(function GameOfLife(
 			}
 		}
 
-		//set opacity to 0.5
 		ctx.save();
 
-		ctx.globalAlpha = (showGrid ? opacityProgressRef.current : 1 - opacityProgressRef.current);
+		ctx.globalAlpha = Math.max(0, opacityProgressRef.current);
 
 		ctx.strokeStyle = rgbToCss(currentSecondary.current); 
 		ctx.lineWidth = borderWidth.current;
@@ -195,7 +206,7 @@ export default forwardRef(function GameOfLife(
 		}
 		ctx.stroke();
 		ctx.restore();
-	}, [rows, cols, cellSize, showGrid]);
+	}, [rows, cols, cellSize]);
 
 	useEffect(() => {
 		const stepInterval = speed > 0 ? 1000 / speed : Infinity; //updates per second
@@ -210,15 +221,19 @@ export default forwardRef(function GameOfLife(
 			if (runningRef.current) {
 				accRef.current += dt;
 				while (accRef.current >= stepInterval) {
-					setGrid((prev) => stepGeneration(prev, rows, cols, wrap));
+					setGrid(stepGeneration());
 					accRef.current -= stepInterval;
 				}
 			}
 
 			const inc = colorTransition > 0 ? dt / colorTransition : 1;
 
-			if (opacityProgressRef.current < 1) {
+			if (opacityProgressRef.current < 1 && showGrid) {
 				opacityProgressRef.current = Math.min(1, opacityProgressRef.current + inc);
+			}
+			
+			if (opacityProgressRef.current > 0 && !showGrid) {
+				opacityProgressRef.current = Math.max(0, opacityProgressRef.current - inc);
 			}
 
 			if (transitionProgressRef.current < 1) {
@@ -251,10 +266,10 @@ export default forwardRef(function GameOfLife(
 			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 			rafRef.current = null;
 		};
-	}, [speed, stepGeneration, draw]);
+	}, [speed, showGrid, stepGeneration, draw]);
 
 	useEffect(() => {
-		setCellSize(initCellSize * zoom / 100);
+		setCellSize(Math.floor(initCellSize * zoom / 100));
 	}, [zoom]);
 
 	const toggleCellAt = useCallback(
@@ -270,10 +285,13 @@ export default forwardRef(function GameOfLife(
 			const c = Math.floor(x / scaleX);
 			const r = Math.floor(y / scaleY);
 			if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+			const xDiff = Math.floor((MAX - cols) / 2);
+			const yDiff = Math.floor((MAX - rows) / 2);
 			setGrid((prev) => {
 				const next = new Uint8Array(prev);
-				if (isSet === null) next[r * cols + c] = 1 - next[r * cols + c];
-				else next[r * cols + c] = isSet ? 1 : 0;
+				const coord = (r + yDiff) * MAX + (c + xDiff);
+				if (isSet === null) next[coord] = 1 - next[coord];
+				else next[coord] = isSet ? 1 : 0;
 				return next;
 			});
 		},
@@ -300,10 +318,6 @@ export default forwardRef(function GameOfLife(
 
 		cssW = cssW + borderWidth.current;
 		cssH = cssH + borderWidth.current;
-
-		//console.log(rect.width, rect.height);
-
-		//console.log(cssW, cssH, cellSize);
 
 		const dpr = window.devicePixelRatio || 1;
 		canvas.width = cssW * dpr;
@@ -351,17 +365,6 @@ export default forwardRef(function GameOfLife(
 		const newCols = Math.floor(calcWidth / cellSize);
 		const newRows = Math.floor(calcHeight / cellSize);
 
-		const newGrid = new Uint8Array(newRows * newCols);
-
-		const oldGrid = gridRef.current;
-
-		for (let i = 0; i < rows; i++) {
-			for (let j = 0; j < cols; j++) {
-				newGrid[i * newCols + j] = oldGrid[i * cols + j];
-			}
-		}
-
-		setGrid(newGrid);
 		setCols(newCols);
 		setRows(newRows);
 
@@ -372,9 +375,9 @@ export default forwardRef(function GameOfLife(
 	}, [initialRandom, randomProbability, randomizeGrid]);
 
 	useEffect(() => {
-		gridRef.current = grid;
+		displayRef.current = display;
 		draw();
-	}, [grid, draw]);
+	}, [display, draw]);
 
 	useImperativeHandle(ref, () => {
 		return {
