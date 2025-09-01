@@ -1,5 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 
+// Helper Functions
+
 function hexToRGB(hex) {
     const parsed = hex.replace("#", "");
     const bigint = parseInt(parsed, 16);
@@ -12,6 +14,12 @@ function hexToRGB(hex) {
 function rgbToCss(rgb) {
     const [r, g, b] = rgb.map(v => Math.round(Math.max(0, Math.min(255, v))));
     return `rgb(${r}, ${g}, ${b})`;
+}
+
+function readColor(){
+    return [
+        hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--primary-color").trim())
+    ]
 }
 
 function calc(coord, max, off, v){
@@ -29,6 +37,8 @@ function calc(coord, max, off, v){
     return [coord + off, v];
 }
 
+// Component
+
 export default function ParticleNetwork({
     numParticles = 100,
     particleRadius = 2,
@@ -45,39 +55,14 @@ export default function ParticleNetwork({
     style = {},
     className = "",
 }) {
+
+    // Wrapper
+
     const wrapperRef = useRef(null);
+
+    // Canvas 
+
     const canvasRef = useRef(null);
-    const particlesRef = useRef([]);
-    const rafRef = useRef(null);
-    const pointerRef = useRef({ x: 0, y: 0, active: false });
-    const pointerDown = useRef(false);
-
-    const currentColorRef = useRef([0, 0, 0]);
-    const targetColorRef = useRef([0, 0, 0]);
-    const transitionProgressRef = useRef(1);
-
-    const readPrimaryColor = useCallback(
-        () => getComputedStyle(document.documentElement).getPropertyValue("--primary-color").trim(), []
-    );
-
-    useEffect(() => {
-        const initial = readPrimaryColor();
-        const parsed = hexToRGB(initial);
-        currentColorRef.current = parsed.slice();
-        targetColorRef.current = parsed.slice();
-        transitionProgressRef.current = 1;
-    }, [readPrimaryColor]);
-
-    useEffect(() => {
-        const onStorage = () => {
-            const newCol = readPrimaryColor();
-            const rgb = hexToRGB(newCol);
-            targetColorRef.current = rgb;
-            transitionProgressRef.current = 0;
-        };
-        window.addEventListener("themeStorage", onStorage);
-        return () => window.removeEventListener("themeStorage", onStorage);
-    }, []);
 
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -98,6 +83,40 @@ export default function ParticleNetwork({
     useEffect(() => {
         resizeCanvas();
     }, []);
+
+    // Render Refs
+
+    const particlesRef = useRef([]);
+    const rafRef = useRef(null);
+    const pointerRef = useRef({ x: 0, y: 0, active: false });
+    const pointerDown = useRef(false);
+
+    // Color Refs
+
+    const currentColorRef = useRef([0, 0, 0]);
+    const targetColorRef = useRef([0, 0, 0]);
+    const transitionProgressRef = useRef(1);
+
+    // Theme
+
+    useEffect(() => {
+        const rgb = readColor();
+        currentColorRef.current = rgb[0];
+        targetColorRef.current = rgb[0];
+        transitionProgressRef.current = 1;
+    }, [readColor]);
+
+    useEffect(() => {
+        const onStorage = () => {
+            const rgb = readColor();
+            targetColorRef.current = rgb[0];
+            transitionProgressRef.current = 0;
+        };
+        window.addEventListener("themeStorage", onStorage);
+        return () => window.removeEventListener("themeStorage", onStorage);
+    }, []);
+
+    // Loop Functions
 
     const freezeTimer = 300;
 

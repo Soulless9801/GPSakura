@@ -1,4 +1,4 @@
-import { useState, useRef, forwardRef } from "react";
+import { useState, useRef } from "react";
 
 import GameOfLife from "./GameOfLife.jsx";
 import Slider from "./Slider.jsx"
@@ -9,11 +9,13 @@ export default function GameOfLifeDemo() {
 
     const [interactive, setInteractive] = useState(true);
     const [running, setRunning] = useState(true);
-    const [wrap, setWrap] = useState(true);
     const [showGrid, setShowGrid] = useState(true);
 
     const [speed, setSpeed] = useState(8);
     const [zoom, setZoom] = useState(100);
+
+    const minZoom = useRef(25);
+    const maxZoom = useRef(300);
 
     const gameRef = useRef(null);
 
@@ -30,7 +32,6 @@ export default function GameOfLifeDemo() {
                             zoom={zoom}
                             interactive={interactive}
                             running={running}
-                            wrap={wrap}
                             showGrid={showGrid}
                         />
                     </div>
@@ -72,9 +73,9 @@ export default function GameOfLifeDemo() {
                                 </div>
                                 <div className='col-4'>
                                     <button className="cellButton" onClick={() => {
-                                        setWrap(prev => !prev);
+                                        if (gameRef.current) gameRef.current.randomize();
                                     }}>
-                                        {wrap ? "No Wrap" : "Wrap"}
+                                        Random
                                     </button>
                                 </div>
                                 <div className='col-4'>
@@ -85,15 +86,15 @@ export default function GameOfLifeDemo() {
                                     </button>
                                 </div>
                             </div>
-                            <Slider min={25} max={300} value={zoom} unit={"%"} onChange={e => setZoom(e)} label="Zoom"/>
+                            <Slider min={minZoom.current} max={maxZoom.current} value={zoom} unit={"%"} onChange={e => setZoom(e)} label="Zoom"/>
                             <div className='row g-1'>
                                 <div className='col-6'>
-                                    <button className="cellButton" onClick={() => setZoom(prev => Math.min(Number(prev) + 10, 300))}>
+                                    <button className="cellButton" onClick={() => setZoom(prev => Math.min(Number(prev) + 10, maxZoom.current))}>
                                         Zoom In
                                     </button>
                                 </div>
                                 <div className='col-6'>
-                                    <button className="cellButton" onClick={() => setZoom(prev => Math.max(Number(prev) - 10, 50))}>
+                                    <button className="cellButton" onClick={() => setZoom(prev => Math.max(Number(prev) - 10, minZoom.current))}>
                                         Zoom Out
                                     </button>
                                 </div>

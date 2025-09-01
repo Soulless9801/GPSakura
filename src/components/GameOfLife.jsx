@@ -1,5 +1,7 @@
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from "react";
 
+// Helper Functions
+
 function hexToRGB(hex) {
     const parsed = hex.replace("#", "");
     const bigint = parseInt(parsed, 16);
@@ -13,6 +15,15 @@ function rgbToCss(rgb) {
     const [r, g, b] = rgb.map(v => Math.round(Math.max(0, Math.min(255, v))));
     return `rgb(${r}, ${g}, ${b})`;
 }
+
+function readColor() {
+	return [
+		hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--primary-color").trim()),
+		hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--secondary-color").trim())
+	];
+}
+
+// Component
 
 export default forwardRef(function GameOfLife(
 	{
@@ -38,14 +49,56 @@ export default forwardRef(function GameOfLife(
 	ref
 ) {
 
+	// Wrapper
+
 	const wrapperRef = useRef(null);
+
+	// Canvas
+
+	const canvasRef = useRef(null);
+
+	// Sizing
 
 	const [calcWidth, setCalcWidth] = useState(width);
 	const [calcHeight, setCalcHeight] = useState(height);
 
+	const [cellSize, setCellSize] = useState(initCellSize);
+
+	const resizeCanvas = useCallback(() => {
+        const canvas = canvasRef.current;
+        const wrapper = wrapperRef.current;
+        if (!canvas || !wrapper) return;
+        if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
+        if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
+
+		const rect = wrapper.getBoundingClientRect();
+
+		let cssW = rect.width;
+		let cssH = rect.height;
+
+		cssW = Math.floor(cssW / cellSize) * cellSize;
+		cssH = Math.floor(cssH / cellSize) * cellSize;
+
+		setCalcWidth(cssW);
+		setCalcHeight(cssH);
+
+		cssW = cssW + borderWidth.current;
+		cssH = cssH + borderWidth.current;
+
+		const dpr = window.devicePixelRatio || 1;
+		canvas.width = cssW * dpr;
+		canvas.height = cssH * dpr;
+		canvas.style.width = cssW + "px";
+		canvas.style.height = cssH + "px";
+        const ctx = canvas.getContext("2d");
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }, [width, height, cellSize]);
+
 	useEffect(() => {
-		resizeCanvas(); //first render
-	}, []);
+		resizeCanvas();
+	}, [cellSize])
+
+	// Color Refs
 
 	const currentPrimary = useRef([0, 0, 0]);
 	const targetPrimary = useRef([0, 0, 0]);
@@ -56,18 +109,6 @@ export default forwardRef(function GameOfLife(
 	const opacityProgressRef = useRef(1);
 
 	const borderWidth = useRef(1);
-
-	const readColor = useCallback(
-		//return both colors
-		() => {
-			return [
-				hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--primary-color").trim()),
-				hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--secondary-color").trim()),
-				hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--bg-color-primary").trim())
-			];
-		},
-		[]
-	);
 
 	useEffect(() => {
 		const rgb = readColor();
@@ -88,7 +129,8 @@ export default forwardRef(function GameOfLife(
 
 	}, [readColor]);
 
-	const canvasRef = useRef(null);
+
+	// Render Refs
 
 	const rafRef = useRef(null);
 	const lastTimeRef = useRef(performance.now());
@@ -102,9 +144,9 @@ export default forwardRef(function GameOfLife(
 		runningRef.current = running;
 	}, [running])
 
-	const MAX = 200; // lmao
+	// Display + Grid
 
-	const [cellSize, setCellSize] = useState(initCellSize);
+	const MAX = 200; // lmao
 
 	const [cols, setCols] = useState(Math.floor(calcWidth / cellSize));
 	const [rows, setRows] = useState(Math.floor(calcHeight / cellSize));
@@ -133,18 +175,7 @@ export default forwardRef(function GameOfLife(
 		setDisplay(newDisplay);
 	}, [grid, rows, cols]);
 
-	const clearGrid = useCallback(() => {
-		const g = new Uint8Array(MAX * MAX);
-		setGrid(g);
-	}, []);
-
-	const randomizeGrid = useCallback((prob = randomProbability) => {
-		const g = new Uint8Array(MAX * MAX);
-		for (let i = 0; i < g.length; i++) {
-			g[i] = Math.random() < prob ? 1 : 0;
-		}
-		setGrid(g);
-	}, [randomProbability]);
+	// Step Generation
 
 	const stepGeneration = useCallback(() => {
 		const out = new Uint8Array(MAX * MAX);
@@ -166,6 +197,8 @@ export default forwardRef(function GameOfLife(
 		}
 		return out;
 	}, [grid, rules]);
+
+	// Draw Function
 
 	const draw = useCallback(() => {
 		const canvas = canvasRef.current;
@@ -207,6 +240,8 @@ export default forwardRef(function GameOfLife(
 		ctx.stroke();
 		ctx.restore();
 	}, [rows, cols, cellSize]);
+
+	// Render + Transition Loop
 
 	useEffect(() => {
 		const stepInterval = speed > 0 ? 1000 / speed : Infinity; //updates per second
@@ -269,8 +304,11 @@ export default forwardRef(function GameOfLife(
 	}, [speed, showGrid, stepGeneration, draw]);
 
 	useEffect(() => {
-		setCellSize(Math.floor(initCellSize * zoom / 100));
-	}, [zoom]);
+		displayRef.current = display;
+		draw();
+	}, [display, draw]);
+
+	// Interaction
 
 	const toggleCellAt = useCallback(
 		(clientX, clientY, isSet = null) => {
@@ -297,40 +335,6 @@ export default forwardRef(function GameOfLife(
 		},
 		[rows, cols, cellSize, interactive]
 	);
-
-	const resizeCanvas = useCallback(() => {
-        const canvas = canvasRef.current;
-        const wrapper = wrapperRef.current;
-        if (!canvas || !wrapper) return;
-        if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
-        if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
-
-		const rect = wrapper.getBoundingClientRect();
-
-		let cssW = rect.width;
-		let cssH = rect.height;
-
-		cssW = Math.floor(cssW / cellSize) * cellSize;
-		cssH = Math.floor(cssH / cellSize) * cellSize;
-
-		setCalcWidth(cssW);
-		setCalcHeight(cssH);
-
-		cssW = cssW + borderWidth.current;
-		cssH = cssH + borderWidth.current;
-
-		const dpr = window.devicePixelRatio || 1;
-		canvas.width = cssW * dpr;
-		canvas.height = cssH * dpr;
-		canvas.style.width = cssW + "px";
-		canvas.style.height = cssH + "px";
-        const ctx = canvas.getContext("2d");
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }, [width, height, cellSize]);
-
-	useEffect(() => {
-		resizeCanvas();
-	}, [cellSize])
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -361,6 +365,25 @@ export default forwardRef(function GameOfLife(
 		};
 	}, [toggleCellAt]);
 
+	// Grid Functions
+
+	const clearGrid = useCallback(() => {
+		const g = new Uint8Array(MAX * MAX);
+		setGrid(g);
+	}, []);
+
+	const randomizeGrid = useCallback((prob = randomProbability) => {
+		const g = new Uint8Array(MAX * MAX);
+		for (let i = 0; i < g.length; i++) {
+			g[i] = Math.random() < prob ? 1 : 0;
+		}
+		setGrid(g);
+	}, [randomProbability]);
+
+	useEffect(() => {
+		setCellSize(Math.floor(initCellSize * zoom / 100));
+	}, [zoom]);
+
 	useEffect(() => {
 		const newCols = Math.floor(calcWidth / cellSize);
 		const newRows = Math.floor(calcHeight / cellSize);
@@ -374,10 +397,7 @@ export default forwardRef(function GameOfLife(
 		if (initialRandom) randomizeGrid(randomProbability);
 	}, [initialRandom, randomProbability, randomizeGrid]);
 
-	useEffect(() => {
-		displayRef.current = display;
-		draw();
-	}, [display, draw]);
+	// Exposed Functions
 
 	useImperativeHandle(ref, () => {
 		return {
@@ -386,9 +406,14 @@ export default forwardRef(function GameOfLife(
 			},
 			step() {
 				setGrid(stepGeneration());
+			},
+			randomize() {
+				randomizeGrid(randomProbability);
 			}
 		}
 	}, [clearGrid, stepGeneration]);
+
+	// Return
 
 	return (
 		<div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: interactive ? 'none' : 'auto' }}>
