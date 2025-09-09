@@ -6,6 +6,7 @@ import USACO from './pages/USACO.jsx';
 import Blog from './pages/Blog.jsx';
 import Particle from './pages/Particle.jsx';
 import CellAutomata from './pages/CellAutomata.jsx';
+import Fractals from './pages/Fractals.jsx';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
                 <Route path="blog" element={<Blog />} />
                 <Route path="particle" element={<Particle />} />
                 <Route path="cell" element={<CellAutomata />} />
+                <Route path="fractals" element={<Fractals />} />
             </Routes>
         </HashRouter>
     </div>

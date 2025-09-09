@@ -74,8 +74,8 @@ export default function ParticleNetwork({
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;
         const cssH = canvas.clientHeight || wrapper.clientHeight;
-        canvas.width = Math.max(1, Math.floor(cssW * dpr));
-        canvas.height = Math.max(1, Math.floor(cssH * dpr));
+        canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
         const ctx = canvas.getContext("2d");
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height]);

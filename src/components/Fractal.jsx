@@ -20,11 +20,12 @@ function readColor() {
 }
 
 export default function Fractal({
-	type = "koch",
-	width = 800,
-	height = 500,
+	type,
+	width,
+	height,
+	depth,
+	speed,
 	lineWidth = 1,
-	kochDepth = 2,
 	colorTransition = 300,
 	className = "",
 	style = {},
@@ -48,12 +49,10 @@ export default function Fractal({
 		const dpr = window.devicePixelRatio || 1;
 		const cssW = canvas.clientWidth || wrapper.clientWidth;
 		const cssH = canvas.clientHeight || wrapper.clientHeight;
-		canvas.width = cssW * dpr;
-		canvas.height = cssH * dpr;
-		canvas.style.width = cssW + "px";
-		canvas.style.height = cssH + "px";
-		const canvasCtx = canvas.getContext("2d");
-		canvasCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+		const ctx = canvas.getContext("2d");
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	}, [width, height]);
 
 	useEffect(() => {
@@ -66,6 +65,8 @@ export default function Fractal({
 	const lastTimeRef = useRef(performance.now());
 
 	// Color Refs
+
+	const colorRafRef = useRef(null);
 
 	const currentColorRef = useRef([0, 0, 0]);
 	const targetColorRef = useRef([0, 0, 0]);
@@ -104,7 +105,7 @@ export default function Fractal({
 	}, []);
 
 	// Koch Snowflake
-	const drawKoch = useCallback((lineWidth) => {
+	const drawKoch = useCallback(() => {
 
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -114,15 +115,13 @@ export default function Fractal({
 		const W = ctx.canvas.clientWidth;
 		const H = ctx.canvas.clientHeight;
 
-		console.log("Canvas:", W, H);
-
 		ctx.clearRect(0, 0, W, H);
 
 		ctx.fillStyle = rgbToCss(currentColorRef.current);
 
-		const size = Math.min(W, H) * 0.7;
+		const size = Math.min(W, H) * 0.8;
 		const cx = W / 2;
-		const cy = H / 2 + size * 0.2;
+		const cy = H / 2 + size / 12;
 
 		const p0 = { x: cx - size / 2, y: cy + (Math.sqrt(3) / 6) * size };
 		const p1 = { x: cx + size / 2, y: cy + (Math.sqrt(3) / 6) * size };
@@ -149,23 +148,135 @@ export default function Fractal({
 
 		ctx.lineWidth = lineWidth;
 		ctx.beginPath();
-		segment(p0, p1, kochDepth);
-		segment(p1, p2, kochDepth);
-		segment(p2, p0, kochDepth);
+		segment(p0, p1, depth);
+		segment(p1, p2, depth);
+		segment(p2, p0, depth);
 		ctx.stroke();
 
 		fillFractal();
-	}, [kochDepth]);
 
-	useEffect(() => {
-		fillFractal();
-	}, []);
+	}, [depth, lineWidth]);
+
+	const drawSierpinski = useCallback(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+
+		const ctx = canvas.getContext("2d");
+
+		const W = ctx.canvas.clientWidth;
+		const H = ctx.canvas.clientHeight;
+
+		ctx.clearRect(0, 0, W, H);
+
+		ctx.fillStyle = rgbToCss(currentColorRef.current);
+
+		const size = Math.min(W, H) * 0.8;
+		const cx = W / 2;
+		const cy = H / 2 + size / 12;
+
+		const A = { x: cx - size / 2, y: cy + (Math.sqrt(3) / 6) * size };
+		const B = { x: cx + size / 2, y: cy + (Math.sqrt(3) / 6) * size };
+		const C = { x: cx, y: cy - (Math.sqrt(3) / 3) * size };
+
+		let p = { x: (A.x + B.x + C.x) / 3, y: (A.y + B.y + C.y) / 3 };
+
+		const pointsPerFrame = speed;
+		const pointSize = lineWidth;
+
+		const step = () => {
+			ctx.beginPath();
+			for (let i = 0; i < pointsPerFrame; i++) {
+				const r = Math.random();
+				const target = r < 1 / 3 ? A : r < 2 / 3 ? B : C;
+				p.x = (p.x + target.x) / 2;
+				p.y = (p.y + target.y) / 2;
+				ctx.rect(p.x, p.y, pointSize, pointSize);
+			}
+			ctx.fill();
+			rafRef.current = requestAnimationFrame(step);
+		};
+
+		rafRef.current = requestAnimationFrame(step);
+
+	}, [speed, lineWidth])
+
+	const drawFern = useCallback(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+
+		const ctx = canvas.getContext("2d");
+
+		const W = ctx.canvas.clientWidth;
+		const H = ctx.canvas.clientHeight;
+
+		ctx.clearRect(0, 0, W, H);
+
+		ctx.fillStyle = rgbToCss(currentColorRef.current);
+
+		const size = Math.min(W, H) * 0.8;
+
+		const world = { minX: -2.1820, maxX: 2.6558, minY: 0, maxY: 9.9983 };
+
+		const worldWidth = world.maxX - world.minX;
+		const worldHeight = world.maxY - world.minY;
+
+		const scaleX = size / worldWidth;
+		const scaleY = size / worldHeight;
+
+		// Compute offsets to center
+		const offsetX = (W - worldWidth * scaleX) / 2;
+		const offsetY = (H - worldHeight * scaleY) / 2;
+
+		// Mapping functions
+		const sx = x => (x - world.minX) * scaleX + offsetX;
+		const sy = y => H - ((y - world.minY) * scaleY + offsetY);
+
+		let x = 0, y = 0;
+
+		const pointsPerFrame = speed;
+		const pointSize = lineWidth;
+
+		const step = () => {
+			ctx.beginPath();
+			for (let i = 0; i < pointsPerFrame; i++) {
+				const r = Math.random() * 100;
+				let xNew, yNew;
+				if (r < 1) {
+					xNew = 0; yNew = 0.16 * y;
+				} else if (r < 86) {
+					xNew = 0.85 * x + 0.04 * y; yNew = -0.04 * x + 0.85 * y + 1.6;
+				} else if (r < 93) {
+					xNew = 0.2 * x - 0.26 * y; yNew = 0.23 * x + 0.22 * y + 1.6;
+				} else {
+					xNew = -0.15 * x + 0.28 * y; yNew = 0.26 * x + 0.24 * y + 0.44;
+				}
+				x = xNew; y = yNew;
+				ctx.rect(sx(x), sy(y), pointSize, pointSize);
+			}
+			ctx.fill();
+			rafRef.current = requestAnimationFrame(step);
+		};
+
+		rafRef.current = requestAnimationFrame(step);
+	}, [speed, lineWidth]);
 
 	useEffect(() => {
 		const cut = () => {
+
+			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
 			switch (type) {
 				case "koch": {
-					drawKoch(lineWidth);
+					drawKoch();
+					break;
+				}
+				case "sierpinski": {
+					//drawSierpinski();
+					drawSierpinski();
+					break;
+				}
+				case "fern": {
+					drawFern();
 					break;
 				}
 				default: {
@@ -187,7 +298,7 @@ export default function Fractal({
 			window.removeEventListener("resize", handleResize);
 		};
 
-	}, [type, lineWidth, resizeCanvas]);
+	}, [type, depth, speed, lineWidth, resizeCanvas]);
 
 	useEffect(() => {
 		lastTimeRef.current = performance.now();
@@ -214,13 +325,13 @@ export default function Fractal({
 				fillFractal();
 			}
 
-			rafRef.current = requestAnimationFrame(loop);
+			colorRafRef.current = requestAnimationFrame(loop);
 		};
 
-		rafRef.current = requestAnimationFrame(loop);
+		colorRafRef.current = requestAnimationFrame(loop);
 
 		return () => {
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+			if (colorRafRef.current) cancelAnimationFrame(colorRafRef.current);
 		};
 		}, [colorTransition]);
 

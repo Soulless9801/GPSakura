@@ -47,7 +47,7 @@
   height: auto;
 }
 
-.nav-item .custom-select__selected {
+.nav-item .customSelectSelected {
   border: none !important;
   padding: 8px !important;
   pointer-events: auto;

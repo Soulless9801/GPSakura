@@ -122,6 +122,7 @@ export default function Navbar() {
                                     options={[
                                         { value: 'Particle', label: 'Particle Network', to: '/particle' },
                                         { value: 'Cell', label: 'Cell Automata', to: '/cell' },
+                                        { value: 'Fractal', label: 'Fractals', to: '/fractals' },
                                     ]}
                                     defaultIndex='0'
                                     onChange={e => navigate(e.to)}
