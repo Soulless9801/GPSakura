@@ -56,7 +56,7 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
             <div className={`customSlider ${disabled ? " disabled" : ""}`}>
                 <div className="customSliderRow">
                     <div className="customSliderLabel">
-                        <span>{label}:</span>
+                        <span>{label}</span>
                         <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => setInternalValue(e)} />
                         <span>{unit ? unit : ""}</span>
                     </div>

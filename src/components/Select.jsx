@@ -35,15 +35,15 @@ export default function Select({ options = [], defaultIndex, onChange, fixedSele
     }, [open, hover]);
 
     return (
-        <div className="custom-select">
-            <div className="custom-select__container" ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-                <div className="custom-select__selected" onClick={() => setOpen((prev) => !prev)}>
+        <div className="customSelect">
+            <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+                <div className="customSelectSelected" onClick={() => setOpen((prev) => !prev)}>
                     {fixedSelect ? placeholder : value.label}
-                    <span className="custom-select__arrow">{open ? "↑" : "↓"}</span>
+                    <span className="customSelectArrow">{open ? "↑" : "↓"}</span>
                 </div>
-                <div className={`custom-select__options${showMenu ? " show" : ""}${align === "right" ? " right" : ""}`} ref={menuRef}>
+                <div className={`customSelectOptions${showMenu ? " show" : ""}${align === "right" ? " right" : ""}`} ref={menuRef}>
                     {options.map((option) => (
-                        <div key={option.value} className={`custom-select__option${value && value.value === option.value ? " selected" : ""}`} onClick={() => handleSelect(option)}>
+                        <div key={option.value} className={`customSelectOption${value && value.value === option.value ? " selected" : ""}`} onClick={() => handleSelect(option)}>
                             {option.label}
                         </div>
                     ))}

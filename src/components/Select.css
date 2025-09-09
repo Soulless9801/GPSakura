@@ -1,9 +1,9 @@
-.custom-select {
+.customSelect {
     position: relative;
     display: inline-block;
 }
 
-.custom-select__selected {
+.customSelectSelected {
     text-align: left;
     transition: var(--transition-timers);
     cursor: pointer;
@@ -14,16 +14,16 @@
     user-select: none;
 }
 
-.custom-select__selected:hover {
+.customSelectSelected:hover {
     background-color: var(--bg-color-hover);
 }
 
-.custom-select__arrow {
+.customSelectArrow {
     float: right;
     margin-left: 0.5em;
 }
 
-.custom-select__options {
+.customSelectOptions {
     transition: var(--dropdown-timers);
     opacity: 0;
     padding: 0px;
@@ -41,19 +41,19 @@
     box-shadow: 2px 2px 2px 2px var(--bg-color-primary);
 }
 
-.custom-select__options.right {
+.customSelectOptions.right {
     right: 0;
     left: auto;
 }
 
-.custom-select__options.show {
+.customSelectOptions.show {
     opacity: 1;
     visibility: visible;
     pointer-events: all;
     transform: translateY(0);
 }
 
-.custom-select__option {
+.customSelectOption {
     transition: var(--transition-timers);
     padding: var(--padding-dropdown);
     cursor: pointer;
@@ -63,7 +63,7 @@
     text-align: left;
 }
 
-.custom-select__option:hover,
-.custom-select__option.selected {
+.customSelectOption:hover,
+.customSelectOption.selected {
     background: var(--bg-color-hover);
 }

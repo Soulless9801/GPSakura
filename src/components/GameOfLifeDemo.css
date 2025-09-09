@@ -14,14 +14,6 @@
     flex-direction: column;
     gap: 1rem;
 }
-.cellSliderLabel {
-    transition: var(--transition-timers);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: space-between;
-    white-space: nowrap;
-}
 .cellButton {
     transition: var(--transition-timers);
     background: transparent;
@@ -35,9 +27,5 @@
 .cellButton:hover {
     background-color: var(--bg-color-hover);
     color: var(--primary-color);
-}
-
-.cellSliderLabel.disabled {
-    color: var(--disabled-color);
 }
 
