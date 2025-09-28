@@ -1,5 +1,5 @@
-import GenericButton from './GenericButton';
-import TextParser from './TextParser';
+import GenericButton from '/src/components/tools/GenericButton/GenericButton.jsx';
+import TextParser from '/src/components/tools/TextParser/TextParser.jsx';
 
 import './BlogPost.css'
 

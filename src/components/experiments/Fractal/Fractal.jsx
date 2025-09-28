@@ -1,23 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-
-function hexToRGB(hex) {
-	if (!hex) return [0,0,0];
-	const h = hex.startsWith("#") ? hex.slice(1) : hex;
-	const n = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
-	return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-function rgbToCss(rgb) {
-    const [r, g, b] = rgb.map(v => Math.round(Math.max(0, Math.min(255, v))));
-    return `rgb(${r}, ${g}, ${b})`;
-}
-
-function readColor() {
-	return [
-		hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--primary-color").trim()),
-		hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--secondary-color").trim())
-	];
-}
+import { hexToRGB, rgbToCss, readColor } from "/src/utils/colors.js";
 
 export default function Fractal({
 	type,

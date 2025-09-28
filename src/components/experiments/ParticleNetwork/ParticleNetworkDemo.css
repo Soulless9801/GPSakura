@@ -23,20 +23,6 @@
     white-space: nowrap;
 }
 
-.particleButton {
-    transition: var(--transition-timers);
-    background: transparent;
-    border: var(--border-width) solid var(--primary-color);
-    color: var(--primary-color);
-    cursor: pointer;
-    padding: var(--padding-dropdown);
-    border-radius: var(--table-border-radius-secondary);
-}
-.particleButton:hover {
-    background-color: var(--bg-color-hover);
-    color: var(--primary-color);
-}
-
 .particleSliderLabel.disabled {
     color: var(--disabled-color);
 }

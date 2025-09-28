@@ -1,12 +1,12 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 
-import Home from './pages/Home.jsx';
-import Codeforces from './pages/Codeforces.jsx';
-import USACO from './pages/USACO.jsx';
-import Blog from './pages/Blog.jsx';
-import Particle from './pages/Particle.jsx';
-import CellAutomata from './pages/CellAutomata.jsx';
-import Fractals from './pages/Fractals.jsx';
+import Home from '/src/pages/Home.jsx';
+import Codeforces from '/src/pages/Coding/Codeforces.jsx';
+import USACO from '/src/pages/Coding/USACO.jsx';
+import Blog from '/src/pages/Blog.jsx';
+import Particle from '/src/pages/Experiments/Particle.jsx';
+import CellAutomata from '/src/pages/Experiments/CellAutomata.jsx';
+import Fractals from '/src/pages/Experiments/Fractals.jsx';
 
 export default function App() {
   return (

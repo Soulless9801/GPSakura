@@ -39,3 +39,18 @@ body {
   color: var(--primary-color) !important;
   transition: var(--transition-timers) !important;
 }
+
+button {
+  transition: var(--transition-timers);
+  background: transparent;
+  border: var(--border-width) solid var(--primary-color);
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: var(--padding-dropdown);
+  border-radius: var(--table-border-radius-secondary) !important;
+}
+
+button:hover {
+  background-color: var(--bg-color-hover);
+  color: var(--primary-color);
+}

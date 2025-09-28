@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-import Form from './Form.jsx';
+import Form from '/src/components/tools/Form/Form.jsx';
 
 import "./Slider.css";
 

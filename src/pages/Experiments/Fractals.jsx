@@ -9,11 +9,11 @@ import 'bootstrap'
 
 import '@fortawesome/fontawesome-free/css/all.css'
 
-import Navbar from '/src/components/Navbar.jsx'
+import Navbar from '/src/components/tools/Navbar/Navbar.jsx'
 
-import PageTitle from '/src/components/PageTitle.jsx'
+import PageTitle from '/src/components/tools/PageTitle/PageTitle.jsx'
 
-import FractalDemo from '/src/components/FractalDemo.jsx';
+import FractalDemo from '/src/components/experiments/Fractal/FractalDemo.jsx';
 
 export default function Fractals(){
     return (
