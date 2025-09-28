@@ -9,11 +9,11 @@ import 'bootstrap'
 
 import '@fortawesome/fontawesome-free/css/all.css'
 
-import Navbar from '/src/components/Navbar.jsx'
+import Navbar from '/src/components/tools/Navbar/Navbar.jsx'
 
-import PageTitle from '/src/components/PageTitle.jsx'
+import PageTitle from '/src/components/tools/PageTitle/PageTitle.jsx'
 
-import BlogApp from '/src/components/BlogApp.jsx'
+import BlogApp from '/src/components/blog/BlogApp/BlogApp.jsx'
 
 export default function Home(){
     return (

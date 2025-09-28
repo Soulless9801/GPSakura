@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
-import Select from './Select.jsx'
+import Select from '/src/components/tools/Select/Select.jsx'
 
 import './Navbar.css';
 

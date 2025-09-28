@@ -1,8 +1,8 @@
 import { useState } from "react";
 
 import Fractal from "./Fractal.jsx";
-import Select from "./Select.jsx";
-import Slider from "./Slider.jsx";
+import Select from "/src/components/tools/Select/Select.jsx";
+import Slider from "/src/components/tools/Slider/Slider.jsx";
 
 import "./FractalDemo.css";
 

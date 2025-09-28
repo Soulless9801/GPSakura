@@ -1,21 +1,50 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import GameOfLife from "./GameOfLife.jsx";
-import Slider from "./Slider.jsx"
+import Slider from "/src/components/tools/Slider/Slider.jsx"
 
 import "./GameOfLifeDemo.css";
 
+function loadValue(key, defaultValue) {
+    const raw = localStorage.getItem(key);
+    const val = (raw !== null ? JSON.parse(raw) : defaultValue);
+    if (typeof defaultValue === "number") return Number(val);
+    if (typeof defaultValue === "boolean") return Boolean(val);
+    return val;
+}
+
 export default function GameOfLifeDemo() {
 
-    const [interactive, setInteractive] = useState(true);
-    const [running, setRunning] = useState(true);
-    const [showGrid, setShowGrid] = useState(true);
+    const options = [1, 2, 3, 4, 5, 6, 7, 8];
 
-    const [speed, setSpeed] = useState(8);
-    const [zoom, setZoom] = useState(100);
+    const interactiveKey = 'cellAutomataDemoInteractive';
+    const runningKey = 'cellAutomataDemoRunning';
+    const showGridKey = 'cellAutomataDemoShowGrid';
+    const speedKey = 'cellAutomataDemoSpeed';
+    const zoomKey = 'cellAutomataDemoZoom';
+
+    const [interactive, setInteractive] = useState(() => loadValue(interactiveKey, true));
+    const [running, setRunning] = useState(() => loadValue(runningKey, false));
+    const [showGrid, setShowGrid] = useState(() => loadValue(showGridKey, true));
+
+    const [speed, setSpeed] = useState(() => loadValue(speedKey, 8));
+    const [zoom, setZoom] = useState(() => loadValue(zoomKey, 100));
 
     const minZoom = useRef(25);
     const maxZoom = useRef(300);
+
+    const [rules, setRules] = useState({
+        survive: [2, 3],
+		birth: [3]
+	})
+
+    useEffect(() => {
+        localStorage.setItem(interactiveKey, JSON.stringify(interactive));
+        localStorage.setItem(runningKey, JSON.stringify(running));
+        localStorage.setItem(showGridKey, JSON.stringify(showGrid));
+        localStorage.setItem(speedKey, JSON.stringify(speed));
+        localStorage.setItem(zoomKey, JSON.stringify(zoom));
+    }, [interactive, running, showGrid, speed, zoom]);
 
     const gameRef = useRef(null);
 
@@ -29,6 +58,7 @@ export default function GameOfLifeDemo() {
                             width={"100%"}
                             height={"100%"}
                             speed={speed}
+                            rules={rules}
                             zoom={zoom}
                             interactive={interactive}
                             running={running}

@@ -7,9 +7,9 @@ import DT from 'datatables.net-dt';
 
 DataTable.use(DT);
 
-import Select from './Select.jsx';
+import Select from '/src/components/tools/Select/Select.jsx';
 
-import './DataTable.css'
+import '/src/components/tables/DataTable.css'
 
 $.fn.dataTable.ext.oSort['my-numeric-asc'] = (a, b) => {
   if (a === 'unrated') a = '0';

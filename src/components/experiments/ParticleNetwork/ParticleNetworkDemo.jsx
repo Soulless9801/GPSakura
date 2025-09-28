@@ -1,18 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import ParticleNetwork from './ParticleNetwork.jsx';
-import Slider from './Slider.jsx';
+import Slider from '/src/components/tools/Slider/Slider.jsx';
 
 import './ParticleNetworkDemo.css';
 
+function loadValue(key, defaultValue) {
+    const raw = localStorage.getItem(key);
+    const val = (raw !== null ? JSON.parse(raw) : defaultValue);
+	if (typeof defaultValue === "number") return Number(val);
+	if (typeof defaultValue === "boolean") return Boolean(val);
+	return val;
+}
+
 export default function ParticleNetworkDemo() {
-	const [numParticles, setNumParticles] = useState(100);
-	const [particleRadius, setParticleRadius] = useState(2);
-	const [connectionDistance, setConnectionDistance] = useState(120);
-	const [speed, setSpeed] = useState(0.5);
-	const [mouseRadius, setMouseRadius] = useState(60);
-	const [mouseStrength, setMouseStrength] = useState(0.3);
-	const [interactive, setInteractive] = useState(true);
+
+	const numParticlesKey = 'particleNetworkDemoNumParticles';
+	const particleRadiusKey = 'particleNetworkDemoParticleRadius';
+	const connectionDistanceKey = 'particleNetworkDemoConnectionDistance';
+	const speedKey = 'particleNetworkDemoSpeed';
+	const mouseRadiusKey = 'particleNetworkDemoMouseRadius';
+	const mouseStrengthKey = 'particleNetworkDemoMouseStrength';
+	const interactiveKey = 'particleNetworkDemoInteractive';
+
+	const [numParticles, setNumParticles] = useState(() => loadValue(numParticlesKey, 100));
+	const [particleRadius, setParticleRadius] = useState(() => loadValue(particleRadiusKey, 2));
+	const [connectionDistance, setConnectionDistance] = useState(() => loadValue(connectionDistanceKey, 120));
+	const [speed, setSpeed] = useState(() => loadValue(speedKey, 0.5));
+	const [mouseRadius, setMouseRadius] = useState(() => loadValue(mouseRadiusKey, 60));
+	const [mouseStrength, setMouseStrength] = useState(() => loadValue(mouseStrengthKey, 0.3));
+	const [interactive, setInteractive] = useState(() => loadValue(interactiveKey, true));
 
 	const minParticles = 10;
 	const maxParticles = 200;
@@ -27,6 +44,16 @@ export default function ParticleNetworkDemo() {
 	const minMouseStr = 0;
 	const maxMouseStr = 2;
 
+	useEffect(() => {
+		localStorage.setItem(numParticlesKey, JSON.stringify(numParticles));
+		localStorage.setItem(particleRadiusKey, JSON.stringify(particleRadius));
+		localStorage.setItem(connectionDistanceKey, JSON.stringify(connectionDistance));
+		localStorage.setItem(speedKey, JSON.stringify(speed));
+		localStorage.setItem(mouseRadiusKey, JSON.stringify(mouseRadius));
+		localStorage.setItem(mouseStrengthKey, JSON.stringify(mouseStrength));
+		localStorage.setItem(interactiveKey, JSON.stringify(interactive));
+	}, [numParticles, particleRadius, connectionDistance, speed, mouseRadius, mouseStrength, interactive]);
+
 	return (
 		<div className='container-fluid particleDemoWrapper'>
 			<div className='row g-3 align-item-start'>
@@ -34,14 +61,14 @@ export default function ParticleNetworkDemo() {
 					<div style={{ width: '100%', height: '60vh', position: 'relative' }}>
 						<ParticleNetwork
 							numParticles={numParticles}
-							particleRadius={particleRadius}
 							connectionDistance={connectionDistance}
+							width="100%"
+							height="100%"
+							particleRadius={particleRadius}
 							speed={speed}
 							mouseRadius={mouseRadius}
 							mouseStrength={mouseStrength}
 							interactive={interactive}
-							width="100%"
-							height="100%"
 							style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
 						/>
 					</div>

@@ -1,26 +1,5 @@
 import { useRef, useEffect, useCallback } from "react";
-
-// Helper Functions
-
-function hexToRGB(hex) {
-    const parsed = hex.replace("#", "");
-    const bigint = parseInt(parsed, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return [r, g, b];
-}
-
-function rgbToCss(rgb) {
-    const [r, g, b] = rgb.map(v => Math.round(Math.max(0, Math.min(255, v))));
-    return `rgb(${r}, ${g}, ${b})`;
-}
-
-function readColor(){
-    return [
-        hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--primary-color").trim())
-    ]
-}
+import { hexToRGB, rgbToCss, readColor } from "/src/utils/colors.js";
 
 function calc(coord, max, off, v){
     coord = Number(coord);
@@ -40,16 +19,16 @@ function calc(coord, max, off, v){
 // Component
 
 export default function ParticleNetwork({
-    numParticles = 100,
+    numParticles,
+    connectionDistance,
+    width,
+    height,
     particleRadius = 2,
-    maxAccel = 0.12,
-    width = "100vw",
-    height = "100vh",
-    connectionDistance = 120,
     speed = 0.5,
     pointerRadius = 60,
     pointerStrength = 0.3,
     interactive = false,
+    maxAccel = 0.12,
     pointerEvents = false,
     colorTransition = 300,
     style = {},
@@ -172,6 +151,7 @@ export default function ParticleNetwork({
         for (let i = 0; i < desired - current; i++) {
             particlesRef.current.push(new Particle());
         }
+        console.log(desired);
         particlesRef.current.length = desired;
     }, [numParticles, particleRadius, speed, connectionDistance]);
 
