@@ -1,17 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { loadValue } from "/src/utils/storage.js";
 
 import GameOfLife from "./GameOfLife.jsx";
 import Slider from "/src/components/tools/Slider/Slider.jsx"
 
 import "./GameOfLifeDemo.css";
-
-function loadValue(key, defaultValue) {
-    const raw = localStorage.getItem(key);
-    const val = (raw !== null ? JSON.parse(raw) : defaultValue);
-    if (typeof defaultValue === "number") return Number(val);
-    if (typeof defaultValue === "boolean") return Boolean(val);
-    return val;
-}
 
 export default function GameOfLifeDemo() {
 
@@ -33,6 +26,7 @@ export default function GameOfLifeDemo() {
     const minZoom = useRef(25);
     const maxZoom = useRef(300);
 
+    // TODO
     const [rules, setRules] = useState({
         survive: [2, 3],
 		birth: [3]

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { loadValue } from "/src/utils/storage.js";
 
 import Fractal from "./Fractal.jsx";
 import Select from "/src/components/tools/Select/Select.jsx";
@@ -13,7 +14,7 @@ export default function FractalDemo() {
         { value: 'koch', label: 'Koch Snowflake' },
         { value: 'fern', label: 'Barnsley Fern' },
     ];
-
+    //
     const speedFractals = [
         'sierpinski',
         'fern',
@@ -23,9 +24,19 @@ export default function FractalDemo() {
         'koch',
     ];
 
-    const [type, setType] = useState('sierpinski');
-    const [depth, setDepth] = useState(3);
-    const [speed, setSpeed] = useState(500);
+    const typeKey = 'fractalDemoType';
+    const depthKey = 'fractalDemoDepth';
+    const speedKey = 'fractalDemoSpeed';
+
+    const [type, setType] = useState(() => loadValue(typeKey, 'sierpinski'));
+    const [depth, setDepth] = useState(() => loadValue(depthKey, 3));
+    const [speed, setSpeed] = useState(() => loadValue(speedKey, 100));
+
+    useEffect(() => {
+        localStorage.setItem(typeKey, JSON.stringify(type));
+        localStorage.setItem(depthKey, JSON.stringify(depth));
+        localStorage.setItem(speedKey, JSON.stringify(speed));
+    }, [type, depth, speed]);
 
     return (
         <div className='container-fluid fractalDemoWrapper'>
@@ -50,7 +61,7 @@ export default function FractalDemo() {
                                     <label htmlFor="fractalDemoSelect" className="fractalDemoLabel">Type</label>
                                     <Select
                                         options={fractalOptions}
-                                        defaultIndex={0}
+                                        defaultValue={type}
                                         onChange={e => {
                                             const value = e.value;
                                             setType(value);

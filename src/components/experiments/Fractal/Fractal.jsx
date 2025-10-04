@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { hexToRGB, rgbToCss, readColor } from "/src/utils/colors.js";
+import { useRef, useEffect, useCallback } from "react";
+import { rgbToCss, readColor } from "/src/utils/colors.js";
 
 export default function Fractal({
 	type,
