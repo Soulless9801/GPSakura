@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from "react";
-import { hexToRGB, rgbToCss, readColor } from "/src/utils/colors.js";
+import { rgbToCss, readColor } from "/src/utils/colors.js";
 
 // Component
 

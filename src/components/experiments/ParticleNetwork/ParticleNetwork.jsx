@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback } from "react";
-import { hexToRGB, rgbToCss, readColor } from "/src/utils/colors.js";
+import { rgbToCss, readColor } from "/src/utils/colors.js";
 
 function calc(coord, max, off, v){
     coord = Number(coord);

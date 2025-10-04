@@ -109,7 +109,6 @@ export default function Navbar() {
                                         { value: 'USACO', label: 'USACO', to: '/usaco' },
                                         { value: 'Codeforces', label: 'Codeforces', to: '/cf' },
                                     ]}
-                                    defaultIndex='0'
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
                                     placeholder="Coding"
@@ -124,7 +123,6 @@ export default function Navbar() {
                                         { value: 'Cell', label: 'Cell Automata', to: '/cell' },
                                         { value: 'Fractal', label: 'Fractals', to: '/fractals' },
                                     ]}
-                                    defaultIndex='0'
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
                                     placeholder="Experiments"

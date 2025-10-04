@@ -1,4 +1,4 @@
-export function hexToRGB(hex) {
+function hexToRGB(hex) {
     const parsed = hex.replace("#", "");
     const bigint = parseInt(parsed, 16);
     const r = (bigint >> 16) & 255;

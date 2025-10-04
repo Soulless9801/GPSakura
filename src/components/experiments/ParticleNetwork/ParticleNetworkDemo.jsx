@@ -1,17 +1,10 @@
 import { useState, useEffect } from 'react';
+import { loadValue } from "/src/utils/storage.js";
 
 import ParticleNetwork from './ParticleNetwork.jsx';
 import Slider from '/src/components/tools/Slider/Slider.jsx';
 
 import './ParticleNetworkDemo.css';
-
-function loadValue(key, defaultValue) {
-    const raw = localStorage.getItem(key);
-    const val = (raw !== null ? JSON.parse(raw) : defaultValue);
-	if (typeof defaultValue === "number") return Number(val);
-	if (typeof defaultValue === "boolean") return Boolean(val);
-	return val;
-}
 
 export default function ParticleNetworkDemo() {
 

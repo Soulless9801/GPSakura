@@ -1,7 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import "./Select.css";
 
-export default function Select({ options = [], defaultIndex, onChange, fixedSelect=false, align="left", placeholder="Select an option" }) {
+function findIndex(val, list, defaultIndex) {
+    const idx = list.findIndex(item => item.value === String(val));
+    return idx !== -1 ? idx : defaultIndex;
+}
+
+export default function Select({ options = [], defaultValue, onChange, defaultIndex=0, fixedSelect=false, align="left", placeholder="Select an option" }) {
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState({ value: '1', label: '1' });
 
@@ -18,7 +23,8 @@ export default function Select({ options = [], defaultIndex, onChange, fixedSele
     };
 
     useEffect(() => {
-        if (!fixedSelect) handleSelect(options[Number(defaultIndex)]);
+        console.log(defaultValue);
+        if (!fixedSelect) handleSelect(options[findIndex(defaultValue, options, defaultIndex)]);
         const handleClickOutside = (event) => {
             if (ref.current && !ref.current.contains(event.target)) {
                 setOpen(false);
