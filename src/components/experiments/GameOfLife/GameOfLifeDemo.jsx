@@ -1,10 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { loadValue } from "/src/utils/storage.js";
+import { convertToPixels } from '/src/utils/resize.js';
 
 import GameOfLife from "./GameOfLife.jsx";
 import Slider from "/src/components/tools/Slider/Slider.jsx"
 
 import "./GameOfLifeDemo.css";
+
+function toggleVal(list, val) {
+    if (list.includes(val)) {
+        return list.filter(item => item !== val);
+    } else {
+        return [...list, val];
+    }
+}
 
 export default function GameOfLifeDemo() {
 
@@ -15,6 +24,7 @@ export default function GameOfLifeDemo() {
     const showGridKey = 'cellAutomataDemoShowGrid';
     const speedKey = 'cellAutomataDemoSpeed';
     const zoomKey = 'cellAutomataDemoZoom';
+    const rulesKey = 'cellAutomataDemoRules';
 
     const [interactive, setInteractive] = useState(() => loadValue(interactiveKey, true));
     const [running, setRunning] = useState(() => loadValue(runningKey, false));
@@ -26,11 +36,10 @@ export default function GameOfLifeDemo() {
     const minZoom = useRef(25);
     const maxZoom = useRef(300);
 
-    // TODO
-    const [rules, setRules] = useState({
+    const [rules, setRules] = useState(() => loadValue(rulesKey, {
         survive: [2, 3],
 		birth: [3]
-	})
+	}));
 
     useEffect(() => {
         localStorage.setItem(interactiveKey, JSON.stringify(interactive));
@@ -38,15 +47,16 @@ export default function GameOfLifeDemo() {
         localStorage.setItem(showGridKey, JSON.stringify(showGrid));
         localStorage.setItem(speedKey, JSON.stringify(speed));
         localStorage.setItem(zoomKey, JSON.stringify(zoom));
-    }, [interactive, running, showGrid, speed, zoom]);
+        localStorage.setItem(rulesKey, JSON.stringify(rules));
+    }, [interactive, running, showGrid, speed, zoom, rules]);
 
     const gameRef = useRef(null);
 
     return (
         <div className='container-fluid cellDemoWrapper'>
-			<div className='row g-3 align-item-start'>
+			<div className='row g-3 align-items-center'>
 				<div className='col-12 col-md-6 col-xl-8'>
-                    <div style={{ width: '100%', height: '60vh', position: 'relative' }}>
+                    <div style={{ width: '100%', height: convertToPixels('70vh'), position: 'relative' }}>
                         <GameOfLife
                             ref={gameRef}
                             width={"100%"}
@@ -60,7 +70,7 @@ export default function GameOfLifeDemo() {
                         />
                     </div>
 				</div>
-				<div className='col-12 col-md-6 col-xl-4 d-flex'>
+				<div className='col-12 col-md-6 col-xl-4 d-flex' id='cellControls'>
 					<div className='p-3 cellControls'>
 						<div className='container-fluid cellControlsSliders'>
                             <div className='row g-1'>
@@ -121,6 +131,41 @@ export default function GameOfLifeDemo() {
                                     <button className="cellButton" onClick={() => setZoom(prev => Math.max(Number(prev) - 10, minZoom.current))}>
                                         Zoom Out
                                     </button>
+                                </div>
+                            </div>
+                            <div className='row cellOptionButtonRow'>
+                                <div className='col-4 cellOptionLabel'>Survive</div>
+                                <div className="row g-1 col-8">
+                                    {options.map(option => (
+                                        <div className='col-3' key={option}>
+                                            <button className={`cellOptionButton ${rules.survive.includes(option) ? "active" : ""}`} onClick={() => {
+                                                setRules(prev => ({
+                                                    ...prev,
+                                                    survive: toggleVal(prev.survive, option)
+                                                }));
+                                            }}>
+                                                {option}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <hr></hr>
+                            <div className='row cellOptionButtonRow'>
+                                <div className='col-4 cellOptionLabel'>Birth</div>
+                                <div className="row g-1 col-8">
+                                    {options.map(option => (
+                                        <div className='col-3' key={option}>
+                                            <button className={`cellOptionButton ${rules.birth.includes(option) ? "active" : ""}`} onClick={() => {
+                                                setRules(prev => ({
+                                                    ...prev,
+                                                    birth: toggleVal(prev.birth, option)
+                                                }));
+                                            }}>
+                                                {option}
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

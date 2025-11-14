@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { loadValue } from "/src/utils/storage.js";
+import { convertToPixels } from '/src/utils/resize.js';
 
 import Fractal from "./Fractal.jsx";
 import Select from "/src/components/tools/Select/Select.jsx";
@@ -40,9 +41,9 @@ export default function FractalDemo() {
 
     return (
         <div className='container-fluid fractalDemoWrapper'>
-            <div className='row g-3 align-item-start'>
+            <div className='row g-3 align-items-center'>
                 <div className='col-12 col-md-6 col-xl-8'>
-                    <div style={{ width: '100%', height: '60vh', position: 'relative' }}>
+                    <div style={{ width: '100%', height: convertToPixels('60vh'), position: 'relative' }}>
                         <Fractal
                             type={type}
                             width={"100%"}
@@ -70,8 +71,6 @@ export default function FractalDemo() {
                                         id="fractalDemoSelect"
                                     />
                                 </div>
-                            </div>
-                            <div className='row g-3'>
                                 <div className='col-12'>
                                     <Slider 
                                         min={1} 
