@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { loadValue } from "/src/utils/storage.js";
+import { convertToPixels } from '/src/utils/resize.js';
 
 import ParticleNetwork from './ParticleNetwork.jsx';
 import Slider from '/src/components/tools/Slider/Slider.jsx';
@@ -51,7 +52,7 @@ export default function ParticleNetworkDemo() {
 		<div className='container-fluid particleDemoWrapper'>
 			<div className='row g-3 align-item-start'>
 				<div className='col-12 col-md-6 col-lg-8'>
-					<div style={{ width: '100%', height: '60vh', position: 'relative' }}>
+					<div style={{ width: '100%', height: convertToPixels('60vh'), position: 'relative' }}>
 						<ParticleNetwork
 							numParticles={numParticles}
 							connectionDistance={connectionDistance}

@@ -23,7 +23,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     };
 
     useEffect(() => {
-        console.log(defaultValue);
+        // console.log(defaultValue);
         if (!fixedSelect) handleSelect(options[findIndex(defaultValue, options, defaultIndex)]);
         const handleClickOutside = (event) => {
             if (ref.current && !ref.current.contains(event.target)) {

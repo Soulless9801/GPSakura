@@ -151,7 +151,7 @@ export default function ParticleNetwork({
         for (let i = 0; i < desired - current; i++) {
             particlesRef.current.push(new Particle());
         }
-        console.log(desired);
+        // console.log(desired);
         particlesRef.current.length = desired;
     }, [numParticles, particleRadius, speed, connectionDistance]);
 

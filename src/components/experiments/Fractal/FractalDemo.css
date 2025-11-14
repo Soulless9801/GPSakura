@@ -15,7 +15,6 @@
     gap: 1rem;
 }
 .fractalDemoLabel {
-    margin-left: var(--sep-distance-secondary);
     margin-right: var(--sep-distance-secondary);
 }
 .fractalDemoSelect {

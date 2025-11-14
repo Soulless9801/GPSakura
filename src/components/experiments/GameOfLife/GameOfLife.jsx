@@ -92,6 +92,8 @@ export default forwardRef(function GameOfLife(
 		targetSecondary.current = rgb[1];
 		transitionProgressRef.current = 1;
 
+		if (!showGrid) opacityProgressRef.current = 0;
+
 		const onStorage = () => {
 			const rgb = readColor();
 			targetPrimary.current = rgb[0];
@@ -101,7 +103,7 @@ export default forwardRef(function GameOfLife(
 		window.addEventListener("themeStorage", onStorage);
 		return () => window.removeEventListener("themeStorage", onStorage);
 
-	}, [readColor]);
+	}, []);
 
 
 	// Render Refs
