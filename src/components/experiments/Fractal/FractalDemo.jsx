@@ -71,6 +71,7 @@ export default function FractalDemo() {
                                         id="fractalDemoSelect"
                                     />
                                 </div>
+                                <hr/>
                                 <div className='col-12'>
                                     <Slider 
                                         min={1} 
