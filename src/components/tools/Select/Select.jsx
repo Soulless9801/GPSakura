@@ -14,12 +14,14 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     const menuRef = useRef();
 
     const [hover, setHover] = useState(false);
+    const [closed, setClosed] = useState(false);
 
     const handleSelect = (option) => {
         onChange(option);
         setValue(option);
         setOpen(false);
         setHover(false);
+        setClosed(true);
     };
 
     useEffect(() => {
@@ -37,13 +39,13 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     const [showMenu, setShowMenu] = useState(false);
 
     useEffect(() => {
-        setShowMenu(open || hover);
+        setShowMenu(open || hover && !closed);
     }, [open, hover]);
 
     return (
         <div className="customSelect">
-            <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-                <div className="customSelectSelected" onClick={() => setOpen((prev) => !prev)}>
+            <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => {setHover(false); setClosed(false);}}>
+                <div className="customSelectSelected" onClick={() => {setClosed(open); setOpen((prev) => !prev);}}>
                     {fixedSelect ? placeholder : value.label}
                     <span className="customSelectArrow">{open ? "↑" : "↓"}</span>
                 </div>

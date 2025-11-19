@@ -74,6 +74,7 @@ export default function ParticleNetworkDemo() {
 							<Slider min={minRadius} max={maxRadius} value={particleRadius} onChange={e => setParticleRadius(e)} label="Size" />
 							<Slider min={minDist} max={maxDist} value={connectionDistance} onChange={e => setConnectionDistance(e)} label="Distance" />
 							<Slider min={minSpeed} max={maxSpeed} step={0.01} places={2} value={speed} onChange={e => setSpeed(e)} label="Speed" />
+							<hr/>
 							<div>
 								<button className="particleButton" onClick={() => {
 									setInteractive(prev => !prev);

@@ -1,82 +1,91 @@
 .dropdown-menu {
-  background-color: var(--bg-color-secondary);
-  color: var(--primary-color);
+    background-color: var(--bg-color-secondary);
+    color: var(--primary-color);
 }
 
 .dropdown-menu .dropdown-item {
-  color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .dropdown-menu .dropdown-item:hover {
-  background-color: var(--bg-color-hover);
+    background-color: var(--bg-color-hover);
 }
 
 .navbar {
-  transition: var(--transition-timers);
-  background-color: var(--bg-color-secondary);
+    transition: var(--transition-timers);
+    background-color: var(--bg-color-secondary);
 }
 
 .navbar .nav-link,
 .navbar .navbar-brand,
 .navbar .navbar-toggler,
 .navbar .btn {
-  transition: var(--transition-timers);
-  color: var(--primary-color);
-  pointer-events: auto;
+    transition: var(--transition-timers);
+    color: var(--primary-color);
+    pointer-events: auto;
 }
 
 .navbar-wrapper {
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 127;
-  pointer-events: none;
-  min-width: 250px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 127;
+    pointer-events: none;
+    min-width: 250px;
 }
 
 .navbar-custom {
-  margin: var(--sep-distance-primary);
-  display: inline-block;
-  border-radius: 50px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    margin: var(--sep-distance-primary);
+    display: inline-block;
+    border-radius: 50px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-logo,
 .navbar-icon {
-  width: clamp(32px, 36px, 40px);
-  height: auto;
+    width: clamp(32px, 36px, 40px);
+    height: auto;
 }
 
 .nav-item .customSelectSelected {
-  border: none !important;
-  padding: 8px !important;
-  pointer-events: auto;
-  background: transparent !important;
+    border: none !important;
+    padding: 8px !important;
+    pointer-events: auto;
+    background: transparent !important;
 }
 
 .navbar-toggler {
-  margin-left: auto;
-  margin-right: auto;
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  cursor: pointer;
+    margin-left: auto;
+    margin-right: auto;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.navbar-toggler:hover {
+	background-color: var(--bg-color-secondary);
 }
 
 .navbar-toggler:focus,
 .navbar-toggler:focus-visible {
-  outline: none;
-  box-shadow: none;
+    outline: none;
+    box-shadow: none;
 }
 
 @media (max-width: 768px) {
-  .navbar-wrapper {
-    width: 40%;
-    display: flex;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .navbar-custom {
-    width: 100%;
-  }
+    .navbar-wrapper {
+        width: 40%;
+        display: flex;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .navbar-custom {
+        width: 100%;
+    }
+}
+
+.navbarLabel {
+    margin-right: 0.5rem;
+    cursor: pointer;
 }

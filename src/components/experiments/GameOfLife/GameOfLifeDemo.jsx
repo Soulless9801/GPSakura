@@ -150,7 +150,7 @@ export default function GameOfLifeDemo() {
                                     ))}
                                 </div>
                             </div>
-                            <hr></hr>
+                            <hr/>
                             <div className='row cellOptionButtonRow'>
                                 <div className='col-4 cellOptionLabel'>Birth</div>
                                 <div className="row g-1 col-8">

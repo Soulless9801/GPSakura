@@ -91,8 +91,8 @@ export default function Navbar() {
                 <div className="container-fluid">
                     <Link className="navbar-brand ms-3 d-none d-md-block" to="/"><img src="/favicon.png" alt="Logo" className="me-2 navbar-logo" id="navIcon"/></Link>
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false">
-                        Menu{' '}
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <label htmlFor="navbarIcon" className="navbarLabel">Menu</label>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" id="navbarIcon">
                             <rect y="4" width="24" height="2" rx="1" fill="currentColor" />
                             <rect y="11" width="24" height="2" rx="1" fill="currentColor" />
                             <rect y="18" width="24" height="2" rx="1" fill="currentColor" />
