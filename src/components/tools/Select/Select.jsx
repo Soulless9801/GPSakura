@@ -1,10 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import "./Select.css";
+import { findIndex } from "/src/utils/list.js";
 
-function findIndex(val, list, defaultIndex) {
-    const idx = list.findIndex(item => item.value === String(val));
-    return idx !== -1 ? idx : defaultIndex;
-}
+import "./Select.css";
 
 export default function Select({ options = [], defaultValue, onChange, defaultIndex=0, fixedSelect=false, align="left", placeholder="Select an option" }) {
     const [open, setOpen] = useState(false);
