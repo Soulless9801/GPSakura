@@ -1,33 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { loadValue } from "/src/utils/storage.js";
 import { convertToPixels } from '/src/utils/resize.js';
+import { toggleVal } from '/src/utils/list.js';
 
 import GameOfLife from "./GameOfLife.jsx";
 import Slider from "/src/components/tools/Slider/Slider.jsx"
 
 import "./GameOfLifeDemo.css";
 
-function toggleVal(list, val) {
-    if (list.includes(val)) {
-        return list.filter(item => item !== val);
-    } else {
-        return [...list, val];
-    }
-}
-
 export default function GameOfLifeDemo() {
 
     const options = [1, 2, 3, 4, 5, 6, 7, 8];
 
     const interactiveKey = 'cellAutomataDemoInteractive';
-    const runningKey = 'cellAutomataDemoRunning';
     const showGridKey = 'cellAutomataDemoShowGrid';
     const speedKey = 'cellAutomataDemoSpeed';
     const zoomKey = 'cellAutomataDemoZoom';
     const rulesKey = 'cellAutomataDemoRules';
 
     const [interactive, setInteractive] = useState(() => loadValue(interactiveKey, true));
-    const [running, setRunning] = useState(() => loadValue(runningKey, false));
+    const [running, setRunning] = useState(false);
     const [showGrid, setShowGrid] = useState(() => loadValue(showGridKey, true));
 
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 8));
@@ -43,12 +35,11 @@ export default function GameOfLifeDemo() {
 
     useEffect(() => {
         localStorage.setItem(interactiveKey, JSON.stringify(interactive));
-        localStorage.setItem(runningKey, JSON.stringify(running));
         localStorage.setItem(showGridKey, JSON.stringify(showGrid));
         localStorage.setItem(speedKey, JSON.stringify(speed));
         localStorage.setItem(zoomKey, JSON.stringify(zoom));
         localStorage.setItem(rulesKey, JSON.stringify(rules));
-    }, [interactive, running, showGrid, speed, zoom, rules]);
+    }, [interactive, showGrid, speed, zoom, rules]);
 
     const gameRef = useRef(null);
 

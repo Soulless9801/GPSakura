@@ -86,9 +86,7 @@ export default function Fractal({
 		ctx.globalCompositeOperation = "source-over";
 	}, []);
 
-	// Koch Snowflake
-	const drawKoch = useCallback(() => {
-
+	const setupFractal = () => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 
@@ -100,6 +98,14 @@ export default function Fractal({
 		ctx.clearRect(0, 0, W, H);
 
 		ctx.fillStyle = rgbToCss(currentColorRef.current);
+
+		return [ctx, W, H];
+	};
+
+	// Koch Snowflake
+	const drawKoch = useCallback(() => {
+
+		const [ctx, W, H] = setupFractal();
 
 		const size = Math.min(W, H) * 0.8;
 		const cx = W / 2;
@@ -110,11 +116,13 @@ export default function Fractal({
 		const p2 = { x: cx, y: cy - (Math.sqrt(3) / 3) * size };
 
 		const segment = (a, b, iter) => {
+
 			if (iter === 0) {
 				ctx.moveTo(a.x, a.y);
 				ctx.lineTo(b.x, b.y);
 				return;
 			}
+
 			const dx = (b.x - a.x) / 3;
 			const dy = (b.y - a.y) / 3;
 			const pA = { x: a.x + dx, y: a.y + dy };
@@ -122,6 +130,7 @@ export default function Fractal({
 			const angle = Math.atan2(dy, dx) - Math.PI / 3;
 			const len = Math.hypot(dx, dy);
 			const pC = { x: pA.x + Math.cos(angle) * len, y: pA.y + Math.sin(angle) * len };
+
 			segment(a, pA, iter - 1);
 			segment(pA, pC, iter - 1);
 			segment(pC, pB, iter - 1);
@@ -129,28 +138,23 @@ export default function Fractal({
 		};
 
 		ctx.lineWidth = lineWidth;
+
 		ctx.beginPath();
+
 		segment(p0, p1, depth);
 		segment(p1, p2, depth);
 		segment(p2, p0, depth);
+
 		ctx.stroke();
 
 		fillFractal();
 
 	}, [depth, lineWidth]);
 
+	// Sierpinski Triangle
 	const drawSierpinski = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
 
-		const ctx = canvas.getContext("2d");
-
-		const W = ctx.canvas.clientWidth;
-		const H = ctx.canvas.clientHeight;
-
-		ctx.clearRect(0, 0, W, H);
-
-		ctx.fillStyle = rgbToCss(currentColorRef.current);
+		const [ctx, W, H] = setupFractal();
 
 		const size = Math.min(W, H) * 0.8;
 		const cx = W / 2;
@@ -166,7 +170,9 @@ export default function Fractal({
 		const pointSize = lineWidth;
 
 		const step = () => {
+
 			ctx.beginPath();
+
 			for (let i = 0; i < pointsPerFrame; i++) {
 				const r = Math.random();
 				const target = r < 1 / 3 ? A : r < 2 / 3 ? B : C;
@@ -174,26 +180,21 @@ export default function Fractal({
 				p.y = (p.y + target.y) / 2;
 				ctx.rect(p.x, p.y, pointSize, pointSize);
 			}
+
 			ctx.fill();
+
 			rafRef.current = requestAnimationFrame(step);
+
 		};
 
 		rafRef.current = requestAnimationFrame(step);
 
 	}, [speed, lineWidth])
 
+	// Barnsley Fern
 	const drawFern = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
 
-		const ctx = canvas.getContext("2d");
-
-		const W = ctx.canvas.clientWidth;
-		const H = ctx.canvas.clientHeight;
-
-		ctx.clearRect(0, 0, W, H);
-
-		ctx.fillStyle = rgbToCss(currentColorRef.current);
+		const [ctx, W, H] = setupFractal();
 
 		const size = Math.min(W, H) * 0.8;
 
@@ -219,7 +220,9 @@ export default function Fractal({
 		const pointSize = lineWidth;
 
 		const step = () => {
+
 			ctx.beginPath();
+
 			for (let i = 0; i < pointsPerFrame; i++) {
 				const r = Math.random() * 100;
 				let xNew, yNew;
@@ -235,12 +238,84 @@ export default function Fractal({
 				x = xNew; y = yNew;
 				ctx.rect(sx(x), sy(y), pointSize, pointSize);
 			}
+
 			ctx.fill();
+
 			rafRef.current = requestAnimationFrame(step);
+
 		};
 
 		rafRef.current = requestAnimationFrame(step);
+
 	}, [speed, lineWidth]);
+
+	// Dragon Curve
+	const drawDragon = useCallback(() => {
+
+		const [ctx, W, H] = setupFractal();
+
+    	const steps = 1 << depth; 
+
+		const dirs = [
+			[1, 0],   // 0: right
+			[0, 1],   // 1: down
+			[-1, 0],  // 2: left
+			[0, -1],  // 3: up
+		];
+
+		let x = 0, y = 0;
+		let dir = 0;
+
+		const points = [];
+		points.push([x, y]);
+
+		for (let i = 0; i < steps; i++) {
+			const turn = ((i & -i) << 1) & (i + 1) ? -1 : +1;
+
+			dir = (dir + turn + 4) % 4;
+
+			x += dirs[dir][0];
+			y += dirs[dir][1];
+			points.push([x, y]);
+		}
+
+		let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+		for (const [px, py] of points) {
+			if (px < minX) minX = px;
+			if (px > maxX) maxX = px;
+			if (py < minY) minY = py;
+			if (py > maxY) maxY = py;
+		}
+
+		const fractalWidth = maxX - minX;
+		const fractalHeight = maxY - minY;
+
+		const scale = 0.9 * Math.min(W / fractalWidth, H / fractalHeight);
+
+		const offsetX = (W - fractalWidth * scale) / 2 - minX * scale;
+		const offsetY = (H - fractalHeight * scale) / 2 - minY * scale;
+
+		ctx.lineWidth = lineWidth;
+
+		ctx.beginPath();
+
+		for (let i = 0; i < points.length - 1; i++) {
+
+			const [x1, y1] = points[i];
+			const [x2, y2] = points[i + 1];
+
+			ctx.moveTo(x1 * scale + offsetX, y1 * scale + offsetY);
+			ctx.lineTo(x2 * scale + offsetX, y2 * scale + offsetY);
+
+		}
+
+		ctx.stroke();
+
+		fillFractal();
+
+	}, [depth, lineWidth]);
+
 
 	useEffect(() => {
 		const cut = () => {
@@ -253,12 +328,15 @@ export default function Fractal({
 					break;
 				}
 				case "sierpinski": {
-					//drawSierpinski();
 					drawSierpinski();
 					break;
 				}
 				case "fern": {
 					drawFern();
+					break;
+				}
+				case "dragon": {
+					drawDragon();
 					break;
 				}
 				default: {
@@ -283,6 +361,7 @@ export default function Fractal({
 	}, [type, depth, speed, lineWidth, resizeCanvas]);
 
 	useEffect(() => {
+
 		lastTimeRef.current = performance.now();
 
 		const loop = (now) => {
@@ -315,7 +394,8 @@ export default function Fractal({
 		return () => {
 			if (colorRafRef.current) cancelAnimationFrame(colorRafRef.current);
 		};
-		}, [colorTransition]);
+
+	}, [colorTransition]);
 
 	return (
 		<div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

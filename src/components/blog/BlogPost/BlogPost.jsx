@@ -1,14 +1,9 @@
+import { formatDate } from '/src/utils/time.js';
+
 import GenericButton from '/src/components/tools/GenericButton/GenericButton.jsx';
 import TextParser from '/src/components/tools/TextParser/TextParser.jsx';
 
 import './BlogPost.css'
-
-const formatDate = (timestamp) => {
-    return timestamp.toDate().toLocaleString(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    });
-}
 
 export default function BlogPost({ title, body, creationTime, updateTime, postId }) {
     return (

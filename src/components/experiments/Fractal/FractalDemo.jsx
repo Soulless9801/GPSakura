@@ -14,8 +14,9 @@ export default function FractalDemo() {
         { value: 'sierpinski', label: 'Sierpinski Triangle' },
         { value: 'koch', label: 'Koch Snowflake' },
         { value: 'fern', label: 'Barnsley Fern' },
+        { value: 'dragon', label: 'Dragon Curve' },
     ];
-    //
+    
     const speedFractals = [
         'sierpinski',
         'fern',
@@ -23,7 +24,13 @@ export default function FractalDemo() {
 
     const depthFractals = [
         'koch',
+        'dragon',
     ];
+
+    const depthMax = {
+        'koch': 7,
+        'dragon': 15,
+    };
 
     const typeKey = 'fractalDemoType';
     const depthKey = 'fractalDemoDepth';
@@ -31,6 +38,7 @@ export default function FractalDemo() {
 
     const [type, setType] = useState(() => loadValue(typeKey, 'sierpinski'));
     const [depth, setDepth] = useState(() => loadValue(depthKey, 3));
+    const [maxDepth, setMaxDepth] = useState(() => depthMax[type] || 7);
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 100));
 
     useEffect(() => {
@@ -66,6 +74,14 @@ export default function FractalDemo() {
                                         onChange={e => {
                                             const value = e.value;
                                             setType(value);
+                                            if (depthFractals.findIndex(item => item === value) === -1) return;
+
+                                            const newMaxDepth = depthMax[value];
+
+                                            setMaxDepth(newMaxDepth);
+                                            setDepth(prev => {
+                                                return Math.min(prev, newMaxDepth);
+                                            });
                                         }}
                                         className="fractalDemoSelect"
                                         id="fractalDemoSelect"
@@ -75,7 +91,7 @@ export default function FractalDemo() {
                                 <div className='col-12'>
                                     <Slider 
                                         min={1} 
-                                        max={7} 
+                                        max={maxDepth} 
                                         value={depth} 
                                         onChange={e => setDepth(e)} 
                                         label="Depth"

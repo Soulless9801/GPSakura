@@ -1,41 +1,43 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 import Form from '/src/components/tools/Form/Form.jsx';
 
 import "./Slider.css";
 
 export default function Slider({ min, max, value, onChange, label, unit, step = 1, places = 0, disabled = false}) {
+    
     const [internalValue, setInternalValue] = useState(value);
+    const [percent, setPercent] = useState(((internalValue - min) / (max - min)) * 100);
+
     const trackRef = useRef(null);
 
+    const updateValue = useCallback((newValue) => {
+        newValue = Math.min(max, Math.max(min, newValue));
+        newValue = Math.round(newValue / step) * step;
+        newValue = newValue.toFixed(places);
+        setInternalValue(newValue);
+        setPercent(((newValue - min) / (max - min)) * 100);
+    }, [min, max, step, places]);
 
     useEffect(() => {
         if (value !== undefined) {
             updateValue(value);
         }
-    }, [value]);
+    }, [value, updateValue]);
 
     useEffect(() => {
         onChange?.(internalValue);
     }, [internalValue]);
 
-    const percent = ((internalValue - min) / (max - min)) * 100;
-
-    const updateValue = (newValue) => {
-        newValue = Math.min(max, Math.max(min, newValue));
-        newValue = Math.round(newValue / step) * step;
-        newValue = newValue.toFixed(places);
-        setInternalValue(newValue);
-    };
-
-    const handleMove = (e) => {
+    const handleMove = useCallback((e) => {
         if (disabled) return;
         const rect = trackRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         let newPercent = Math.min(Math.max(x / rect.width, 0), 1);
         let newValue = min + newPercent * (max - min);
         updateValue(newValue);
-    };
+        setPercent(newPercent * 100);
+    }, [disabled, min, max, updateValue]);
 
     const startDrag = (e) => {
         e.preventDefault();
