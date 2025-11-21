@@ -7,6 +7,7 @@ export default function Fractal({
 	height,
 	depth,
 	speed,
+	angle,
 	lineWidth = 1,
 	colorTransition = 300,
 	className = "",
@@ -316,6 +317,128 @@ export default function Fractal({
 
 	}, [depth, lineWidth]);
 
+	const drawPythagoras = useCallback(() => {
+
+		const [ctx, W, H] = setupFractal();
+
+		const fractalAngle = angle / 180 * Math.PI;
+
+		const leftAngleOffset = Math.PI / 2 - fractalAngle / 2;
+		const rightAngleOffset = fractalAngle / 2;
+
+		const squares = [];
+
+		const queue = [];
+		queue.push({ x: 0, y: 0, size: 1, angle: Math.PI, d: 0 });
+
+		while (queue.length > 0) {
+			const sq = queue.shift();
+			squares.push(sq);
+
+			if (sq.d >= depth) continue;
+
+			const { x, y, size, angle, d } = sq;
+
+			const x0 = x;
+			const y0 = y;
+
+			const x1 = x0 + size * Math.cos(angle);
+			const y1 = y0 + size * Math.sin(angle);
+
+			const x2 = x1 - size * Math.sin(angle);
+			const y2 = y1 + size * Math.cos(angle);
+
+			const x3 = x0 - size * Math.sin(angle);
+			const y3 = y0 + size * Math.cos(angle);
+
+			const leftAngle = angle + leftAngleOffset;
+			const rightAngle = angle - rightAngleOffset;
+
+			const leftChildSize = size * Math.cos(leftAngleOffset);
+			const rightChildSize = size * Math.cos(rightAngleOffset);
+
+			const leftX = x3;
+			const leftY = y3;
+
+			const rightX = x2 - rightChildSize * Math.cos(rightAngle);
+			const rightY = y2 - rightChildSize * Math.sin(rightAngle);
+
+			queue.push({
+				x: leftX,
+				y: leftY,
+				size: leftChildSize,
+				angle: leftAngle,
+				d: d + 1
+			});
+
+			queue.push({
+				x: rightX,
+				y: rightY,
+				size: rightChildSize,
+				angle: rightAngle,
+				d: d + 1
+			});
+
+		}
+
+		let minX = Infinity, maxX = -Infinity;
+		let minY = Infinity, maxY = -Infinity;
+
+		for (const sq of squares) {
+			const { x, y, size, angle } = sq;
+
+			const pts = [
+				[x, y],
+				[x + size * Math.cos(angle), y + size * Math.sin(angle)],
+				[
+					x + size * (Math.cos(angle) - Math.sin(angle)),
+					y + size * (Math.sin(angle) + Math.cos(angle))
+				],
+				[x - size * Math.sin(angle), y + size * Math.cos(angle)]
+			];
+
+			for (const [px, py] of pts) {
+				if (px < minX) minX = px;
+				if (px > maxX) maxX = px;
+				if (py < minY) minY = py;
+				if (py > maxY) maxY = py;
+			}
+		}
+
+		const fw = maxX - minX;
+		const fh = maxY - minY;
+
+		const scale = 0.9 * Math.min(W / fw, H / fh);
+
+		const offsetX = (W - fw * scale) / 2 - minX * scale;
+		const offsetY = (H - fh * scale) / 2 - minY * scale;
+
+		const drawSquare = (sq) => {
+			const { x, y, size, angle } = sq;
+
+			const x0 = x, y0 = y;
+			const x1 = x0 + size * Math.cos(angle);
+			const y1 = y0 + size * Math.sin(angle);
+			const x2 = x1 - size * Math.sin(angle);
+			const y2 = y1 + size * Math.cos(angle);
+			const x3 = x0 - size * Math.sin(angle);
+			const y3 = y0 + size * Math.cos(angle);
+
+			ctx.beginPath();
+			ctx.moveTo(x0 * scale + offsetX, y0 * scale + offsetY);
+			ctx.lineTo(x1 * scale + offsetX, y1 * scale + offsetY);
+			ctx.lineTo(x2 * scale + offsetX, y2 * scale + offsetY);
+			ctx.lineTo(x3 * scale + offsetX, y3 * scale + offsetY);
+			ctx.closePath();
+			ctx.fill();
+		};
+
+		for (const sq of squares) drawSquare(sq);
+
+		fillFractal();
+
+	}, [angle, depth, lineWidth])
+
 
 	useEffect(() => {
 		const cut = () => {
@@ -339,6 +462,10 @@ export default function Fractal({
 					drawDragon();
 					break;
 				}
+				case "pythagoras": {
+					drawPythagoras();
+					break;
+				}
 				default: {
 					break;
 				}
@@ -358,7 +485,7 @@ export default function Fractal({
 			window.removeEventListener("resize", handleResize);
 		};
 
-	}, [type, depth, speed, lineWidth, resizeCanvas]);
+	}, [type, depth, speed, angle, lineWidth, resizeCanvas]);
 
 	useEffect(() => {
 
