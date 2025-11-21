@@ -15,6 +15,7 @@ export default function FractalDemo() {
         { value: 'koch', label: 'Koch Snowflake' },
         { value: 'fern', label: 'Barnsley Fern' },
         { value: 'dragon', label: 'Dragon Curve' },
+        { value: 'pythagoras', label: 'Pythagoras Tree' },
     ];
     
     const speedFractals = [
@@ -25,27 +26,36 @@ export default function FractalDemo() {
     const depthFractals = [
         'koch',
         'dragon',
+        'pythagoras',
+    ];
+
+    const angleFractals = [
+        'pythagoras',
     ];
 
     const depthMax = {
         'koch': 7,
         'dragon': 15,
+        'pythagoras': 12,
     };
 
     const typeKey = 'fractalDemoType';
     const depthKey = 'fractalDemoDepth';
     const speedKey = 'fractalDemoSpeed';
+    const angleKey = 'fractalDemoAngle';
 
     const [type, setType] = useState(() => loadValue(typeKey, 'sierpinski'));
     const [depth, setDepth] = useState(() => loadValue(depthKey, 3));
     const [maxDepth, setMaxDepth] = useState(() => depthMax[type] || 7);
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 100));
+    const [angle, setAngle] = useState(() => loadValue(angleKey, 90));
 
     useEffect(() => {
         localStorage.setItem(typeKey, JSON.stringify(type));
         localStorage.setItem(depthKey, JSON.stringify(depth));
         localStorage.setItem(speedKey, JSON.stringify(speed));
-    }, [type, depth, speed]);
+        localStorage.setItem(angleKey, JSON.stringify(angle));
+    }, [type, depth, speed, angle]);
 
     return (
         <div className='container-fluid fractalDemoWrapper'>
@@ -58,6 +68,7 @@ export default function FractalDemo() {
                             height={"100%"}
                             depth={depth}
                             speed={speed}
+                            angle={angle}
                             //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
                         />
                     </div>
@@ -106,6 +117,16 @@ export default function FractalDemo() {
                                         onChange={e => setSpeed(e)} 
                                         label="Speed"
                                         disabled={speedFractals.findIndex(item => item === type) === -1}
+                                    />
+                                </div>
+                                <div className='col-12'>
+                                    <Slider 
+                                        min={0} 
+                                        max={180} 
+                                        value={angle} 
+                                        onChange={e => setAngle(e)} 
+                                        label="Angle"
+                                        disabled={angleFractals.findIndex(item => item === type) === -1}
                                     />
                                 </div>
                             </div> 
