@@ -122,6 +122,7 @@ export default function Navbar() {
                                         { value: 'Particle', label: 'Particle Network', to: '/particle' },
                                         { value: 'Cell', label: 'Cell Automata', to: '/cell' },
                                         { value: 'Fractal', label: 'Fractals', to: '/fractals' },
+                                        { value: 'Chaos', label: 'Chaotic Attractors', to: '/chaos' },
                                     ]}
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}

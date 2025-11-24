@@ -70,14 +70,21 @@ export default function Fractal({
 
 	}, [readColor]);
 
+	const getCTX = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return null;
+
+        const ctx = canvas.getContext("2d");
+
+        const W = ctx.canvas.clientWidth;
+        const H = ctx.canvas.clientHeight;
+
+        return [ctx, W, H];
+    }
+
 	const fillFractal = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-
-		const ctx = canvas.getContext("2d");
-
-		const W = ctx.canvas.width;
-		const H = ctx.canvas.height;
+		
+		const [ctx, W, H] = getCTX();
 
 		ctx.globalCompositeOperation = "source-in";
 
@@ -88,13 +95,8 @@ export default function Fractal({
 	}, []);
 
 	const setupFractal = () => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-
-		const ctx = canvas.getContext("2d");
-
-		const W = ctx.canvas.clientWidth;
-		const H = ctx.canvas.clientHeight;
+		
+		const [ctx, W, H] = getCTX();
 
 		ctx.clearRect(0, 0, W, H);
 
@@ -485,7 +487,7 @@ export default function Fractal({
 			window.removeEventListener("resize", handleResize);
 		};
 
-	}, [type, depth, speed, angle, lineWidth, resizeCanvas]);
+	}, [type, drawSierpinski, drawKoch, drawFern, drawDragon, drawPythagoras, resizeCanvas]);
 
 	useEffect(() => {
 
