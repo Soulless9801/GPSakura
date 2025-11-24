@@ -18,7 +18,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
         setValue(option);
         setOpen(false);
         setHover(false);
-        setClosed(true);
+        setClosed(false);
     };
 
     useEffect(() => {
@@ -27,6 +27,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
         const handleClickOutside = (event) => {
             if (ref.current && !ref.current.contains(event.target)) {
                 setOpen(false);
+                setClosed(false);
             }
         };
         document.addEventListener("pointerdown", handleClickOutside);

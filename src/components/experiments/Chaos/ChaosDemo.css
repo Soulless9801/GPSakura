@@ -1,0 +1,23 @@
+.chaosDemoWrapper {
+    padding: 0 5%;
+}
+.chaosControls {
+    background: var(--bg-color-primary);
+    color: var(--primary-color);
+    transition: var(--transition-timers);
+    border-radius: var(--table-border-radius-secondary);
+    border: 1px solid var(--primary-color);
+    width: 100%;
+}
+.chaosControlsSliders {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.chaosDemoLabel {
+    margin-right: var(--sep-distance-secondary);
+}
+.chaosDemoSelect {
+    
+}
+
