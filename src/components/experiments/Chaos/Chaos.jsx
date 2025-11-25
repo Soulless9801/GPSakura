@@ -5,10 +5,8 @@ export default function Chaos({
     attractor,
     width,
     height,
-    speed = 1,        // dt time step
-    scale = 10,           // visual scale factor
+    speed = 1,
     lineWidth = 1,
-    speedFactor = 5,
     colorTransition = 300,
     className = "",
     style = {},
@@ -112,47 +110,50 @@ export default function Chaos({
 
     const drawChaos = useCallback(() => {
 
+        if (!attractor) return;
+
         const [ctx, W, H] = setupChaos();
 
         const params = attractor.params;
         const dims = attractor.dims;
 
-        pointRef.current = { x: 0.1, y: 0, z: 0 };
+        pointRef.current = { ...attractor.start };
 
         lastChaosTimeRef.current = performance.now();
 
         const step = (now) => {
 
-            const dt = (now - lastChaosTimeRef.current) * speed;
+            let dt = (now - lastChaosTimeRef.current) / attractor.speedFactor * speed;
+            dt = Math.min(dt, 0.005);
             lastChaosTimeRef.current = now;
 
             let { x, y, z } = pointRef.current;
 
-            ctx.strokeStyle = rgbToCss(currentColorRef.current);
             ctx.beginPath();
+            ctx.strokeStyle = rgbToCss(currentColorRef.current);
 
-            const sx = W / 2 + x * scale;
-            const sy = H / 2 + y * scale;
+            let sx = W / 2 + x * attractor.scaleFactor;
+            let sy = H / 2 + y * attractor.scaleFactor;
 
             ctx.moveTo(sx, sy);
 
-            let d;
-            if (dims === 3) d = attractor.step(x, y, z, params);
-            else if (dims === 2) d = attractor.step(x, y, params);
+            for (let i = 0; i < 200; i++) {
 
-            if (dims === 3) {
-                x += d[0] * dt / 1000 * speedFactor;
-                y += d[1] * dt / 1000 * speedFactor;
-                z += d[2] * dt / 1000 * speedFactor;
-            } else {
-                x += d[0] * dt / 1000 * speedFactor;
-                y += d[1] * dt / 1000 * speedFactor;
+                const d = dims === 3
+                    ? attractor.step(x, y, z, params)
+                    : attractor.step(x, y, params);
+
+                x += d[0] * dt;
+                y += d[1] * dt;
+                if (dims === 3) z += d[2] * dt;
+
+                pointRef.current = { x, y, z };
+
+                const nx = W / 2 + x * attractor.scaleFactor;
+                const ny = H / 2 + y * attractor.scaleFactor;
+
+                ctx.lineTo(nx, ny);
             }
-
-            const ex = W / 2 + x * scale;
-            const ey = H / 2 + y * scale;
-
-            ctx.lineTo(ex, ey);
 
             ctx.stroke();
 
@@ -163,7 +164,7 @@ export default function Chaos({
 
         rafRef.current = requestAnimationFrame(step);
 
-    }, [attractor, speed, speedFactor, lineWidth, scale]);
+    }, [attractor, speed, lineWidth]);
 
     useEffect(() => {
         
