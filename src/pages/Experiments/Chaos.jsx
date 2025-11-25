@@ -19,7 +19,7 @@ export default function Chaos(){
     return (
         <StrictMode>
             <Navbar />
-            <PageTitle title="Chaotic Attractors" description="I'm going to break my monitor, I sware!"/>
+            <PageTitle title="Chaotic Attractors" description="You call it chaos, I call it cheese"/>
             <ChaosDemo />
         </StrictMode>
     )

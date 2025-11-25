@@ -16,79 +16,66 @@ export default function ChaosDemo() {
             dims: 3,
             params: { sigma: 10, rho: 28, beta: 8 / 3 },
             step: (x, y, z, p) => {
-            const dx = p.sigma * (y - x);
-            const dy = x * (p.rho - z) - y;
-            const dz = x * y - p.beta * z;
-            return [dx, dy, dz];
+                const dx = p.sigma * (y - x);
+                const dy = x * (p.rho - z) - y;
+                const dz = x * y - p.beta * z;
+                return [dx, dy, dz];
             },
+            speedFactor: 5000,
+            scaleFactor: 8,
+            start: { x: 0.1, y: 0.1, z: 0.1 },
         },
 
         "aizawa": {
             dims: 3,
             params: { a: 0.95, b: 0.7, c: 0.6, d: 3.5, e: 0.25, f: 0.1 },
             step: (x, y, z, p) => {
-            const dx = (z - p.b) * x - p.d * y;
-            const dy = p.d * x + (z - p.b) * y;
-            const dz =
-                p.c +
-                p.a * z -
-                (z ** 3) / 3 -
-                (x ** 2 + y ** 2) * (1 + p.e * z) +
-                p.f * z * (x ** 3);
-            return [dx, dy, dz];
+                const dx = (z - p.b) * x - p.d * y;
+                const dy = p.d * x + (z - p.b) * y;
+                const dz =
+                    p.c +
+                    p.a * z -
+                    (z ** 3) / 3 -
+                    (x ** 2 + y ** 2) * (1 + p.e * z) +
+                    p.f * z * (x ** 3);
+                return [dx, dy, dz];
             },
+            speedFactor: 1000,
+            scaleFactor: 100,
+            start: { x: 0.1, y: 0, z: 0 },
         },
 
         "halvorsen": {
             dims: 3,
             params: { a: 1.4 },
             step: (x, y, z, p) => {
-            const dx = -p.a * x - 4 * y - 4 * z - y * y;
-            const dy = -p.a * y - 4 * z - 4 * x - z * z;
-            const dz = -p.a * z - 4 * x - 4 * y - x * x;
-            return [dx, dy, dz];
+                const dx = -p.a * x - 4 * y - 4 * z - y * y;
+                const dy = -p.a * y - 4 * z - 4 * x - z * z;
+                const dz = -p.a * z - 4 * x - 4 * y - x * x;
+                return [dx, dy, dz];
             },
-        },
-
-        "clifford": {
-            dims: 2,
-            params: { a: -1.4, b: 1.6, c: 1.0, d: 0.7 },
-            step: (x, y, p) => {
-            const x2 = Math.sin(p.a * y) + p.c * Math.cos(p.a * x);
-            const y2 = Math.sin(p.b * x) + p.d * Math.cos(p.b * y);
-            return [x2 - x, y2 - y]; // treat as delta for consistency
-            },
-        },
-
-        "ikeda": {
-            dims: 2,
-            params: { u: 0.918 },
-            step: (x, y, p) => {
-            const t = 0.4 - (6 / (1 + x * x + y * y));
-            const x2 = 1 + p.u * (x * Math.cos(t) - y * Math.sin(t));
-            const y2 = p.u * (x * Math.sin(t) + y * Math.cos(t));
-            return [x2 - x, y2 - y];
-            },
-        },
+            speedFactor: 5000,
+            scaleFactor: 15,
+            start: { x: -6.4, y: 0, z: 0 },
+        }
     };
 
     const chaosOptions = [
         { value: 'lorenz', label: 'Lorenz' },
         { value: 'aizawa', label: 'Aizawa' },
         { value: 'halvorsen', label: 'Halvorsen' },
-        { value: 'clifford', label: 'Clifford' },
-        { value: 'ikeda', label: 'Ikeda' },
     ];
 
-    const chaosSpeedFactors = {
-        'lorenz': 1,
-        'aizawa': 10,
-        'halvorsen': 2,
-        'clifford': 10,
-        'ikeda': 10,
-    };
+    const typeKey = 'chaosDemoType';
+    const speedKey = 'chaosDemoSpeed';
 
-    const [type, setType] = useState('lorenz');
+    const [type, setType] = useState(() => loadValue(typeKey, 'lorenz'));
+    const [speed, setSpeed] = useState(() => loadValue(speedKey, 10));
+
+    useEffect(() => {
+        localStorage.setItem(typeKey, JSON.stringify(type));
+        localStorage.setItem(speedKey, JSON.stringify(speed));
+    }, [type, speed]);
     
     return (
         <div className='container-fluid chaosDemoWrapper'>
@@ -99,7 +86,7 @@ export default function ChaosDemo() {
                             attractor={attractors[type]}
                             width={"100%"}
                             height={"100%"}
-                            speedFactor={chaosSpeedFactors[type]}
+                            speed={speed}
                             //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
                         />
                     </div>
@@ -119,6 +106,18 @@ export default function ChaosDemo() {
                                         }}
                                         className="chaosDemoSelect"
                                         id="chaosDemoSelect"
+                                    />
+                                </div>
+                                <hr/>
+                                <div className='col-12'>
+                                    <Slider 
+                                        min={0.01} 
+                                        max={0.1} 
+                                        value={speed}
+                                        step={0.01}
+                                        places={2}
+                                        onChange={e => setSpeed(e)} 
+                                        label="Speed"
                                     />
                                 </div>
                             </div>    
