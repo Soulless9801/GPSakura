@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { convertToPixels } from '/src/utils/resize.js';
 import { readColor, rgbToCss } from '/src/utils/colors.js';
+import { loadValue } from '/src/utils/storage.js';
 
 import Form from '/src/components/tools/Form/Form.jsx';
 
@@ -14,8 +15,26 @@ export default function ColorPickerDemo() {
     const gameRef = useRef(null);
 
     const [rgb, setRgb] = useState([0, 0, 0]);
-
     const [rgbD, setRgbD] = useState([-1, -1, -1]);
+
+    const [guesses, setGuesses] = useState(0);
+    const [win, setWin] = useState(false);
+
+    const guessesRef = useRef(guesses);
+
+    const sumKey = "colorPickerSum";
+    const countKey = "colorPickerCount";
+    const giveUpKey = "colorPickerGiveUp";
+
+    const [sum, setSum] = useState(loadValue(sumKey, 0));
+    const [count, setCount] = useState(loadValue(countKey, 0));
+    const [giveUp, setGiveUp] = useState(loadValue(giveUpKey, 0));
+
+    useEffect(() => {
+        localStorage.setItem(sumKey, JSON.stringify(sum));
+        localStorage.setItem(countKey, JSON.stringify(count));
+        localStorage.setItem(giveUpKey, JSON.stringify(giveUp));
+    }, [sum, count, giveUp]);
 
     const [primary, setPrimary] = useState([0, 0, 0]);
 
@@ -39,14 +58,34 @@ export default function ColorPickerDemo() {
     }, [primary]);
 
     const guess = useCallback(() => {
+        if (win) return;
         if (gameRef.current){
             const res = gameRef.current.guess(rgb);
             setRgbD(res);
-            // TODO: Win/Lose Logic
-            if (res[0] === 0 && res[1] === 0 && res[2] === 0) console.log("yay");
-            else console.log("no");
+            guessesRef.current = guesses + 1;
+            setGuesses(prev => prev + 1);
+            if (res[0] === 0 && res[1] === 0 && res[2] === 0) setWin(true);
+            else setWin(false);
         }
-    }, [rgb]);
+    }, [rgb, guesses, win]);
+
+    useEffect(() => {
+        if (win) {
+            setSum(prev => prev + guessesRef.current);
+            setCount(prev => prev + 1);
+        }
+    }, [win]);
+
+    const gen = useCallback(() => {
+        if (gameRef.current){
+            if (!win) setGiveUp(prev => prev + 1);
+            else setWin(false);
+            gameRef.current.gen();
+            setRgbD([-1, -1, -1]);
+            setRgb([0, 0, 0]);
+            setGuesses(0);
+        }
+    }, [win]);
 
     const ruleDescription = `
         Guess the Color!
@@ -65,6 +104,15 @@ export default function ColorPickerDemo() {
         - Red: Far off (100 or more distance)
         \\n
         Use this feedback to adjust your guesses and try to find the exact color!
+
+    `;
+
+    const statDescription = `
+        Total Games Completed: ${count}
+        \\n
+        Average Guesses: ${count === 0 ? 0 : (sum / count).toFixed(2)}
+        \\n
+        Total Games Given Up: ${giveUp}
     `;
 
     return (
@@ -86,7 +134,7 @@ export default function ColorPickerDemo() {
                             <div className='row g-3'>
                                 <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
                             </div>    
-                            <div className='row g-3'>
+                            <div className='row g-3 colorRow'>
                                 <div className='col-4 colorLabel'>
                                     <span>R</span>
                                     <Form init={rgb[0]} min={0} max={255} onChange={e => setRgb(prev => [e, prev[1], prev[2]])} style={{ borderColor: colorFromDistance(rgbD[0]) }} />
@@ -100,22 +148,24 @@ export default function ColorPickerDemo() {
                                     <Form init={rgb[2]} min={0} max={255} onChange={e => setRgb(prev => [prev[0], prev[1], e])} style={{ borderColor: colorFromDistance(rgbD[2]) }} />
                                 </div>
                             </div>
-                            <div className='row g-3'>
+                            <div className='row g-3 colorRow'>
                                 <div className='col-6'>
                                     <button className='colorButton' onClick={() => guess()}>
                                         Guess
                                     </button>
                                 </div>
                                 <div className='col-6'>
-                                    <button className='colorButton' onClick={() => {
-                                        if (gameRef.current) {
-                                            gameRef.current.gen();
-                                            setRgbD([-1, -1, -1]);
-                                            setRgb([0, 0, 0]);
-                                        }
-                                    }}>
+                                    <span style={{ color: win ? "#00ff00" : rgbToCss(primary) }}>Guesses: {guesses}</span>
+                                </div>
+                            </div>
+                            <div className='row g-3 colorRow'>
+                                <div className='col-6'>
+                                    <button className='colorButton' onClick={() => gen()} >
                                         Randomize
                                     </button>
+                                </div>
+                                <div className='col-6'>
+                                    <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='colorButton'/>
                                 </div>
                             </div>
                         </div>

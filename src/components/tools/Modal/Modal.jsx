@@ -37,7 +37,7 @@ function ModalContent({ open, onClose, onExited, children }) {
     );
 }
 
-export default function Modal({title, description, buttonText}) {
+export default function Modal({title, description, buttonText, buttonStyle={}, buttonClassName=""}) {
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -52,7 +52,7 @@ export default function Modal({title, description, buttonText}) {
 
     return (
         <>
-            <button onClick={openModal}>{buttonText}</button>
+            <button style={buttonStyle} className={buttonClassName} onClick={openModal}>{buttonText}</button>
 
             {mounted && (
                 <ModalContent
