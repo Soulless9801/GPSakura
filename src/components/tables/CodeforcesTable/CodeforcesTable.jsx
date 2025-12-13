@@ -12,14 +12,14 @@ import Select from '/src/components/tools/Select/Select.jsx';
 import '/src/components/tables/DataTable.css'
 
 $.fn.dataTable.ext.oSort['my-numeric-asc'] = (a, b) => {
-  if (a === 'unrated') a = '0';
-  if (b === 'unrated') b = '0';
-  return parseFloat(a) - parseFloat(b);
+    if (a === 'unrated') a = '0';
+    if (b === 'unrated') b = '0';
+    return parseFloat(a) - parseFloat(b);
 };
 $.fn.dataTable.ext.oSort['my-numeric-desc'] = (a, b) => {
-  if (a === 'unrated') a = '0';
-  if (b === 'unrated') b = '0';
-  return parseFloat(b) - parseFloat(a);
+    if (a === 'unrated') a = '0';
+    if (b === 'unrated') b = '0';
+    return parseFloat(b) - parseFloat(a);
 };
 
 export default function CodeforcesTable() {

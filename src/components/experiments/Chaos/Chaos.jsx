@@ -124,7 +124,7 @@ export default function Chaos({
         const step = (now) => {
 
             let dt = (now - lastChaosTimeRef.current) / attractor.speedFactor * speed;
-            dt = Math.min(dt, 0.005);
+            dt = Math.min(dt, 0.001);
             lastChaosTimeRef.current = now;
 
             let { x, y, z } = pointRef.current;

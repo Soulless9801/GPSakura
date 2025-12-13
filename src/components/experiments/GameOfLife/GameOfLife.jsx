@@ -333,6 +333,7 @@ export default forwardRef(function GameOfLife(
 		window.addEventListener("pointermove", handlePointerMove);
 		window.addEventListener("pointerup", handlePointerUp);
 		window.addEventListener("resize", resizeCanvas);
+		
 		return () => {
 			canvas.removeEventListener("pointerdown", handlePointerDown);
 			window.removeEventListener("pointermove", handlePointerMove);
