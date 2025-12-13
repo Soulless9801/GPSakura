@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./Form.css";
 
-export default function Form({ init, min, max,  onChange, step = 1, places = 0, disabled = false }) {
+export default function Form({ init, min, max,  onChange, step = 1, places = 0, disabled = false, style={}, className="" }) {
 	const [value, setValue] = useState(init);
 	const [draft, setDraft] = useState(String(init));
 	const [focus, setFocus] = useState(false);
@@ -81,7 +81,7 @@ export default function Form({ init, min, max,  onChange, step = 1, places = 0, 
 	};
 
 	return (
-		<div className={`customNumberInput ${disabled ? "disabled" : ""}`} onClick={handleClick} onBlur={handleBlur} >
+		<div className={`customNumberInput ${disabled ? "disabled" : ""} ${className}`} style={style} onClick={handleClick} onBlur={handleBlur} >
 			<input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)} onFocus={() => setFocus(true)} onKeyDown={handleKeyDown} />
 			<div className="customNumberButtons">
 				<div
