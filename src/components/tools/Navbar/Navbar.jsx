@@ -130,6 +130,18 @@ export default function Navbar() {
                                     className="nav-dropdown"
                                 />
                             </li>
+                            <li className="nav-item">
+                                <Select
+                                    id="gamesMenu"
+                                    options={[
+                                        { value: 'Color', label: 'Color Picker', to: '/color' },
+                                    ]}
+                                    onChange={e => navigate(e.to)}
+                                    fixedSelect={true}
+                                    placeholder="Games"
+                                    className="nav-dropdown"
+                                />
+                            </li>
                         </ul>
                         <button
                             id="darkModeToggle"

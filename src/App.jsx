@@ -8,6 +8,7 @@ import Particle from '/src/pages/Experiments/Particle.jsx';
 import CellAutomata from '/src/pages/Experiments/CellAutomata.jsx';
 import Fractals from '/src/pages/Experiments/Fractals.jsx';
 import Chaos from '/src/pages/Experiments/Chaos.jsx';
+import Color from '/src/pages/Games/Color.jsx';
 
 export default function App() {
 	return (
@@ -22,6 +23,7 @@ export default function App() {
 					<Route path="cell" element={<CellAutomata />} />
 					<Route path="fractals" element={<Fractals />} />
 					<Route path="chaos" element={<Chaos />} />
+					<Route path="color" element={<Color />} />
 				</Routes>
 			</HashRouter>
 		</div>
