@@ -1,0 +1,55 @@
+.modalRoot {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.modalRoot.open {
+    pointer-events: auto;
+}
+
+.modalBackdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 250ms ease;
+}
+
+.modalRoot.open .modalBackdrop {
+    opacity: 1;
+}
+
+.modalPanel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -40%);
+    opacity: 0;
+
+    background: var(--bg-color-secondary);
+    border-radius: 8px;
+    padding: 1.25rem;
+    min-width: 300px;
+    max-width: 90vw;
+
+    transition: transform 250ms ease, opacity 250ms ease;
+
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modalRoot.open .modalPanel {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+}
+
+.modalClose {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
