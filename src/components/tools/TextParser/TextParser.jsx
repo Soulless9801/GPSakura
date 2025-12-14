@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
@@ -72,10 +73,10 @@ const LinkParser = ({ text }) => {
     );
 };
 
-export default function TextParser({ text }){
+export default forwardRef(function TextParser({ text, className="" }, ref) {
     const blocks = text.split('\\n');
     return (
-        <div>
+        <div ref={ref} className={`${className}`}>
             {blocks.map((block, index) => (
                 <div key={index} className="textParserBlock">
                     <BlockLaTeXParser text={block} />
@@ -83,4 +84,4 @@ export default function TextParser({ text }){
             ))}
         </div>
     )
-}
+});

@@ -61,7 +61,7 @@ export default function Modal({title, description, buttonText, buttonStyle={}, b
                     onExited={() => setMounted(false)}
                 >
                     <h2>{title}</h2>
-                    <div><TextParser text={description} /></div>
+                    <div>{typeof description === "string" ? <TextParser text={description} /> : description}</div>
                 </ModalContent>
             )}
         </>
