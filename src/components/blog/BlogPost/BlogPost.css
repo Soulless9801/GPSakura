@@ -4,8 +4,14 @@
     border-radius: 5px;
     margin-bottom: var(--sep-distance-primary);
 }
+.blogPostHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 .blogPostTitle {
     font-size: 2em;
+    cursor: pointer;
 }
 .blogPostBody {
     font-size: 1.2em;
@@ -25,3 +31,56 @@
 .blogLink:hover {
     color: var(--secondary-color);
 }
+.fadeScroll {
+    position: relative;
+    height: 300px;
+
+    overflow: hidden;
+    overscroll-behavior: contain;
+}
+
+.fadeScrollInner {
+    height: 100%;
+    overflow-y: auto;
+
+    padding-right: 1rem;
+    padding-top: 16px;
+
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black 32px,
+        black calc(100% - 32px),
+        transparent
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black 32px,
+        black calc(100% - 32px),
+        transparent
+    );
+}
+
+.fadeScrollInner::-webkit-scrollbar {
+    width: 8px;
+}
+
+.fadeScrollInner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fadeScrollInner::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 4px;
+}
+
+.fadeScrollInner::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+.fadeScrollInner {
+    scrollbar-width: medium;
+    scrollbar-color: var(--secondary-color) transparent;
+}
+
