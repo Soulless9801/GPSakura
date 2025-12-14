@@ -95,13 +95,13 @@ export default function ColorPickerDemo() {
         \\n
         Feedback Legend:
         \\n
-        - Green: Exact match (0 distance)
+        - Green: Exact match (plus or minus 0)
         \\n
-        - Yellow: Very close (less than 10 distance)
+        - Yellow: Very close (plus or minus 10)
         \\n
-        - Orange: Close (less than 100 distance)
+        - Orange: Close (plus or minus 100)
         \\n
-        - Red: Far off (100 or more distance)
+        - Red: Far off (anything else)
         \\n
         Use this feedback to adjust your guesses and try to find the exact color!
 
@@ -155,7 +155,7 @@ export default function ColorPickerDemo() {
                                     </button>
                                 </div>
                                 <div className='col-6'>
-                                    <span style={{ color: win ? "#00ff00" : rgbToCss(primary) }}>Guesses: {guesses}</span>
+                                    <span className="colorText" style={{ color: win ? "#00ff00" : rgbToCss(primary) }}>Guesses: {guesses}</span>
                                 </div>
                             </div>
                             <div className='row g-3 colorRow'>

@@ -1,5 +1,6 @@
 .blogPostContainer {
     padding: 10px;
+    transition: var(--transition-timers);
     border: var(--border-width) solid var(--primary-color);
     border-radius: 5px;
     margin-bottom: var(--sep-distance-primary);

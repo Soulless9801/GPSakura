@@ -60,7 +60,8 @@ export default function Modal({title, description, buttonText, buttonStyle={}, b
                     onClose={closeModal}
                     onExited={() => setMounted(false)}
                 >
-                    <h2>{title}</h2>
+                    <h2 style={{textAlign: "start"}}>{title}</h2>
+                    <br/>
                     <div>{typeof description === "string" ? <TextParser text={description} /> : description}</div>
                 </ModalContent>
             )}

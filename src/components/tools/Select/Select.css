@@ -8,7 +8,7 @@
     transition: var(--transition-timers);
     cursor: pointer;
     padding: var(--padding-dropdown);
-    background-color: var(--bg-color-primary);
+    background-color: transparent;
     border: var(--border-width) solid var(--primary-color);
     border-radius: var(--table-border-radius-secondary);
     user-select: none;
