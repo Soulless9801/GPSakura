@@ -28,3 +28,6 @@
 .colorButton {
     width: 100%;
 }
+.colorText {
+    transition: var(--transition-timers);
+}

@@ -7,7 +7,7 @@ import TextParser from '/src/components/tools/TextParser/TextParser.jsx';
 
 import './BlogPost.css'
 
-export default function BlogPost({ title, body, creationTime, updateTime, postId}) {
+export default function BlogPost({ title, body, creationTime, updateTime, postId}, ref) {
 
     const collapsedKey = `blogPostCollapsed_${postId}`;
     const scrolledKey = `blogPostScrolled_${postId}`;
@@ -20,19 +20,18 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
         localStorage.setItem(scrolledKey, JSON.stringify(scrolled));
     }, [collapsed, scrolled]);
 
-    const ref = useRef(null);
+    const bodyRef = useRef(null);
 
     const minHeight = 300;
 
     const [fit, setFit] = useState(true);
 
     useEffect(() => {
-        const el = ref.current;
+        const el = bodyRef.current;
         if (!el) return;
 
         const update = () => {
             if (!scrolled) return;
-            console.log(el.clientHeight, el.scrollHeight, minHeight);
             const canScroll = el.clientHeight >= minHeight && el.scrollHeight > el.clientHeight;
             setFit(canScroll);  
         };
@@ -51,12 +50,12 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
         <div className="container-fluid blogPostContainer">
             <div className="blogPostHeader">
                 <div className="blogPostTitle" onClick={() => setCollapsed(prev => !prev)}>{title}</div>
-                <div><button onClick={() => setScrolled(prev => !prev)}>{scrolled ? "Disable Scroll" : "Enable Scroll"}</button></div>
+                <div><i className="fa fa-scroll" style={{cursor: "pointer"}} onClick={() => setScrolled(prev => !prev)}></i></div>
             </div>
             {collapsed ? null :
                 <>
                     <div className="blogPostTime">Posted {formatDate(creationTime)}</div>
-                    <div className={`blogPostBody ${scrolled && fit ? "fadeScroll" : ""}`}><TextParser ref={ref} text={body} className={`${scrolled && fit ? "fadeScrollInner" : ""}`} /></div>
+                    <div className={`blogPostBody ${scrolled && fit ? "fadeScroll" : ""}`}><TextParser ref={bodyRef} text={body} className={`${scrolled && fit ? "fadeScrollInner" : ""}`} /></div>
                 </>
             }
             <div className="blogPostTime">Updated {formatDate(updateTime)}</div>
