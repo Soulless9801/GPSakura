@@ -72,10 +72,8 @@ export default function ChaosDemo() {
     const [type, setType] = useState(() => loadValue(typeKey, 'lorenz'));
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 10));
 
-    useEffect(() => {
-        localStorage.setItem(typeKey, JSON.stringify(type));
-        localStorage.setItem(speedKey, JSON.stringify(speed));
-    }, [type, speed]);
+    useEffect(() => localStorage.setItem(typeKey, JSON.stringify(type)), [type]);
+    useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
     
     return (
         <div className='container-fluid chaosDemoWrapper'>

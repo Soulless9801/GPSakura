@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./Form.css";
 
-export default function Form({ init, min, max,  onChange, step = 1, places = 0, disabled = false, style={}, className="" }) {
+export default function Form({ init, min, max, onChange, step = 1, places = 0, disabled = false, style={}, className="" }) {
 	const [value, setValue] = useState(init);
 	const [draft, setDraft] = useState(String(init));
 	const [focus, setFocus] = useState(false);
