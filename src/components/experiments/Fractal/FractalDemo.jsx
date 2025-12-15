@@ -50,12 +50,10 @@ export default function FractalDemo() {
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 100));
     const [angle, setAngle] = useState(() => loadValue(angleKey, 90));
 
-    useEffect(() => {
-        localStorage.setItem(typeKey, JSON.stringify(type));
-        localStorage.setItem(depthKey, JSON.stringify(depth));
-        localStorage.setItem(speedKey, JSON.stringify(speed));
-        localStorage.setItem(angleKey, JSON.stringify(angle));
-    }, [type, depth, speed, angle]);
+    useEffect(() => localStorage.setItem(typeKey, JSON.stringify(type)), [type]);
+    useEffect(() => localStorage.setItem(depthKey, JSON.stringify(depth)), [depth]);
+    useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
+    useEffect(() => localStorage.setItem(angleKey, JSON.stringify(angle)), [angle]);
 
     return (
         <div className='container-fluid fractalDemoWrapper'>

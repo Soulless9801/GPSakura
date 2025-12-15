@@ -38,15 +38,13 @@ export default function ParticleNetworkDemo() {
 	const minMouseStr = 0;
 	const maxMouseStr = 2;
 
-	useEffect(() => {
-		localStorage.setItem(numParticlesKey, JSON.stringify(numParticles));
-		localStorage.setItem(particleRadiusKey, JSON.stringify(particleRadius));
-		localStorage.setItem(connectionDistanceKey, JSON.stringify(connectionDistance));
-		localStorage.setItem(speedKey, JSON.stringify(speed));
-		localStorage.setItem(mouseRadiusKey, JSON.stringify(mouseRadius));
-		localStorage.setItem(mouseStrengthKey, JSON.stringify(mouseStrength));
-		localStorage.setItem(interactiveKey, JSON.stringify(interactive));
-	}, [numParticles, particleRadius, connectionDistance, speed, mouseRadius, mouseStrength, interactive]);
+	useEffect(() => localStorage.setItem(numParticlesKey, JSON.stringify(numParticles)), [numParticles]);
+	useEffect(() => localStorage.setItem(particleRadiusKey, JSON.stringify(particleRadius)), [particleRadius]);
+	useEffect(() => localStorage.setItem(connectionDistanceKey, JSON.stringify(connectionDistance)), [connectionDistance]);
+	useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
+	useEffect(() => localStorage.setItem(mouseRadiusKey, JSON.stringify(mouseRadius)), [mouseRadius]);
+	useEffect(() => localStorage.setItem(mouseStrengthKey, JSON.stringify(mouseStrength)), [mouseStrength]);
+	useEffect(() => localStorage.setItem(interactiveKey, JSON.stringify(interactive)), [interactive]);
 
 	return (
 		<div className='container-fluid particleDemoWrapper'>

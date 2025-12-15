@@ -33,13 +33,11 @@ export default function GameOfLifeDemo() {
 		birth: [3]
 	}));
 
-    useEffect(() => {
-        localStorage.setItem(interactiveKey, JSON.stringify(interactive));
-        localStorage.setItem(showGridKey, JSON.stringify(showGrid));
-        localStorage.setItem(speedKey, JSON.stringify(speed));
-        localStorage.setItem(zoomKey, JSON.stringify(zoom));
-        localStorage.setItem(rulesKey, JSON.stringify(rules));
-    }, [interactive, showGrid, speed, zoom, rules]);
+    useEffect(() => localStorage.setItem(interactiveKey, JSON.stringify(interactive)), [interactive]);
+    useEffect(() => localStorage.setItem(showGridKey, JSON.stringify(showGrid)), [showGrid]);
+    useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
+    useEffect(() => localStorage.setItem(zoomKey, JSON.stringify(zoom)), [zoom]);
+    useEffect(() => localStorage.setItem(rulesKey, JSON.stringify(rules)), [rules]);
 
     const gameRef = useRef(null);
 
