@@ -62,7 +62,7 @@ export default function FreqGuesser({signal, width, height, className="", style=
         return [ctx, W, H];
     }
 
-    const fillSignal = useCallback(() => {
+    const fillSignal = () => {
             
         const [ctx, W, H] = getCTX();
 
@@ -72,7 +72,7 @@ export default function FreqGuesser({signal, width, height, className="", style=
         ctx.fillRect(0, 0, W, H);
 
         ctx.globalCompositeOperation = "source-over";
-    }, []);
+    };
 
     const drawSignal = useCallback(() => {
         

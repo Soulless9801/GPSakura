@@ -135,6 +135,7 @@ export default function Navbar() {
                                     id="gamesMenu"
                                     options={[
                                         { value: 'Color', label: 'Color Picker', to: '/color' },
+                                        { value: 'Freq', label: 'Frequency Guesser', to: '/freq' },
                                     ]}
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
