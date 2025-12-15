@@ -9,6 +9,7 @@ import CellAutomata from '/src/pages/Experiments/CellAutomata.jsx';
 import Fractals from '/src/pages/Experiments/Fractals.jsx';
 import Chaos from '/src/pages/Experiments/Chaos.jsx';
 import Color from '/src/pages/Games/Color.jsx';
+import Freq from '/src/pages/Games/Freq.jsx';
 
 export default function App() {
 	return (
@@ -24,6 +25,7 @@ export default function App() {
 					<Route path="fractals" element={<Fractals />} />
 					<Route path="chaos" element={<Chaos />} />
 					<Route path="color" element={<Color />} />
+					<Route path="freq" element={<Freq />} />
 				</Routes>
 			</HashRouter>
 		</div>

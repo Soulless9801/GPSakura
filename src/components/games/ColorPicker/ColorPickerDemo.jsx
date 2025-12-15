@@ -141,7 +141,6 @@ export default function ColorPickerDemo() {
                         </div>
                     </div>
                 </div>
-                {/* TODO: add controls */}
                 <div className='col-12 col-md-6 col-xl-4 d-flex'>
                     <div className='p-3 colorControls'>
                         <div className='container-fluid colorInputs'>

@@ -1,0 +1,36 @@
+/* TODO: add styling */
+.freqDemoWrapper {
+    padding: 0 5%;
+}
+.freqControls {
+    background: var(--bg-freq-primary);
+    color: var(--primary-freq);
+    transition: var(--transition-timers);
+    border-radius: var(--table-border-radius-secondary);
+    border: 1px solid var(--primary-freq);
+    width: 100%;
+}
+.freqInputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.freqRow {
+    align-items: center;
+}
+.freqLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    white-space: nowrap;
+}
+.freqButton {
+    width: 100%;
+}
+.freqText {
+    transition: var(--transition-timers);
+}
+.freqLabelR {
+    margin-right: var(--sep-distance-primary);
+}
