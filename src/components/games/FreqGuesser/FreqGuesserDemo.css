@@ -3,11 +3,11 @@
     padding: 0 5%;
 }
 .freqControls {
-    background: var(--bg-freq-primary);
-    color: var(--primary-freq);
+    background: var(--bg-color-primary);
+    color: var(--primary-color);
     transition: var(--transition-timers);
     border-radius: var(--table-border-radius-secondary);
-    border: 1px solid var(--primary-freq);
+    border: 1px solid var(--primary-color);
     width: 100%;
 }
 .freqInputs {

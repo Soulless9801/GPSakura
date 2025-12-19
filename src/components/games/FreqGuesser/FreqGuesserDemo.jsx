@@ -9,18 +9,22 @@ import FreqGuesser from "./FreqGuesser.jsx";
 
 import './FreqGuesserDemo.css';
 
-const COMPONENT_COUNT = 2;
-
 export default function FreqGuesserDemo() {
+
+    const componentsKey = "freqGuesserComponents";
+
+    const [components, setComponents] = useState(loadValue(componentsKey, 2));
+
+    useEffect(() => localStorage.setItem(componentsKey, JSON.stringify(components)), [components]);
 
     const t = useMemo(() => generateTimeArray(512, 1), []);
 
     const [targetFreq, setTargetFreq] = useState(() =>
-        Array.from({ length: COMPONENT_COUNT }, randomComponent)
+        Array.from({ length: components }, randomComponent)
     );
 
     const [guessFreq, setGuessFreq] = useState(() =>
-        Array.from({ length: COMPONENT_COUNT }, () => ({ a: 1, f: 1 }))
+        Array.from({ length: components }, () => ({ a: 1, f: 1 }))
     );
 
     const [cachedFreq, setCachedFreq] = useState(guessFreq);
@@ -74,13 +78,30 @@ export default function FreqGuesserDemo() {
         return () => window.removeEventListener("themeStorage", onStorage);
     }, []);
 
+    const chk = useCallback(() => {
+        let targetStrings = [];
+        let cachedStrings = [];
+        for (const { a, f } of targetFreq) targetStrings.push(`${a}_${f}`);
+        for (const { a, f } of cachedFreq) cachedStrings.push(`${a}_${f}`);
+        targetStrings.sort();
+        cachedStrings.sort();
+        for (let i = 0; i < components; i++) if (targetStrings[i] !== cachedStrings[i]) return false;
+        return true;
+    }, [cachedFreq, targetFreq, components]);
+
+    const reset = useCallback(() => {
+        if (!win) setGiveUp(prev => prev + 1);
+        setTargetFreq(Array.from({ length: components }, randomComponent));
+        setGuessFreq(Array.from({ length: components }, () => ({ a: 1, f: 1 })));
+        setGuesses(0);
+        setWin(false);
+    }, [win, components]);
+
     const guess = useCallback(() => {
         if (win) return;
         setGuesses(prev => prev + 1);
         setGuessFreq(cachedFreq);
-        if  (cachedFreq.every(g =>
-            targetFreq.some(tg => tg.a === g.a && tg.f === g.f)
-        )) setWin(true);
+        if (chk()) setWin(true);
         else setWin(false);
     }, [cachedFreq, targetFreq, win]);
 
@@ -91,13 +112,9 @@ export default function FreqGuesserDemo() {
         }
     }, [win]);
 
-    const gen = useCallback(() => {
-        if (!win) setGiveUp(prev => prev + 1);
-        else setWin(false);
-        setTargetFreq(Array.from({ length: COMPONENT_COUNT }, randomComponent));
-        setGuessFreq(Array.from({ length: COMPONENT_COUNT }, () => ({ a: 1, f: 1 })));
-        setGuesses(0);
-    }, [win]);
+    useEffect(() => {
+        reset();
+    }, [components]);
     
     const update = (idx, key, value) => {
         setCachedFreq(prev => {
@@ -128,12 +145,12 @@ export default function FreqGuesserDemo() {
         <div className='container-fluid freqDemoWrapper'>
             <div className='row g-3 align-items-center'>
                 <div className='col-12 col-md-6 col-xl-8'>
-                    <div className="row">
+                    <div className="row gy-3">
                         <div className="col-12">
-                            <FreqGuesser signal={targetSignal} width={"100%"} height={"30vh"} />
+                            <FreqGuesser signal={targetSignal} width={"100%"} height={"30vh"} components={components} />
                         </div>
                         <div className="col-12">
-                            <FreqGuesser signal={guessSignal} width={"100%"} height={"30vh"} />
+                            <FreqGuesser signal={guessSignal} width={"100%"} height={"30vh"} components={components} />
                         </div>
                     </div>
                 </div>
@@ -143,7 +160,16 @@ export default function FreqGuesserDemo() {
                         <div className='container-fluid freqInputs'>
                             <div className='row g-3'>
                                 <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
-                            </div>    
+                            </div>
+                            <div>
+                                <label className="freqLabelR">Number of Components</label>
+                                <Form
+                                    min={2}
+                                    max={5}
+                                    init={components}
+                                    onChange={e => setComponents(e)}
+                                />  
+                            </div>
                             <div className='row g-3 freqRow'>
                                 {guessFreq.map((g, i) => (
                                     <div key={i} className="row g-2">
@@ -180,7 +206,7 @@ export default function FreqGuesserDemo() {
                             </div>
                             <div className='row g-3 freqRow'>
                                 <div className='col-6'>
-                                    <button className='freqButton' onClick={() => gen()} >
+                                    <button className='freqButton' onClick={() => reset()} >
                                         Randomize
                                     </button>
                                 </div>
