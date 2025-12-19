@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { readColor, rgbToCss } from "/src/utils/colors.js";
 
-export default function FreqGuesser({signal, width, height, className="", style={}, colorTransition = 300}) {
+export default function FreqGuesser({signal, width, height, components, className="", style={}, colorTransition = 300}) {
 
     const wrapperRef = useRef(null);
 
@@ -32,17 +32,22 @@ export default function FreqGuesser({signal, width, height, className="", style=
     const colorRafRef = useRef(null);
 
 	const currentColorRef = useRef([0, 0, 0]);
-	const targetColorRef = useRef([0, 0, 0]);
+    const secondaryColorRef = useRef([0, 0, 0]);
+	const targetCurrentColorRef = useRef([0, 0, 0]);
+    const targetSecondaryColorRef = useRef([0, 0, 0]);
 	const transitionProgressRef = useRef(1);
 
 	useEffect(() => {
 		const rgb = readColor();
 		currentColorRef.current = rgb[0];
-		targetColorRef.current = rgb[0];
+		targetCurrentColorRef.current = rgb[0];
+        secondaryColorRef.current = rgb[1];
+        targetSecondaryColorRef.current = rgb[1];
 
 		const onStorage = () => {
 			const rgb = readColor();
-			targetColorRef.current = rgb[0];
+			targetCurrentColorRef.current = rgb[0];
+            targetSecondaryColorRef.current = rgb[1];
 			transitionProgressRef.current = 0;
 		};
 		window.addEventListener("themeStorage", onStorage);
@@ -61,6 +66,40 @@ export default function FreqGuesser({signal, width, height, className="", style=
 
         return [ctx, W, H];
     }
+
+    const drawAxis = useCallback(() => {
+        
+        const [ctx, W, H] = getCTX();
+
+        ctx.strokeStyle = rgbToCss(secondaryColorRef.current);
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.4;
+
+        ctx.beginPath();
+
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, H);
+
+        ctx.moveTo(0, H / 2);
+        ctx.lineTo(W, H / 2);
+
+        for (let i = 1; i <= components; i++){
+            const y = H / 2 + H / 2 / components * i;
+            ctx.moveTo(0, y);
+            ctx.lineTo(5, y);
+        }
+
+        for (let i = 1; i <= components; i++){
+            const y = H / 2 - H / 2 / components * i;
+            ctx.moveTo(0, y);
+            ctx.lineTo(5, y);
+        }
+
+        ctx.stroke();
+
+        ctx.globalAlpha = 1;
+        
+    }, [components]);
 
     const fillSignal = () => {
             
@@ -81,12 +120,12 @@ export default function FreqGuesser({signal, width, height, className="", style=
         ctx.clearRect(0, 0, W, H);
 
         // normalize vertically
-        const max = Math.max(...signal.map(Math.abs)) || 1;
+        const max = 3 * components;
         const midY = H / 2;
 
-        const color = rgbToCss(currentColorRef.current);
+        drawAxis();
 
-        ctx.strokeStyle = color;
+        ctx.strokeStyle = rgbToCss(currentColorRef.current);
         ctx.lineWidth = 2;
         ctx.beginPath();
 
@@ -100,7 +139,7 @@ export default function FreqGuesser({signal, width, height, className="", style=
         ctx.stroke();
 
         fillSignal();
-    }, [signal]);
+    }, [signal, components]);
 
     useEffect(() => {
 
@@ -132,13 +171,23 @@ export default function FreqGuesser({signal, width, height, className="", style=
                 transitionProgressRef.current = Math.min(1, transitionProgressRef.current + inc);
 
                 const t = transitionProgressRef.current;
+
                 const a = currentColorRef.current;
-                const b = targetColorRef.current;
+                const b = targetCurrentColorRef.current;
 
                 currentColorRef.current = [
                     a[0] + (b[0] - a[0]) * t,
                     a[1] + (b[1] - a[1]) * t,
                     a[2] + (b[2] - a[2]) * t,
+                ];
+
+                const x = secondaryColorRef.current;
+                const y = targetSecondaryColorRef.current;
+                
+                secondaryColorRef.current = [
+                    x[0] + (y[0] - x[0]) * t,
+                    x[1] + (y[1] - x[1]) * t,
+                    x[2] + (y[2] - x[2]) * t,
                 ];
 
                 fillSignal();
