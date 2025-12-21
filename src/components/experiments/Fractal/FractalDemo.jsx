@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { loadValue } from "/src/utils/storage.js";
-import { convertToPixels } from '/src/utils/resize.js';
+
+import ExperimentDemo from "/src/components/experiments/ExperimentDemo.jsx";
 
 import Fractal from "./Fractal.jsx";
 import Select from "/src/components/tools/Select/Select.jsx";
@@ -55,83 +56,77 @@ export default function FractalDemo() {
     useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
     useEffect(() => localStorage.setItem(angleKey, JSON.stringify(angle)), [angle]);
 
+    const display = (
+        <Fractal
+            type={type}
+            width={"100%"}
+            height={"100%"}
+            depth={depth}
+            speed={speed}
+            angle={angle}
+            //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
+        />
+    );
+
+    const controls = (
+        <>
+            <div className='row g-3'>
+                <div className='col-12'>
+                    <Select
+                        options={fractalOptions}
+                        defaultValue={type}
+                        onChange={e => {
+                            const value = e.value;
+                            setType(value);
+                            if (depthFractals.findIndex(item => item === value) === -1) return;
+
+                            const newMaxDepth = depthMax[value];
+
+                            setMaxDepth(newMaxDepth);
+                            setDepth(prev => {
+                                return Math.min(prev, newMaxDepth);
+                            });
+                        }}
+                        labelL={"Type"}
+                        id="fractalDemoSelect"
+                    />
+                </div>
+                <hr/>
+                <div className='col-12'>
+                    <Slider 
+                        min={1} 
+                        max={maxDepth} 
+                        value={depth} 
+                        onChange={e => setDepth(e)} 
+                        label="Depth"
+                        disabled={depthFractals.findIndex(item => item === type) === -1}
+                    />
+                </div>
+                <div className='col-12'>
+                    <Slider 
+                        min={10} 
+                        max={1000} 
+                        value={speed} 
+                        onChange={e => setSpeed(e)} 
+                        label="Speed"
+                        disabled={speedFractals.findIndex(item => item === type) === -1}
+                    />
+                </div>
+                <div className='col-12'>
+                    <Slider 
+                        min={0} 
+                        max={180} 
+                        value={angle} 
+                        onChange={e => setAngle(e)} 
+                        label="Angle"
+                        disabled={angleFractals.findIndex(item => item === type) === -1}
+                    />
+                </div>
+            </div> 
+        </>
+    );
+
     return (
-        <div className='container-fluid fractalDemoWrapper'>
-            <div className='row g-3 align-items-center'>
-                <div className='col-12 col-md-6 col-xl-8'>
-                    <div style={{ width: '100%', height: convertToPixels('60vh'), position: 'relative' }}>
-                        <Fractal
-                            type={type}
-                            width={"100%"}
-                            height={"100%"}
-                            depth={depth}
-                            speed={speed}
-                            angle={angle}
-                            //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
-                        />
-                    </div>
-                </div>
-                <div className='col-12 col-md-6 col-xl-4 d-flex'>
-                    <div className='p-3 fractalControls'>
-                        <div className='container-fluid fractalControlsSliders'>
-                            <div className='row g-3'>
-                                <div className='col-12'>
-                                    <label htmlFor="fractalDemoSelect" className="fractalDemoLabel">Type</label>
-                                    <Select
-                                        options={fractalOptions}
-                                        defaultValue={type}
-                                        onChange={e => {
-                                            const value = e.value;
-                                            setType(value);
-                                            if (depthFractals.findIndex(item => item === value) === -1) return;
-
-                                            const newMaxDepth = depthMax[value];
-
-                                            setMaxDepth(newMaxDepth);
-                                            setDepth(prev => {
-                                                return Math.min(prev, newMaxDepth);
-                                            });
-                                        }}
-                                        className="fractalDemoSelect"
-                                        id="fractalDemoSelect"
-                                    />
-                                </div>
-                                <hr/>
-                                <div className='col-12'>
-                                    <Slider 
-                                        min={1} 
-                                        max={maxDepth} 
-                                        value={depth} 
-                                        onChange={e => setDepth(e)} 
-                                        label="Depth"
-                                        disabled={depthFractals.findIndex(item => item === type) === -1}
-                                    />
-                                </div>
-                                <div className='col-12'>
-                                    <Slider 
-                                        min={10} 
-                                        max={1000} 
-                                        value={speed} 
-                                        onChange={e => setSpeed(e)} 
-                                        label="Speed"
-                                        disabled={speedFractals.findIndex(item => item === type) === -1}
-                                    />
-                                </div>
-                                <div className='col-12'>
-                                    <Slider 
-                                        min={0} 
-                                        max={180} 
-                                        value={angle} 
-                                        onChange={e => setAngle(e)} 
-                                        label="Angle"
-                                        disabled={angleFractals.findIndex(item => item === type) === -1}
-                                    />
-                                </div>
-                            </div> 
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ExperimentDemo display={display} controls={controls} />
     );
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { loadValue } from "/src/utils/storage.js";
-import { convertToPixels } from '/src/utils/resize.js';
+
+import ExperimentDemo from '/src/components/experiments/ExperimentDemo.jsx';
 
 import ParticleNetwork from './ParticleNetwork.jsx';
 import Slider from '/src/components/tools/Slider/Slider.jsx';
@@ -46,46 +47,43 @@ export default function ParticleNetworkDemo() {
 	useEffect(() => localStorage.setItem(mouseStrengthKey, JSON.stringify(mouseStrength)), [mouseStrength]);
 	useEffect(() => localStorage.setItem(interactiveKey, JSON.stringify(interactive)), [interactive]);
 
-	return (
-		<div className='container-fluid particleDemoWrapper'>
-			<div className='row g-3 align-item-start'>
-				<div className='col-12 col-md-6 col-lg-8'>
-					<div style={{ width: '100%', height: convertToPixels('60vh'), position: 'relative' }}>
-						<ParticleNetwork
-							numParticles={numParticles}
-							connectionDistance={connectionDistance}
-							width="100%"
-							height="100%"
-							particleRadius={particleRadius}
-							speed={speed}
-							mouseRadius={mouseRadius}
-							mouseStrength={mouseStrength}
-							interactive={interactive}
-							style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
-						/>
-					</div>
+	const display = (
+		<ParticleNetwork
+			numParticles={numParticles}
+			connectionDistance={connectionDistance}
+			width="100%"
+			height="100%"
+			particleRadius={particleRadius}
+			speed={speed}
+			mouseRadius={mouseRadius}
+			mouseStrength={mouseStrength}
+			interactive={interactive}
+			style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
+		/>
+	);
+
+	const controls = (
+		<>
+			<div className="row g-3">
+				<Slider min={minParticles} max={maxParticles} value={numParticles} onChange={e => setNumParticles(e)} label="Particles"/>
+				<Slider min={minRadius} max={maxRadius} value={particleRadius} onChange={e => setParticleRadius(e)} label="Size" />
+				<Slider min={minDist} max={maxDist} value={connectionDistance} onChange={e => setConnectionDistance(e)} label="Distance" />
+				<Slider min={minSpeed} max={maxSpeed} step={0.01} places={2} value={speed} onChange={e => setSpeed(e)} label="Speed" />
+				<hr/>
+				<div>
+					<button onClick={() => {
+						setInteractive(prev => !prev);
+					}}>
+						Interactive
+					</button>
 				</div>
-				<div className='col-12 col-md-6 col-lg-4 d-flex'>
-					<div className='p-3 particleControls'>
-						<div className='particleControlsSliders'>
-							<Slider min={minParticles} max={maxParticles} value={numParticles} onChange={e => setNumParticles(e)} label="Particles"/>
-							<Slider min={minRadius} max={maxRadius} value={particleRadius} onChange={e => setParticleRadius(e)} label="Size" />
-							<Slider min={minDist} max={maxDist} value={connectionDistance} onChange={e => setConnectionDistance(e)} label="Distance" />
-							<Slider min={minSpeed} max={maxSpeed} step={0.01} places={2} value={speed} onChange={e => setSpeed(e)} label="Speed" />
-							<hr/>
-							<div>
-								<button className="particleButton" onClick={() => {
-									setInteractive(prev => !prev);
-								}}>
-									Interactive
-								</button>
-							</div>
-							<Slider min={minMouseRadius} max={maxMouseRadius} value={mouseRadius} onChange={e => setMouseRadius(e)} label="Mouse Radius" disabled={!interactive}/>
-							<Slider min={minMouseStr} max={maxMouseStr} step={0.01} places={2} value={mouseStrength} onChange={e => setMouseStrength(e)} label="Mouse Str" disabled={!interactive}/>
-						</div>
-					</div>
-				</div>
+				<Slider min={minMouseRadius} max={maxMouseRadius} value={mouseRadius} onChange={e => setMouseRadius(e)} label="Mouse Radius" disabled={!interactive}/>
+				<Slider min={minMouseStr} max={maxMouseStr} step={0.01} places={2} value={mouseStrength} onChange={e => setMouseStrength(e)} label="Mouse Str" disabled={!interactive}/>
 			</div>
-		</div>
+		</>
+	);
+
+	return (
+		<ExperimentDemo display={display} controls={controls} />
 	);
 }

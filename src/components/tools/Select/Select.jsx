@@ -3,7 +3,7 @@ import { findIndex } from "/src/utils/list.js";
 
 import "./Select.css";
 
-export default function Select({ options = [], defaultValue, onChange, defaultIndex=0, fixedSelect=false, align="left", placeholder="Select an option" }) {
+export default function Select({ options = [], defaultValue, onChange, defaultIndex=0, fixedSelect=false, align="left", labelR=null, labelL=null, placeholder="" }) {
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState({ value: '1', label: '1' });
 
@@ -41,20 +41,24 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     }, [open, hover]);
 
     return (
-        <div className="customSelect">
-            <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => {setHover(false); setClosed(false);}}>
-                <div className="customSelectSelected" onClick={() => {setClosed(open); setOpen((prev) => !prev);}}>
-                    {fixedSelect ? placeholder : value.label}
-                    <span className="customSelectArrow">{open ? "↑" : "↓"}</span>
-                </div>
-                <div className={`customSelectOptions${showMenu ? " show" : ""}${align === "right" ? " right" : ""}`} ref={menuRef}>
-                    {options.map((option) => (
-                        <div key={option.value} className={`customSelectOption${value && value.value === option.value ? " selected" : ""}`} onClick={() => handleSelect(option)}>
-                            {option.label}
-                        </div>
-                    ))}
+        <>
+            {labelL && <label className="customSelectLabelR">{labelL}</label>}
+            <div className="customSelect">
+                <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => {setHover(false); setClosed(false);}}>
+                    <div className="customSelectSelected" onClick={() => {setClosed(open); setOpen((prev) => !prev);}}>
+                        {fixedSelect ? placeholder : value.label}
+                        <span className="customSelectArrow">{open ? "↑" : "↓"}</span>
+                    </div>
+                    <div className={`customSelectOptions${showMenu ? " show" : ""}${align === "right" ? " right" : ""}`} ref={menuRef}>
+                        {options.map((option) => (
+                            <div key={option.value} className={`customSelectOption${value && value.value === option.value ? " selected" : ""}`} onClick={() => handleSelect(option)}>
+                                {option.label}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
-        </div>
+            {labelR && <label className="customSelectLabelL">{labelR}</label>}
+        </>
     );
 };

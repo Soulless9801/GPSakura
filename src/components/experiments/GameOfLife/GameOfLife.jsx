@@ -382,6 +382,7 @@ export default forwardRef(function GameOfLife(
 				clearGrid();
 			},
 			step() {
+				if (runningRef.current) return; //duplicate
 				setGrid(stepGeneration());
 			},
 			randomize() {

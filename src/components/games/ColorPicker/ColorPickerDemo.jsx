@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { convertToPixels } from '/src/utils/resize.js';
 import { readColor, rgbToCss } from '/src/utils/colors.js';
 import { loadValue } from '/src/utils/storage.js';
-import { randomColor } from '/src/entities/color.js';
+import { randomColor, defaultColor } from '/src/entities/color.js';
 
 import Form from '/src/components/tools/Form/Form.jsx';
 
@@ -15,7 +15,7 @@ export default function ColorPickerDemo() {
 
     const [targetColor, setTargetColor] = useState(randomColor());
     
-    const [cachedColor, setCachedColor] = useState([0, 0, 0]);
+    const [cachedColor, setCachedColor] = useState(defaultColor);
     const [guessColor, setGuessColor] = useState(cachedColor);
 
     useEffect(() => {
@@ -28,6 +28,10 @@ export default function ColorPickerDemo() {
     const [win, setWin] = useState(false);
 
     const guessesRef = useRef(guesses);
+
+    useEffect(() => {
+        guessesRef.current = guesses;
+    }, [guesses]);
 
     const sumKey = "colorPickerSum";
     const countKey = "colorPickerCount";
@@ -62,20 +66,20 @@ export default function ColorPickerDemo() {
         return "#ff0000";
     }, [primary]);
 
-    const guess = useCallback(() => {
-        if (win) return;
+    const chk = useCallback(() => {
         const res = [0, 0, 0];
         for (let i = 0; i < 3; i++) res[i] = Math.abs(targetColor[i] - cachedColor[i]);
         setRgbD(res);
+        return res[0] === 0 && res[1] === 0 && res[2] === 0;
+    }, [targetColor, cachedColor]);
+
+    const guess = useCallback(() => {
+        if (win) return;
         setGuesses(prev => prev + 1);
         setGuessColor(cachedColor);
-        if (res[0] === 0 && res[1] === 0 && res[2] === 0) setWin(true);
+        if (chk()) setWin(true);
         else setWin(false);
-    }, [targetColor, cachedColor, guesses, win]);
-
-    useEffect(() => {
-        guessesRef.current = guesses;
-    }, [guesses]);
+    }, [cachedColor, guesses, win]);
 
     useEffect(() => {
         if (win) {

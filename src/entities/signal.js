@@ -29,3 +29,10 @@ export function randomComponent() {
         f: Math.floor(Math.random() * 10) + 1,
     };
 }
+
+export function defaultComponent() {
+    return {
+        a: 1,
+        f: 1,
+    };
+}
