@@ -67,3 +67,11 @@
 .customSelectOption.selected {
     background: var(--bg-color-hover);
 }
+
+.customSelectLabelR {
+    margin-right: var(--sep-distance-secondary);
+}
+
+.customSelectLabelL {
+    margin-left: var(--sep-distance-secondary);
+}

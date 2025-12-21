@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { loadValue } from '/src/utils/storage.js';
 import { rgbToCss, readColor } from '/src/utils/colors.js';
-import { generateTimeArray, composeSignal, randomComponent } from "/src/entities/signal.js";
+import { generateTimeArray, composeSignal, randomComponent, defaultComponent } from "/src/entities/signal.js";
 
 import Form from '/src/components/tools/Form/Form.jsx';
 import Modal from '/src/components/tools/Modal/Modal.jsx';
@@ -24,7 +24,7 @@ export default function FreqGuesserDemo() {
     );
 
     const [guessFreq, setGuessFreq] = useState(() =>
-        Array.from({ length: components }, () => ({ a: 1, f: 1 }))
+        Array.from({ length: components }, defaultComponent)
     );
 
     const [cachedFreq, setCachedFreq] = useState(guessFreq);
@@ -78,6 +78,14 @@ export default function FreqGuesserDemo() {
         return () => window.removeEventListener("themeStorage", onStorage);
     }, []);
 
+    const reset = useCallback(() => {
+        if (!win) setGiveUp(prev => prev + 1);
+        setTargetFreq(Array.from({ length: components }, randomComponent));
+        setGuessFreq(Array.from({ length: components }, defaultComponent));
+        setGuesses(0);
+        setWin(false);
+    }, [win, components]);
+
     const chk = useCallback(() => {
         let targetStrings = [];
         let cachedStrings = [];
@@ -89,21 +97,13 @@ export default function FreqGuesserDemo() {
         return true;
     }, [cachedFreq, targetFreq, components]);
 
-    const reset = useCallback(() => {
-        if (!win) setGiveUp(prev => prev + 1);
-        setTargetFreq(Array.from({ length: components }, randomComponent));
-        setGuessFreq(Array.from({ length: components }, () => ({ a: 1, f: 1 })));
-        setGuesses(0);
-        setWin(false);
-    }, [win, components]);
-
     const guess = useCallback(() => {
         if (win) return;
         setGuesses(prev => prev + 1);
         setGuessFreq(cachedFreq);
         if (chk()) setWin(true);
         else setWin(false);
-    }, [cachedFreq, targetFreq, win]);
+    }, [cachedFreq, win]);
 
     useEffect(() => {
         if (win) {

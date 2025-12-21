@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { loadValue } from "/src/utils/storage.js";
-import { convertToPixels } from '/src/utils/resize.js';
+
+import ExperimentDemo from "/src/components/experiments/ExperimentDemo.jsx";
 
 import Chaos from "./Chaos.jsx";
 import Select from "/src/components/tools/Select/Select.jsx";
@@ -74,55 +75,50 @@ export default function ChaosDemo() {
 
     useEffect(() => localStorage.setItem(typeKey, JSON.stringify(type)), [type]);
     useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
-    
-    return (
-        <div className='container-fluid chaosDemoWrapper'>
-            <div className='row g-3 align-items-center'>
-                <div className='col-12 col-md-6 col-xl-8'>
-                    <div style={{ width: '100%', height: convertToPixels('70vh'), position: 'relative' }}>
-                        <Chaos
-                            attractor={attractors[type]}
-                            width={"100%"}
-                            height={"100%"}
-                            speed={speed}
-                            //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
-                        />
-                    </div>
+
+    const display = (
+        <Chaos
+            attractor={attractors[type]}
+            width={"100%"}
+            height={"100%"}
+            speed={speed}
+            //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
+        />
+    );
+
+    const controls = (
+        <>
+            <div className='row g-3'>
+                <div className='col-12'>
+                    <Select
+                        options={chaosOptions}
+                        defaultValue={type}
+                        onChange={e => {
+                            const value = e.value;
+                            setType(value);
+                        }}
+                        className="chaosDemoSelect"
+                        labelL={"Type"}
+                        id="chaosDemoSelect"
+                    />
                 </div>
-                <div className='col-12 col-md-6 col-xl-4 d-flex'>
-                    <div className='p-3 chaosControls'>
-                        <div className='container-fluid chaosControlsSliders'>
-                            <div className='row g-3'>
-                                <div className='col-12'>
-                                    <label htmlFor="chaosDemoSelect" className="chaosDemoLabel">Type</label>
-                                    <Select
-                                        options={chaosOptions}
-                                        defaultValue={type}
-                                        onChange={e => {
-                                            const value = e.value;
-                                            setType(value);
-                                        }}
-                                        className="chaosDemoSelect"
-                                        id="chaosDemoSelect"
-                                    />
-                                </div>
-                                <hr/>
-                                <div className='col-12'>
-                                    <Slider 
-                                        min={0.01} 
-                                        max={0.1} 
-                                        value={speed}
-                                        step={0.01}
-                                        places={2}
-                                        onChange={e => setSpeed(e)} 
-                                        label="Speed"
-                                    />
-                                </div>
-                            </div>    
-                        </div>
-                    </div>
+                <hr/>
+                <div className='col-12'>
+                    <Slider 
+                        min={0.01} 
+                        max={0.1} 
+                        value={speed}
+                        step={0.01}
+                        places={2}
+                        onChange={e => setSpeed(e)} 
+                        label="Speed"
+                    />
                 </div>
             </div>
-        </div>
+        </>
+    );
+    
+    return (
+        <ExperimentDemo display={display} controls={controls} />
     );
 };
