@@ -8,7 +8,7 @@ function parseNewlines(text) {
 function parseBlockMath(html) {
     return html.replace(
         /\$\$([\s\S]+?)\$\$/g,
-        (_, expr) => `<div class="math-block">\\[${expr.trim()}\\]</div>`
+        (_, expr) => `<div>\\[${expr.trim()}\\]</div>`
     );
 }
 
