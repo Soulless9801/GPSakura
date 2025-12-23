@@ -86,7 +86,7 @@ export default function Navbar() {
     }, []);
 
     return (
-        <div className="navbar-wrapper">
+        <section className="navbar-wrapper">
             <nav className="navbar navbar-expand-md navbar-custom">
                 <div className="container-fluid">
                     <Link className="navbar-brand ms-3 d-none d-md-block" to="/"><img src="/favicon.png" alt="Logo" className="me-2 navbar-logo" id="navIcon"/></Link>
@@ -155,6 +155,6 @@ export default function Navbar() {
                     </div>
                 </div>
             </nav>
-        </div>
+        </section>
     )
 }

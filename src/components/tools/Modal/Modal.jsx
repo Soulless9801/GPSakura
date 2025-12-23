@@ -26,14 +26,14 @@ function ModalContent({ open, onClose, onExited, children }) {
     }, [open, onExited]);
 
     return (
-        <div className={`modalRoot ${open ? "open" : ""}`}>
+        <section className={`modalRoot ${open ? "open" : ""}`}>
             <div className="modalBackdrop" onClick={onClose} />
 
             <div className="modalPanel">
                 <button className="modalClose" onClick={onClose}>✕</button>
                 {children}
             </div>
-        </div>
+        </section>
     );
 }
 

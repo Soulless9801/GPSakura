@@ -47,7 +47,7 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
     }, [collapsed, scrolled]);
 
     return (
-        <div className="container-fluid blogPostContainer">
+        <section className="container-fluid blogPostContainer">
             <div className="blogPostHeader">
                 <div className="blogPostTitle" onClick={() => setCollapsed(prev => !prev)}>{title}</div>
                 <div><i className="fa fa-scroll" style={{cursor: "pointer"}} onClick={() => setScrolled(prev => !prev)}></i></div>
@@ -63,6 +63,6 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
                 <GenericButton postId={postId} type={'pin'} icon='fa-heart' fill='#ff0000'/>
                 <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up' fill='#00ff00'/>
             </div>
-        </div>
+        </section>
     );
 }
