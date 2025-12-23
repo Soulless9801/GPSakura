@@ -16,7 +16,6 @@ A passion project manifested
 ### Mathematical Typesetting
 
 - [Katex](https://github.com/KaTeX/KaTeX)
-- [react-katex](https://github.com/talyssonoc/react-katex)
 
 ### UI
 - [Bootstrap](https://github.com/twbs/bootstrap)
