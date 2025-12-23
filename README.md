@@ -26,7 +26,7 @@ A passion project manifested
 ### Utilities
 - [jQuery](https://jquery.com)
 - [Datatables](https://github.com/DataTables/DataTables)
-- [datatables.net-react](https://github.com/DataTables/Dist-DataTables-DataTables)
+- [datatables.net-dt](https://github.com/DataTables/Dist-DataTables-DataTables)
 
 ### APIs
 

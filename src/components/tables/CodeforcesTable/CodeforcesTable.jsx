@@ -66,7 +66,7 @@ export default function CodeforcesTable() {
     };
 
     return (
-        <div className="container-fluid table-wrapper">
+        <section className="container-fluid table-wrapper">
             <br/>
             <h1>Problem List</h1>
             <hr/>
@@ -115,7 +115,7 @@ export default function CodeforcesTable() {
                     </tr>
                 </thead>
             </DataTable>
-        </div>
+        </section>
     );
 }  
 

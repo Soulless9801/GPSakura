@@ -37,14 +37,16 @@ const InlineLatexParser = ({ text }) => {
 }
 
 const DecorationParser = ({ text }) => {
-    const parts = text.split(/(\*\*[^*]+\*\*|__[^_]+__)/g);
+    const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__)/g);
     return (
         <span>
             {parts.map((part, index) => {
                 if (part.startsWith('**') && part.endsWith('**')) {
                     return <strong key={index}><LinkParser text={part.slice(2, -2)} /></strong>;
+                } else if (part.startsWith('*') && part.endsWith('*')) {
+                    return <em key={index}><LinkParser text={part.slice(1, -1)} /></em>;
                 } else if (part.startsWith('__') && part.endsWith('__')) {
-                    return <em key={index}><LinkParser text={part.slice(2, -2)} /></em>;
+                    return <u key={index}><LinkParser text={part.slice(2, -2)} /></u>;
                 } else {
                     return <span key={index}><LinkParser text={part} /></span>;
                 }
