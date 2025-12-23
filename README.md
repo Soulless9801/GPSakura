@@ -17,7 +17,7 @@ A passion project manifested
 
 - [Katex](https://github.com/KaTeX/KaTeX)
 
-### UI
+### UI, Animations, Icons
 - [Bootstrap](https://github.com/twbs/bootstrap)
 - [Motion (formerly Framer Motion)](https://github.com/motiondivision/motion)
 - [Font Awesome Free](https://github.com/FortAwesome/Font-Awesome)
