@@ -78,3 +78,13 @@ button.disabled, button:disabled {
 	border-color: var(--bg-color-primary);
 	cursor: default;
 }
+
+a {
+	transition: var(--transition-timers);
+    text-decoration: none !important;
+    color: var(--primary-color) !important;
+}
+
+a:hover {
+	color: var(--secondary-color) !important;
+}
