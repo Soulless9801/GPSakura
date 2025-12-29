@@ -15,6 +15,7 @@ exports.handler = async (event, context) => {
 	const delim = ';';
 
 	try {
+		
 		const SHEET_ID = "0";
 		const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=tsv&gid=${SHEET_ID}`;
 

@@ -7,9 +7,8 @@ import "./Modal.css";
 function ModalContent({ open, onClose, onExited, children }) {
 
     useEffect(() => {
-        document.body.style.overflow = "hidden";
-        return () => document.body.style.overflow = "";
-    }, []);
+        document.body.style.overflow = open ? "hidden" : "";
+    }, [open]);
 
     useEffect(() => {
         const onKey = e => e.key === "Escape" && onClose();
@@ -26,7 +25,7 @@ function ModalContent({ open, onClose, onExited, children }) {
     }, [open, onExited]);
 
     return (
-        <section className={`modalRoot ${open ? "open" : ""}`}>
+        <section className={`modalRoot ${open ? "open" : ""}`} aria-hidden={!open}>
             <div className="modalBackdrop" onClick={onClose} />
 
             <div className="modalPanel">
@@ -54,17 +53,15 @@ export default function Modal({title, description, buttonText, buttonStyle={}, b
         <>
             <button style={buttonStyle} className={buttonClassName} onClick={openModal}>{buttonText}</button>
 
-            {mounted && (
-                <ModalContent
-                    open={open}
-                    onClose={closeModal}
-                    onExited={() => setMounted(false)}
-                >
-                    <h2 style={{textAlign: "start"}}>{title}</h2>
-                    <br/>
-                    <div>{typeof description === "string" ? <TextParser text={description} /> : description}</div>
-                </ModalContent>
-            )}
+            <ModalContent
+                open={open}
+                onClose={closeModal}
+                onExited={() => setMounted(false)}
+            >
+                <h2 style={{textAlign: "start"}}>{title}</h2>
+                <br/>
+                <div>{typeof description === "string" ? <TextParser text={description} /> : description}</div>
+            </ModalContent>
         </>
     );
 }

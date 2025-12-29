@@ -7,7 +7,7 @@ import TextParser from '/src/components/tools/TextParser/TextParser.jsx';
 
 import './BlogPost.css'
 
-export default function BlogPost({ title, body, creationTime, updateTime, postId}, ref) {
+export default function BlogPost({ title, body, creationTime, updateTime, postId}) {
 
     const collapsedKey = `blogPostCollapsed_${postId}`;
     const scrolledKey = `blogPostScrolled_${postId}`;
