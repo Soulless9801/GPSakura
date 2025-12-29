@@ -6,42 +6,30 @@ const fs = require('fs');
 const path = require('path');
 
 
-const { GOOGLE_API_KEY, SPREADSHEET_ID } = process.env;
+const { SPREADSHEET_ID } = process.env;
 
 exports.handler = async (event, context) => {
+
 	let csv;
+
+	const delim = ';';
+
 	try {
-		const TAB_NAME = 'Sheet1';
-		const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${TAB_NAME}?alt=json&key=${GOOGLE_API_KEY}`;
+		const SHEET_ID = "0";
+		const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=tsv&gid=${SHEET_ID}`;
 
 		const response = await fetch(url);
-		if (!response.ok) {
-			throw new Error(`Google Sheets API returned ${response.status}`);
-		}
 
-		const jsonData = await response.json();
-		const data = jsonData.values;
+		if (!response.ok) throw new Error();
 
-		if (!data || !data.length) {
-			return {
-				statusCode: 404,
-				body: 'Empty Google Sheet'
-			};
-		}
+		csv = await response.text();
+		csv = csv.replaceAll('\t', ';');
 
-		csv = data.map(row => row.join(';')).join('\n');
+		// console.log(`Fetched ${csv.length} rows from Google Sheets`);
 
 	} catch (error) {
-		// read from local file
-		try {
-			const filePath = path.resolve('./netlify/functions/data/cfProblems.csv');
-			csv = fs.readFileSync(filePath, 'utf8');
-		} catch (fsError) {
-			return {
-				statusCode: 500,
-				body: 'Unable to fetch Data'
-			};
-		}
+		const filePath = path.resolve('./netlify/functions/data/cfProblems.csv');
+		csv = fs.readFileSync(filePath, 'utf8');
 	}
 
 	return {

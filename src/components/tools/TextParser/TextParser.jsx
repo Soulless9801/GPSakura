@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { parseMarkdown } from '/src/utils/parse.js';
-import { BlockMath, InlineMath } from 'react-katex';
 
 import renderMathInElement from 'katex/contrib/auto-render';
 

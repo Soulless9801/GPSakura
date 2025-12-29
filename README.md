@@ -30,7 +30,6 @@ A passion project manifested
 ### APIs
 
 - [Firebase](https://github.com/firebase/firebase-js-sdk)
-- [Google APIs](https://github.com/googleapis/google-api-nodejs-client)
 - [dotenv](https://github.com/motdotla/dotenv)
 
 ### Tools
