@@ -1,5 +1,6 @@
 export function formatDate(timestamp) {
-    return timestamp.toDate().toLocaleString(undefined, {
+    const date = new Date(timestamp);
+    return date.toLocaleString(undefined, {
         dateStyle: 'medium',
         timeStyle: 'short',
     });
