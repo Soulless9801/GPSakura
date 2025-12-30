@@ -73,7 +73,7 @@
 }
 
 .fadeScrollInner {
-    scrollbar-width: medium;
+    scrollbar-width: thin;
     scrollbar-color: var(--secondary-color) transparent;
 }
 

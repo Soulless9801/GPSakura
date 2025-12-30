@@ -1,5 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import lightImage from '/favicon.png';
+import darkImage from '/favicom.png';
 
 import Select from '/src/components/tools/Select/Select.jsx'
 
@@ -7,6 +9,9 @@ import './Navbar.css';
 
 export default function Navbar() {
     const [theme, setTheme] = useState(localStorage.theme || 'light');
+
+    const [brand, setBrand] = useState(lightImage);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -15,17 +20,16 @@ export default function Navbar() {
         localStorage.theme = theme;
 
         const icon = document.getElementById('darkModeIcon');
-        const navImg = document.getElementById('navIcon');
-        const websisteIcon = document.getElementById('websiteIcon');
+        const websiteIcon = document.getElementById('websiteIcon');
 
         if (theme === 'dark') {
             icon.classList.replace('fa-sun', 'fa-moon');
-            navImg.src = '/favicom.png';
-            websisteIcon.to = '/favicom.png';
+            setBrand(darkImage);
+            websiteIcon.to = darkImage;
         } else {
             icon.classList.replace('fa-moon', 'fa-sun');
-            navImg.src = '/favicon.png';
-            websisteIcon.to = '/favicon.png';
+            setBrand(lightImage);
+            websiteIcon.to = lightImage;
         }
     }, [theme]);
 
@@ -89,7 +93,7 @@ export default function Navbar() {
         <section className="navbar-wrapper">
             <nav className="navbar navbar-expand-md navbar-custom">
                 <div className="container-fluid">
-                    <Link className="navbar-brand ms-3 d-none d-md-block" to="/"><img src="/favicon.png" alt="Logo" className="me-2 navbar-logo" id="navIcon"/></Link>
+                    <Link className="navbar-brand ms-3 d-none d-md-block" to="/"><img src={brand} alt="Logo" className="me-2 navbar-logo" id="navIcon"/></Link>
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false">
                         <label htmlFor="navbarIcon" className="navbarLabel">Menu</label>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" id="navbarIcon">
