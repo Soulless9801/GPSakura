@@ -50,7 +50,7 @@ exports.handler = async (event, context) => {
             };
         });
 
-        // console.log("Fetched blog posts from Firebase: ", posts.length);
+        console.log(`Fetched ${posts.length} blog posts from Firebase`);
 
     } catch (error) {
         // console.error("Firestore Error: ", error);
