@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
 		csv = await response.text();
 		csv = csv.replaceAll('\t', ';');
 
-		// console.log(`Fetched ${csv.length} rows from Google Sheets`);
+		console.log(`Fetched ${csv.length} rows from Google Sheets`);
 
 	} catch (error) {
 		const filePath = path.resolve('./netlify/functions/data/cfProblems.csv');

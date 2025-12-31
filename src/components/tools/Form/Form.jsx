@@ -66,7 +66,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	const holdTimeout = useRef(null);
 
 	const startHold = (inc) => {
-		if (disabled) return;
+		if (disabled || holdTimeout.current || holdInterval.current) return;
 		setValue(prev => updateValue(Number(prev) + inc));
 		holdTimeout.current = setTimeout(() => {
 			holdInterval.current = setInterval(() => {
@@ -78,6 +78,8 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	const stopHold = () => {
 		clearTimeout(holdTimeout.current);
 		clearInterval(holdInterval.current);
+		holdTimeout.current = null;
+		holdInterval.current = null;
 	};
 
 	return (
@@ -86,21 +88,17 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 			<div className="customNumberButtons">
 				<div
 					className="btn-up"
-					onMouseDown={e => { e.preventDefault(); startHold(step);  }}
-					onMouseUp={stopHold}
-					onMouseLeave={stopHold}
-					onTouchStart={e => { e.preventDefault(); startHold(step); }}
-					onTouchEnd={stopHold}
+					onPointerDown={e => { e.preventDefault(); startHold(step); }}
+					onPointerUp={stopHold}
+					onPointerLeave={stopHold}
 				>
 					▲
 				</div>
 				<div
 					className="btn-down"
-					onMouseDown={e => { e.preventDefault(); startHold(-step); }}
-					onMouseUp={stopHold}
-					onMouseLeave={stopHold}
-					onTouchStart={e => { e.preventDefault(); startHold(-step); }}
-					onTouchEnd={stopHold}
+					onPointerDown={e => { e.preventDefault(); startHold(-step); }}
+					onPointerUp={stopHold}
+					onPointerLeave={stopHold}
 				>
 					▼
 				</div>

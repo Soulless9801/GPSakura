@@ -4,7 +4,7 @@ import Form from '/src/components/tools/Form/Form.jsx';
 
 import "./Slider.css";
 
-export default function Slider({ min, max, value, onChange, label, unit, step = 1, places = 0, disabled = false}) {
+export default function Slider({ min, max, value, onChange, label, unit, step=1, places=0, disabled=false, form=true}) {
     
     const [internalValue, setInternalValue] = useState(value);
     const [percent, setPercent] = useState(((internalValue - min) / (max - min)) * 100);
@@ -57,12 +57,14 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
         <div className="customSliderWrapper">
             <div className={`customSlider ${disabled ? " disabled" : ""}`}>
                 <div className="customSliderRow">
-                    <div className="customSliderLabel">
-                        <span>{label}</span>
-                        <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => setInternalValue(e)} />
-                        <span>{unit ? unit : ""}</span>
-                    </div>
-                    <div className="customSliderTrackWrapper" onMouseDown={startDrag}>
+                    {form && (
+                        <div className="customSliderLabel">
+                            <span>{label}</span>
+                            <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => setInternalValue(e)} />
+                            <span>{unit ? unit : ""}</span>
+                        </div>
+                    )}
+                    <div className="customSliderTrackWrapper" onPointerDown={startDrag}>
                         <div className="customSliderTrack"  ref={trackRef}>
                             <div className="customSliderTrackActive" style={{ width: `${percent}%` }} />
                             <div className="customSliderTrackInactive" style={{ width: `${100 - percent}%` }} />
