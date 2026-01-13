@@ -37,5 +37,5 @@ A passion project manifested
 - [ESLint](https://github.com/eslint/eslint)
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react)
 
-All third-party software is used in accordance with their respective licenses as listed on project websites or repositories.
+All third-party software are used in accordance with their respective licenses as listed on project websites or repositories.
   
