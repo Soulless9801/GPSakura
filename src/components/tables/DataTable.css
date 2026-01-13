@@ -101,3 +101,12 @@ div.dt-container .dt-scroll-body {
     border-bottom-left-radius: var(--table-border-radius-primary);
     border-bottom-right-radius: var(--table-border-radius-primary);
 }
+
+.view-btn {
+    border: none;
+}
+
+.view-btn:hover {
+    background-color: transparent;
+    color: var(--secondary-color);
+}

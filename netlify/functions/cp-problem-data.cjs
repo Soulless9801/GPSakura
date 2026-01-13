@@ -11,7 +11,6 @@ const fireStore = require('firebase/firestore');
 const { 
     FIREBASE_API_KEY, 
     FIREBASE_AUTH_DOMAIN, 
-    FIREBASE_DATABASE_URL,
     FIREBASE_PROJECT_ID, 
     FIREBASE_STORAGE_BUCKET, 
     FIREBASE_MESSAGING_SENDER_ID, 
@@ -21,8 +20,7 @@ const {
 
 const firebaseConfig = {
     apiKey: FIREBASE_API_KEY, 
-    autoDomain: FIREBASE_AUTH_DOMAIN,
-    databaseURL: FIREBASE_DATABASE_URL, 
+    autoDomain: FIREBASE_AUTH_DOMAIN, 
     projectId: FIREBASE_PROJECT_ID, 
     storageBucket: FIREBASE_STORAGE_BUCKET, 
     messagingSenderId: FIREBASE_MESSAGING_SENDER_ID, 
@@ -31,43 +29,42 @@ const firebaseConfig = {
 };
 
 exports.handler = async (event, context) => {
-    
+
+    const id = event.queryStringParameters.id;
+
     let firebaseApp;
 
     if (!firebase.getApps().length) firebaseApp = firebase.initializeApp(firebaseConfig);
     else firebaseApp = firebase.getApp();
 
-    let posts;
+    let data;
 
     try {
 
         const db = fireStore.getFirestore(firebaseApp);
     
-        const q = fireStore.query(fireStore.collection(db, 'posts'));
+        const q = fireStore.query(fireStore.collection(db, 'problems'), fireStore.where(fireStore.documentId(), '==', id));
 
         const snap = await fireStore.getDocs(q);
 
         if (snap.empty) throw new Error();
 
-        posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        posts = posts.map(post => {
-            return {
-                ...post,
-                timestamp: post.timestamp.toDate().toISOString(),
-                updated: post.updated.toDate().toISOString(),
-            };
-        });
-
-        posts = JSON.stringify(posts);
+        data = snap.docs.map(doc => ({ 
+            ...doc.data(), 
+            created: doc.data().created.toDate().toISOString(),
+            updated: doc.data().updated.toDate().toISOString(),
+        }))[0];
 
     } catch (error) {
         // console.log(`Error: ${error.message}`);
-        const filePath = path.resolve('./netlify/functions/data/firebaseBlogPosts.json');
-        posts = fs.readFileSync(filePath, 'utf8');
+        const filePath = path.resolve('./netlify/functions/data/firebaseProblemData.json');
+        problems = fs.readFileSync(filePath, 'utf8');
+        const allData = JSON.parse(problems);
+        data = allData.find(problem => problem.id === id);
     }
 
     return {
         statusCode: 200,
-        body: posts
+        body: JSON.stringify(data)
     }
 };
