@@ -54,7 +54,6 @@ exports.handler = async (event, context) => {
 
         data = snap.docs.map(doc => ({ 
             ...doc.data(),
-            submission: atob(doc.data().submission),
             created: doc.data().created.toDate().toISOString(),
             updated: doc.data().updated.toDate().toISOString(),
         }))[0];
