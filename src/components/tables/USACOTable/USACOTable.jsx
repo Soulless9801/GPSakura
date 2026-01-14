@@ -11,6 +11,7 @@ import { formatDate } from '/src/utils/time.js';
 
 import Select from '/src/components/tools/Select/Select.jsx';
 import TextParser from '/src/components/tools/TextParser/TextParser.jsx';
+import CodeBlock from '/src/components/tools/CodeBlock/CodeBlock.jsx';
 
 import '/src/components/tables/DataTable.css'
 
@@ -165,7 +166,7 @@ export default function USACOTable() {
                         <hr/>
                         <div>Posted {formatDate(data.created)}</div>
                         <div><TextParser ref={bodyRef} text={data.body} /></div>
-                        <div>{data.submission}</div>
+                        <div><CodeBlock code={data.submission} language={data.language} /></div>
                         <div>Last Updated {formatDate(data.updated)}</div>
                     </div>
                 </section>

@@ -53,7 +53,7 @@ exports.handler = async (event, context) => {
         posts = posts.map(post => {
             return {
                 ...post,
-                timestamp: post.timestamp.toDate().toISOString(),
+                created: post.created.toDate().toISOString(),
                 updated: post.updated.toDate().toISOString(),
             };
         });

@@ -13,9 +13,10 @@ A passion project manifested
 - [React Router](https://github.com/remix-run/react-router)
 - [Vite](https://github.com/vitejs/vite)
 
-### Mathematical Typesetting
+### Mathematical Typesetting & Syntax Highlighting
 
 - [Katex](https://github.com/KaTeX/KaTeX)
+- [Shiki](https://github.com/AVGVSTVS96/react-shiki)
 
 ### UI, Animations, Icons
 - [Bootstrap](https://github.com/twbs/bootstrap)
