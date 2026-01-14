@@ -22,7 +22,7 @@ export default function BlogApp() {
 
     const sortByOptions = [
         { value: 'updated', label: 'Last Updated' },
-        { value: 'timestamp', label: 'Creation Time' },
+        { value: 'created', label: 'Creation Time' },
         { value: 'title', label: 'Title' },
         { value: 'pinned', label: 'Pinned' },
     ];
@@ -61,8 +61,8 @@ export default function BlogApp() {
             sorted.sort(cmp);
         } else if (sortBy === "updated") {
             sorted.sort((a, b) => b.updated - a.updated);
-        } else if (sortBy === "timestamp") {
-            sorted.sort((a, b) => b.timestamp - a.timestamp);
+        } else if (sortBy === "created") {
+            sorted.sort((a, b) => b.created - a.created);
         } else if (sortBy === "title") {
             sorted.sort((a, b) => a.title.localeCompare(b.title));
         }
@@ -158,7 +158,7 @@ export default function BlogApp() {
                     <div className="row">
                         {window.map(post => (
                             <div key={post.id} className="col-12">
-                                <BlogPost title={post.title} body={post.body} creationTime={post.timestamp} updateTime={post.updated} postId={post.id}/>
+                                <BlogPost title={post.title} body={post.body} creationTime={post.created} updateTime={post.updated} postId={post.id}/>
                             </div>
                         ))}
                     </div>

@@ -7,6 +7,7 @@ const path = require('path');
 
 const firebase = require('firebase/app');
 const fireStore = require('firebase/firestore');
+const { sub } = require('motion/react-client');
 
 const { 
     FIREBASE_API_KEY, 
@@ -52,7 +53,8 @@ exports.handler = async (event, context) => {
         if (snap.empty) throw new Error();
 
         data = snap.docs.map(doc => ({ 
-            ...doc.data(), 
+            ...doc.data(),
+            submission: atob(doc.data().submission),
             created: doc.data().created.toDate().toISOString(),
             updated: doc.data().updated.toDate().toISOString(),
         }))[0];
