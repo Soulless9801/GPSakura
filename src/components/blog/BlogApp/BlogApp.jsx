@@ -47,11 +47,9 @@ export default function BlogApp() {
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
         const bPinned = localStorage.getItem(`pin_${b.id}`) === 'true';
-        const aDate = a.updated;
-        const bDate = b.updated;
-        if (aPinned && bPinned) return bDate - aDate;
-        if (aPinned) return -1;
-        if (bPinned) return 1;
+        if (aPinned ^ bPinned) return bPinned - aPinned;
+        const aDate = new Date(a.updated);
+        const bDate = new Date(b.updated);
         return bDate - aDate;
     }, []);
 
@@ -60,9 +58,9 @@ export default function BlogApp() {
         if (sortBy === "pinned") {
             sorted.sort(cmp);
         } else if (sortBy === "updated") {
-            sorted.sort((a, b) => b.updated - a.updated);
+            sorted.sort((a, b) => new Date(b.updated) - new Date(a.updated));
         } else if (sortBy === "created") {
-            sorted.sort((a, b) => b.created - a.created);
+            sorted.sort((a, b) => new Date(b.created) - new Date(a.created));
         } else if (sortBy === "title") {
             sorted.sort((a, b) => a.title.localeCompare(b.title));
         }
@@ -126,7 +124,7 @@ export default function BlogApp() {
                     className="blogSortDirectionButton"
                     onClick={() => reverseOrder()}
                 >
-                    {order ? 'Ascending' : 'Descending'} <i className={`fa fa-arrow-${order ? "up-a-z" : "down-z-a"}`}></i>
+                    {order ? 'Reverse Alphabetical / Oldest' : 'Alphabetical / Newest'} <i className={`fa fa-arrow-${order ? "down-z-a" : "down-a-z"}`}></i>
                 </button>
             </div>
             <div>
