@@ -54,7 +54,7 @@ exports.handler = async (event, context) => {
         problems = JSON.stringify(problems);
 
     } catch (error) {
-        console.log(`Error: ${error.message}`);
+        // console.log(`Error: ${error.message}`);
         const filePath = path.resolve('./netlify/functions/data/firebaseUSACOProblems.json');
         problems = fs.readFileSync(filePath, 'utf8');
     }

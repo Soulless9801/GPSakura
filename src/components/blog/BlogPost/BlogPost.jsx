@@ -54,11 +54,11 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
             </div>
             {collapsed ? null :
                 <>
-                    <div className="blogPostTime">Posted {formatDate(creationTime)}</div>
+                    <div className="timestamp">Posted {formatDate(creationTime)}</div>
                     <div className={`blogPostBody ${scrolled && fit ? "fadeScroll" : ""}`}><TextParser ref={bodyRef} text={body} className={`${scrolled && fit ? "fadeScrollInner" : ""}`} /></div>
                 </>
             }
-            <div className="blogPostTime">Updated {formatDate(updateTime)}</div>
+            <div className="timestamp">Updated {formatDate(updateTime)}</div>
             <div className="blogPostLike">
                 <GenericButton postId={postId} type={'pin'} icon='fa-heart' fill='#ff0000'/>
                 <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up' fill='#00ff00'/>
