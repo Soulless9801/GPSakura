@@ -45,6 +45,11 @@
 	--bg-color-hover: #4f5357;
 }
 
+html {
+	scrollbar-width: thin !important;
+    scrollbar-color: var(--secondary-color) transparent !important;
+}
+
 body {
 	color: var(--primary-color) !important;
   	background-color: var(--bg-color-primary) !important;
@@ -87,4 +92,11 @@ a {
 
 a:hover {
 	color: var(--secondary-color) !important;
+}
+
+.timestamp {
+    transition: var(--transition-timers);
+    font-size: 0.9em;
+    color: var(--disabled-color);
+    margin-bottom: 10px;
 }

@@ -160,14 +160,13 @@ export default function USACOTable() {
                 </thead>
             </DataTable>
             {data && (
-                <section className="problem-data-modal">
-                    <div className="problem-data-content">
+                <section>
+                    <div>
                         <h2>{data.title}</h2>
-                        <hr/>
-                        <div>Posted {formatDate(data.created)}</div>
+                        <div className="timestamp">Posted {formatDate(data.created)}</div>
                         <div><TextParser ref={bodyRef} text={data.body} /></div>
                         <div><CodeBlock code={data.submission} lang={data.language} /></div>
-                        <div>Last Updated {formatDate(data.updated)}</div>
+                        <div className="timestamp">Last Updated {formatDate(data.updated)}</div>
                     </div>
                 </section>
             )}

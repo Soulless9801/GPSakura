@@ -38,10 +38,8 @@ function ModalContent({ open, onClose, onExited, children }) {
 
 export default function Modal({title, description, buttonText, buttonStyle={}, buttonClassName=""}) {
     const [open, setOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
 
     const openModal = () => {
-        setMounted(true);
         requestAnimationFrame(() => setOpen(true));
     };
 
@@ -56,7 +54,6 @@ export default function Modal({title, description, buttonText, buttonStyle={}, b
             <ModalContent
                 open={open}
                 onClose={closeModal}
-                onExited={() => setMounted(false)}
             >
                 <h2 style={{textAlign: "start"}}>{title}</h2>
                 <br/>
