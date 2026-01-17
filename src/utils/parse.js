@@ -1,6 +1,6 @@
 function parseNewlines(text) {
     return text
-    .split('\\n')
+    .split('\n\n')
     .map(p => `<p class="textParserBlock">${p}</p>`)
     .join("");
 }

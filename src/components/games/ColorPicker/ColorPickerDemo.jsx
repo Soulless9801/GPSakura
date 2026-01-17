@@ -99,28 +99,27 @@ export default function ColorPickerDemo() {
 
     const ruleDescription = `
         Guess the RGB values for the color on the left!
-        \\n
+        \n\n
         After each guess, you'll receive feedback on how close each of your RGB components is to the target color. Additionally, the color you guessed will be displayed to the right of the target color.
-        \\n
+        \n\n
         Feedback Legend:
-        \\n
+        \n\n
         - Green: Exact match (plus or minus 0)
-        \\n
+        \n\n
         - Yellow: Very close (plus or minus 10)
-        \\n
+        \n\n
         - Orange: Close (plus or minus 100)
-        \\n
+        \n\n
         - Red: Far off (anything else)
-        \\n
+        \n\n
         Use this feedback to adjust your guesses and try to find the exact color!
-
     `;
 
     const statDescription = `
         Total Games Completed: ${count}
-        \\n
+        \n\n
         Average Guesses: ${count === 0 ? 0 : (sum / count).toFixed(2)}
-        \\n
+        \n\n
         Total Games Given Up: ${giveUp}
     `;
 
