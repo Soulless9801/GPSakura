@@ -126,17 +126,17 @@ export default function FreqGuesserDemo() {
 
     const ruleDescription = `
         Guess the component frequencies of the target signal displayed at the top!
-        \\n
+        \n\n
         After each guess, the signal you guessed will be displayed below the target signal.
-        \\n
+        \n\n
         Use this feedback to adjust your guess and try to find the exact frequencies!
     `;
 
     const statDescription = `
         Total Games Completed: ${count}
-        \\n
+        \n\n
         Average Guesses: ${count === 0 ? 0 : (sum / count).toFixed(2)}
-        \\n
+        \n\n
         Total Games Given Up: ${giveUp}
     `;
 
