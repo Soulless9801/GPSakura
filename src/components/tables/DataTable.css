@@ -43,15 +43,8 @@ th, td {
     margin-bottom: 10px;
 }
 
-.table-length{
-
-}
-
 .table-search {
-
-}
-
-.table-input {
+    margin-left: var(--sep-distance-secondary);
     padding: var(--padding-dropdown);
     border: var(--border-width) solid var(--primary-color);
     border-radius: var(--table-border-radius-secondary);

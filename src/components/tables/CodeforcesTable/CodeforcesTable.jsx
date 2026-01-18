@@ -1,30 +1,24 @@
 import { useEffect, useState, useRef } from 'react';
 import $ from 'jquery';
 
-import 'datatables.net-dt/css/dataTables.dataTables.min.css';
-import DataTable from 'datatables.net-react';
-import DT from 'datatables.net-dt';
+import CustomDataTable from '/src/components/tables/DataTable.jsx';
 
-DataTable.use(DT);
-
-import Select from '/src/components/tools/Select/Select.jsx';
-
-import '/src/components/tables/DataTable.css'
-
-$.fn.dataTable.ext.oSort['my-numeric-asc'] = (a, b) => {
+$.fn.dataTable.ext.oSort['rating-asc'] = (a, b) => {
     if (a === 'unrated') a = '0';
     if (b === 'unrated') b = '0';
     return parseFloat(a) - parseFloat(b);
 };
-$.fn.dataTable.ext.oSort['my-numeric-desc'] = (a, b) => {
+$.fn.dataTable.ext.oSort['rating-desc'] = (a, b) => {
     if (a === 'unrated') a = '0';
     if (b === 'unrated') b = '0';
     return parseFloat(b) - parseFloat(a);
 };
 
 export default function CodeforcesTable() {
+
+    const title = 'Codeforces Problem List';
+
     const [rows, setRows] = useState([]);
-    const tableRef = useRef(null);
 
     const columns = ['Rating', 'Problem Name', 'Submission'];
 
@@ -45,77 +39,19 @@ export default function CodeforcesTable() {
     }, []);
 
     const options = {
-        scrollX: true,
-        destroy: true,
-        bFilter : false,               
-        bLengthChange: false,
         columnDefs: [
-            {targets: 0, type: 'my-numeric', orderDataType: 'my-numeric'},
-            {targets: 2, orderable: false},
+            {targets: 0, type: 'rating', orderDataType: 'rating'},
+            {targets: 2, orderable: false, searchable: false},
         ],
         columns: [{ width: '10%' }, {width: '80%'}, {width: '10%'}],
-        lengthMenu: [5, 10, 20, 50, 100],
-        language: {
-            paginate: {
-                last: '&#8608;',
-                first: '&#8606;',
-                next: '&#8594;',
-                previous: '&#8592;', 
-            }
-        }
     };
 
+    const html = "";
+
+    const id = "codeforces-table";
+
     return (
-        <section className="container-fluid table-wrapper">
-            <br/>
-            <h1>Problem List</h1>
-            <hr/>
-            <br/><br/>
-            <div className="table-header row row-cols-1 row-cols-md-2 gy-3 gy-md-0">
-                <div className="table-length col text-center text-md-start">
-                    <label>
-                        Showing{' '}
-                        <Select
-                            options={[
-                                { value: '5', label: '5' },
-                                { value: '10', label: '10' },
-                                { value: '20', label: '20' },
-                                { value: '50', label: '50' },
-                                { value: '100', label: '100' },
-                            ]}
-                            defaultIndex = '0' 
-                            onChange={e => {
-                                const newLength = Number(e.value);
-                                const table = $('.table-custom').DataTable();
-                                table.page.len(newLength).draw();
-                            }}
-                        />
-                        {' '}entries
-                    </label>
-                </div>
-                <div className="table-search col text-center text-md-end">
-                    <label>
-                        Search:{' '}
-                        <input 
-                            type="search" 
-                            placeholder="" 
-                            onChange={e => {
-                                const table = $('.table-custom').DataTable();
-                                table.search(e.target.value).draw();
-                            }}
-                            className="table-input"
-                        />
-                    </label>
-                </div>
-            </div>
-            <DataTable data={rows} ref={tableRef} options={{ ...options }} className="table table-hover display-nowrap row-border table-custom">
-                <thead>
-                    <tr>
-                        {columns.map(col => <th key={col}>{col}</th>)}
-                    </tr>
-                </thead>
-            </DataTable>
-        </section>
+        <CustomDataTable title={title} rows={rows} columns={columns} options={options} html={html} id={id}/>
     );
 }  
 
