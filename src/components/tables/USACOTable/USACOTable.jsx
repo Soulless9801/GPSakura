@@ -70,7 +70,7 @@ export default function USACOTable() {
 
             const id = btn.dataset.id;
 
-            const res = await fetch(`/.netlify/functions/cp-problem-data?id=${id}_usaco`)
+            const res = await fetch(`/.netlify/functions/cp-problem-data?id=${id}`)
             const json = await res.json();
 
             // console.log(json);
@@ -97,7 +97,7 @@ export default function USACOTable() {
                     <div>
                         <h2>{data.title}</h2>
                         <div className="timestamp">Posted {formatDate(data.created)}</div>
-                        <div><TextParser ref={bodyRef} text={data.body} /></div>
+                        <div><TextParser ref={bodyRef} text={data.body ? data.body : "Explanation Pending"} /></div>
                         <div><CodeBlock code={data.submission} lang={data.language} /></div>
                         <div className="timestamp">Last Updated {formatDate(data.updated)}</div>
                     </div>
