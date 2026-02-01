@@ -5,6 +5,8 @@ export default function Chaos({
     attractor,
     width,
     height,
+    pitch = 0,
+    yaw = 0,
     speed = 1,
     lineWidth = 1,
     colorTransition = 300,
@@ -73,6 +75,21 @@ export default function Chaos({
 
     const pointRef = useRef({ x: 0.1, y: 0, z: 0 });
 
+    // Chaos Drawing
+
+    const calc = useCallback((vec) => {
+        const cosPitch = Math.cos(pitch);
+        const sinPitch = Math.sin(pitch);
+        const cosYaw = Math.cos(yaw);
+        const sinYaw = Math.sin(yaw);
+        
+        const x = vec.x * cosYaw + vec.z * sinYaw;
+        const z = vec.z * cosYaw - vec.x * sinYaw;
+        const y = vec.y * cosPitch - z * sinPitch;
+
+        return [x, y];
+    }, [pitch, yaw]);
+
     const getCTX = () => {
         const canvas = canvasRef.current;
         if (!canvas) return null;
@@ -126,14 +143,18 @@ export default function Chaos({
             let dt = (now - lastChaosTimeRef.current) / attractor.speedFactor * speed;
             dt = Math.min(dt, 0.001);
             lastChaosTimeRef.current = now;
+            
+            console.log(pointRef.current);
 
             let { x, y, z } = pointRef.current;
+
+            let [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
 
             ctx.beginPath();
             ctx.strokeStyle = rgbToCss(currentColorRef.current);
 
-            let sx = W / 2 + x * attractor.scaleFactor;
-            let sy = H / 2 + y * attractor.scaleFactor;
+            let sx = W / 2 + cx * attractor.scaleFactor;
+            let sy = H / 2 + cy * attractor.scaleFactor;
 
             ctx.moveTo(sx, sy);
 
@@ -149,8 +170,10 @@ export default function Chaos({
 
                 pointRef.current = { x, y, z };
 
-                const nx = W / 2 + x * attractor.scaleFactor;
-                const ny = H / 2 + y * attractor.scaleFactor;
+                let [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
+
+                const nx = W / 2 + cx * attractor.scaleFactor;
+                const ny = H / 2 + cy * attractor.scaleFactor;
 
                 ctx.lineTo(nx, ny);
             }
@@ -164,7 +187,7 @@ export default function Chaos({
 
         rafRef.current = requestAnimationFrame(step);
 
-    }, [attractor, speed, lineWidth]);
+    }, [attractor, speed, lineWidth, calc]);
 
     useEffect(() => {
         
