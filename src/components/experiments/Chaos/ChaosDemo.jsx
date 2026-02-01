@@ -23,7 +23,7 @@ export default function ChaosDemo() {
                 return [dx, dy, dz];
             },
             speedFactor: 5000,
-            scaleFactor: 8,
+            scaleFactor: 5,
             start: { x: 0.1, y: 0.1, z: 0.1 },
         },
 
@@ -69,12 +69,18 @@ export default function ChaosDemo() {
 
     const typeKey = 'chaosDemoType';
     const speedKey = 'chaosDemoSpeed';
+    const pitchKey = 'chaosDemoPitch';
+    const yawKey = 'chaosDemoYaw';
 
     const [type, setType] = useState(() => loadValue(typeKey, 'lorenz'));
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 10));
+    const [pitch, setPitch] = useState(() => loadValue(pitchKey, 0));
+    const [yaw, setYaw] = useState(() => loadValue(yawKey, 0));
 
     useEffect(() => localStorage.setItem(typeKey, JSON.stringify(type)), [type]);
     useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
+    useEffect(() => localStorage.setItem(pitchKey, JSON.stringify(pitch)), [pitch]);
+    useEffect(() => localStorage.setItem(yawKey, JSON.stringify(yaw)), [yaw]);
 
     const display = (
         <Chaos
@@ -82,6 +88,8 @@ export default function ChaosDemo() {
             width={"100%"}
             height={"100%"}
             speed={speed}
+            pitch={pitch * (Math.PI / 180)}
+            yaw={yaw * (Math.PI / 180)}
             //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
         />
     );
@@ -112,6 +120,24 @@ export default function ChaosDemo() {
                         places={2}
                         onChange={e => setSpeed(e)} 
                         label="Speed"
+                    />
+                </div>
+                <div className='col-12'>
+                    <Slider 
+                        min={-180} 
+                        max={180} 
+                        value={pitch}
+                        onChange={e => setPitch(e)} 
+                        label="Pitch"
+                    />
+                </div>
+                <div className='col-12'>
+                    <Slider 
+                        min={-180} 
+                        max={180} 
+                        value={yaw}
+                        onChange={e => setYaw(e)} 
+                        label="Yaw"
                     />
                 </div>
             </div>
