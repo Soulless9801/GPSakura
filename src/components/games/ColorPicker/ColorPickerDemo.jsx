@@ -104,13 +104,13 @@ export default function ColorPickerDemo() {
         \n\n
         Feedback Legend:
         \n\n
-        - Green: Exact match (plus or minus 0)
+        - Green: Exact $\\left(\\pm 0\\right)$
         \n\n
-        - Yellow: Very close (plus or minus 10)
+        - Yellow: Adjacent $\\left(\\pm 10\\right)$
         \n\n
-        - Orange: Close (plus or minus 100)
+        - Orange: Close $\\left(\\pm 100\\right)$
         \n\n
-        - Red: Far off (anything else)
+        - Red: Cold $\\left(> 100\\right)$
         \n\n
         Use this feedback to adjust your guesses and try to find the exact color!
     `;

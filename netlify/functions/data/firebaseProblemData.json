@@ -1,11 +1,29 @@
 [
     {
-        "id": "jmpPK6qO0SG8aaod7Nx4_usaco",
-        "created": "2026-01-13T00:07:06.577000+00:00",
-        "submission": "def solve():\n\tprint(\"test usaco submission yay!\")\n\nsolve()",
-        "title": "test usaco problem title",
-        "body": "test usaco problem body",
-        "language": "python",
-        "updated": "2026-01-14T06:17:22.617000+00:00"
+        "id": "jmpPK6qO0SG8aaod7Nx4",
+        "title": "Conquer or of Forest",
+        "language": "cpp",
+        "tag": "usaco",
+        "body": "I know this isn't a USACO problem but it's a recent problem I've solved.",
+        "updated": "2026-01-30T03:51:59.633000+00:00",
+        "submission": "#include <bits/stdc++.h>\n\n#define int long long\n#define pii pair<int, int>\n\nusing namespace std;\n\nconst int MOD = 998244353;\nconst int MAX = 2e5 + 1;\n\nint fact[MAX];\n\nint mult(int a, int b) {\n  a %= MOD; b %= MOD;\n  return (a * b) % MOD;\n}\n\nint pow(int a, int b) {\n  int res = 1;\n  while (b) {\n    if (b & 1) res = mult(res, a);\n    a = mult(a, a);\n    b >>= 1;\n  }\n  return res;\n}\n\nint modinv(int a) {\n  return pow(a, MOD - 2);\n}\n\nvoid add(int &a, int b) {\n  a += b;\n  if (a >= MOD) a -= MOD;\n}\n\nvoid solve(){\n  int n; cin >> n;\n  vector<vector<int>> a(n + 1);\n  for (int i = 0; i < n - 1; i++){\n    int u, v; cin >> u >> v;\n    a[u].emplace_back(v);\n    a[v].emplace_back(u);\n  }\n  vector<int> c(n + 1);\n  // recursively count the number of nodes in subtree (0 for even and 1 for odd)\n  vector<int> par(n + 1, -1);\n  function<int(int, int)> dfs = [&](int u, int p) {\n    int cnt = 1;\n    par[u] = p;\n    for (auto v : a[u]) {\n      if (v == p) continue;\n      cnt += dfs(v, u);\n    }\n    c[u] = cnt % 2;\n    return cnt;\n  };\n  dfs(1, -1);\n  vector<bool> v(n + 1, false);\n  auto bfs = [&](int x){\n    int cnt = 0;\n    queue<int> q;\n    q.push(x);\n    while (!q.empty()){\n      int u = q.front(); q.pop();\n      v[u] = true; cnt++;\n      for (auto d : a[u]) if (c[d] && !v[d] && par[u] != d) q.push(d);\n    }\n    return cnt;\n  };\n  int tot = bfs(1);\n  if (tot == n){\n    cout << \"1\";\n    return;\n  }\n  int cnt = 0;\n  vector<int> sz(n + 1);\n  for (int i = 2; i <= n; i++){\n    if (c[i]) continue;\n    cnt++;\n    int s = bfs(i);\n    sz[i] = s;\n    tot = mult(tot, mult(s, s));\n  }\n  int ans = 0;\n  for (int i = 2; i <= n; i++){\n    if (c[i]) continue;\n    add(ans, mult(mult(tot, modinv(sz[i])), fact[cnt - 1]));\n  }\n  cout << ans << '';\n}\n\nvoid precompute(){\n  fact[0] = 1;\n  for (int i = 1; i < MAX; i++){\n    fact[i] = mult(fact[i - 1], i);\n  }\n}\n\nsigned main(){\n  ios_base::sync_with_stdio(false);\n  cin.tie(nullptr);\n  precompute();\n  int t; cin >> t;\n  while (t--) solve();\n  return 0;\n}\n",
+        "created": "2026-01-30T02:35:24.358000+00:00"
+    },
+    {
+        "id": "majoritywins_cf",
+        "submission": "#include <bits/stdc++.h>\n\n#define int long long\n#define pii pair<int, int>\n\nusing namespace std;\n\n// return max subarray sum for all ranges [l, i] (i from l to r)\nvector<int> calc(const vector<bool>& a){\n\tint m = 0, c = 0;\n\tvector<int> r;\n\tfor (int i = 0; i < a.size(); i++){\n\t\tc += (a[i] ? -1 : 1);\n\t\tif (c < 0) c = 0;\n\t\tif (c > m) m = c;\n\t\tr.push_back(m - 1);\n\t}\n\treturn r;\n}\n\nvoid solve() {\n\tint n; cin >> n;\n\tvector<bool> a(n);\n\tarray<int, 2> c = {0, 0};\n\tfor (int i = 0; i < n; i++) {\n\t\tchar t; cin >> t;\n\t\ta[i] = (t == '1');\n\t\tc[a[i]]++;\n\t}\n\t// cout << c[0] << ' ' << c[1] << '\\n';\n\tif (c[1] == 0){\n\t\tcout << \"-1\\n\";\n\t\treturn;\n\t}\n\tif (n == 1){\n\t\tcout << \"0\\n\";\n\t\treturn;\n\t}\n\tif (c[1] >= (n + 1) / 2){\n\t\tcout << n << '\\n';\n\t\treturn;\n\t}\n\tif (a[0] || a[n - 1]){\n\t\tcout << n + 1 << '\\n';\n\t\treturn;\n\t}\n\tint d = c[0] - c[1];\n\tvector<int> lr = calc(a);\n\treverse(a.begin(), a.end());\n\tvector<int> rl = calc(a);\n\treverse(a.begin(), a.end());\n\treverse(rl.begin(), rl.end());\n\tint ans = n + 3;\n\tfor (int i = 0; i < n; i++){\n\t\tif (!a[i]) continue;\n\t\tint l = max(1ll, lr[i - 1]);\n\t\tint r = max(1ll, rl[i + 1]);\n\t\t// cout << l << ' ' << r << '\\n';\n\t\tif (max(l, r) >= d) ans = min(ans, n + 1);\n\t\tif (l + r >= d) ans = min(ans, n + 2);\n\t}\n\tcout << ans << '\\n';\n}\n\nsigned main(){\n\tios_base::sync_with_stdio(false);\n\tcin.tie(nullptr);\n\tint t; cin >> t;\n\twhile (t--) solve();\n\treturn 0;\n}\n",
+        "language": "cpp",
+        "updated": "2026-01-30T03:56:46.725000+00:00",
+        "title": "Majority Wins?",
+        "created": "2026-01-30T03:56:46.725000+00:00"
+    },
+    {
+        "id": "moodecomposition",
+        "submission": "#include <bits/stdc++.h>\n \n#define int long long\n \nusing namespace std;\n \nconst int MAX = 1e6 + 1;\nconst int MOD = 1e9 + 7;\n \nint fact[MAX];\n \nint powmod(int a, int b){\n  a %= MOD;\n  int r = 1;\n  while (b > 0){\n    if (b & 1) r = (r * a) % MOD;\n    a = (a * a) % MOD;\n    b /= 2;\n  }\n  return r;\n}\n \nint inv(int a){\n  return powmod(a, MOD - 2);\n}\n \nint nCk(int n, int k){\n  if (n < k) return 0;\n  return ((fact[n] * inv(fact[k]) % MOD) * inv(fact[n - k])) % MOD;\n}\n \nvoid solve(){\n  \n}\n \nsigned main(){\n  ios_base::sync_with_stdio(false);\n  cin.tie(nullptr);\n  fact[0] = 1;\n  for (int i = 1; i < MAX; i++) fact[i] = (i * fact[i - 1]) % MOD;\n  int k, n, l; cin >> k >> n >> l;\n  string t;\n  getline(cin, t);\n  getline(cin, t);\n  int cnt = 0;\n  int ans = 1;\n  for (int i = n - 1; i >= 0; i--){\n    //debug(t[i]);\n    if (t[i] == 'M'){\n      ans = (ans * nCk(cnt, k)) % MOD;\n      cnt -= k;\n    } else cnt++;\n  }\n  cout << powmod(ans, l) << '\\n';\n  return 0;\n}",
+        "language": "cpp",
+        "body": "It is guaranteed that $S$ can be completely decomposed into valid sequences, so it follows that one copy of the string of length $N$ must also be completely decomposable. \n\nAt each $M$, we must also consider the fact that all $M$ succeeding it in the sequence also need to choose a sequence of $O$. Thus, an approach similar to topo sort follows, where we let the last $M$ in the sequence choose its sequence of $O$, due to it being unhindered by other $M$. Subsequently, we free up the second last $M$ to choose freely and so on.\n\nIterating from the back of the string, we keep track of the number of $O$ characters. When we hit a $M$ character, suppose we have $x$ remaining $O$ characters. It is guaranteed that $x \\geq K$ so we multiply the final answer by $x\\text{C}k$ and decrement our current count of $O$ characters by $K$. For the $L$ copies of the string, we can use binary exponentiation for a total complexity of $O(n+\\log L)$.\n",
+        "updated": "2026-02-01T06:41:52.222000+00:00",
+        "title": "Moo Decomposition",
+        "created": "2026-02-01T06:37:32.296000+00:00"
     }
 ]
