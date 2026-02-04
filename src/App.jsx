@@ -10,6 +10,7 @@ import Fractals from '/src/pages/Experiments/Fractals.jsx';
 import Chaos from '/src/pages/Experiments/Chaos.jsx';
 import Color from '/src/pages/Games/Color.jsx';
 import Freq from '/src/pages/Games/Freq.jsx';
+import ShengJi from '/src/pages/Games/ShengJi.jsx';
 
 export default function App() {
 	return (
@@ -26,6 +27,7 @@ export default function App() {
 					<Route path="chaos" element={<Chaos />} />
 					<Route path="color" element={<Color />} />
 					<Route path="freq" element={<Freq />} />
+					<Route path="shengji" element={<ShengJi />} />
 				</Routes>
 			</HashRouter>
 		</div>

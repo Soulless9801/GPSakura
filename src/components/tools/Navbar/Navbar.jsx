@@ -140,6 +140,7 @@ export default function Navbar() {
                                     options={[
                                         { value: 'Color', label: 'Color Picker', to: '/color' },
                                         { value: 'Freq', label: 'Frequency Guesser', to: '/freq' },
+                                        { value: 'ShengJi', label: 'Sheng Ji', to: '/shengji' },
                                     ]}
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
