@@ -1,3 +1,5 @@
+import { feDropShadow } from "motion/react-client";
+
 export type Suit = "spades" | "hearts" | "diamonds" | "clubs" | "jokers";
 export type Rank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
 
@@ -6,15 +8,14 @@ export interface Trump {
     rank: Rank;
 }
 
+export function trumpToString(trump: Trump): string {
+    const card : Card = { suit: trump.suit, rank: trump.rank };
+    return cardToString(card);
+}
+
 export interface Card {
     suit: Suit;
     rank: Rank;
-}
-
-function sortCards(cards: Card[], trump: Trump): Card[] {
-    return cards.sort((a, b) => {
-        return isCardBigger(a, b, trump) ? -1 : 1;
-    });
 }
 
 export function validateCard(card: Card): boolean {
@@ -42,89 +43,72 @@ function isMainLine(card: Card, trump: Trump): boolean {
     return isJoker(card) || isBigTrump(card, trump) || isSmallTrump(card, trump) || isTrumpSuit(card, trump);
 }
 
+function getCardData(card: Card, trump: Trump): number[]{
+    return [
+        isJoker(card) ? 1 : 0,
+        isSmallTrump(card, trump) ? 1 : 0,
+        isTrumpSuit(card, trump) ? 1 : 0,
+        card.rank
+    ];
+}
+
+export function getNextCardData(card: Card, trump: Trump): number[] | null {
+
+    if (isJoker(card) && card.rank === 2) return null; // biggest card
+
+    if (isBigTrump(card, trump)) return [1, 0, 0, 1];
+
+    const val : number[] = getCardData(card, trump);
+
+    if (isSmallTrump(card, trump)) val[2] = 1; // big trump
+    else {
+        val[3] += 1;
+        if (val[3] === trump.rank) val[3] += 1;
+        if (val[3] > 14) {
+            val[3] = trump.rank;
+            if (isTrumpSuit(card, trump)) {
+                val[1] = 1;
+                val[2] = 0;
+            } else return null;
+        }
+    }
+
+    return val;
+}
+
 function isCardAdjacent(card_a: Card, card_b: Card, trump: Trump): boolean { // if card_a = card_b + 1
 
-    if (isJoker(card_b)) {
-        if (!isJoker(card_a)) return false;
-        return card_a.rank === card_b.rank + 1;
+    if (!isMainLine(card_a, trump) && card_a.suit !== card_b.suit) return false;
+    
+    const val_a : number[] = getCardData(card_a, trump);
+    const val_b : number[] | null = getNextCardData(card_b, trump);
+
+    if (!val_b) return false;
+
+    for (let i = 0; i < 4; i++) {
+        if (val_a[i] > val_b[i]) return false;
+        if (val_a[i] < val_b[i]) return false;
     }
 
-    const big_trump_b : boolean = isBigTrump(card_b, trump);
-    const small_joker_a : boolean = isJoker(card_a) && card_a.rank === 1;
-
-    if (big_trump_b) return small_joker_a;
-
-    if (small_joker_a) return false;
-
-    const small_trump_b : boolean = isSmallTrump(card_b, trump);
-    const big_trump_a : boolean = isBigTrump(card_a, trump);
-    
-    if (small_trump_b) return big_trump_a;
-
-    if (big_trump_a) return false;
-
-    const small_trump_a : boolean = isSmallTrump(card_a, trump);
-
-    const suit: Suit = card_b.suit;
-
-    let expected_rank : number = card_b.rank + 1;
-    if (expected_rank === trump.rank) expected_rank += 1;
-    if (expected_rank > 14) {
-        if (suit === trump.suit) return small_trump_a;
-
-        return false;
-    }
-    
-    if (small_trump_a) return false;
-
-    return card_a.suit === suit && card_a.rank === expected_rank as Rank;
+    return true;
 }
 
 function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
+    const val_a : number[] = getCardData(card_a, trump);
+    const val_b : number[] = getCardData(card_b, trump);
 
-    const joker_b : boolean = isJoker(card_b);
-    const joker_a : boolean = isJoker(card_a);
+    for (let i = 0; i < 4; i++) {
+        if (val_a[i] > val_b[i]) return true;
+        if (val_a[i] < val_b[i]) return false;
+    }
 
-    if (joker_a && joker_b) return card_a.rank > card_b.rank;
-
-    if (joker_b) return false;
-
-    if (joker_a) return true;
-
-    const big_trump_b : boolean = isBigTrump(card_b, trump);
-
-    if (big_trump_b) return false;
-
-    const big_trump_a : boolean = isBigTrump(card_a, trump);
-
-    if (big_trump_a) return true;
-
-    const small_trump_b : boolean = isSmallTrump(card_b, trump);
-
-    if (small_trump_b) return false;
-
-    const small_trump_a : boolean = isSmallTrump(card_a, trump);
-
-    if (small_trump_a) return true;
-
-    const trump_suit_a : boolean = isTrumpSuit(card_a, trump);
-    const trump_suit_b : boolean = isTrumpSuit(card_b, trump);
-
-    if (trump_suit_a && !trump_suit_b) return true;
-
-    if (!trump_suit_a && trump_suit_b) return false;
-
-    if (card_a.suit !== card_b.suit) return false;
-    
-    return card_a.rank > card_b.rank;
+    return false;
 }
 
-function isCardEqual(card_a: Card, card_b: Card): boolean {
-
-    const same_suit : boolean = card_a.suit === card_b.suit;
-    const same_rank : boolean = card_a.rank === card_b.rank;
-
-    return same_suit && same_rank;
+export function sortCards(cards: Card[], trump: Trump): Card[] {
+    return cards.sort((a, b) => {
+        return isCardBigger(a, b, trump) ? -1 : 1;
+    });
 }
 
 export function cardToString(card: Card): string {
@@ -148,9 +132,40 @@ export function cardToString(card: Card): string {
     return `${rank_strings[card.rank] || card.rank}${suit_symbols[card.suit]}`;
 }
 
-function cardsToString(cards: Card[]): string {
+export function cardsToString(cards: Card[]): string {
     const card_strings : string[] = cards.map(cardToString);
     return "[" + card_strings.join(', ') + "]";
+}
+
+export interface Deck {
+    cards: Card[];
+}
+
+function shuffleDeck(deck: Deck): void {
+    for (let i = deck.cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck.cards[i], deck.cards[j]] = [deck.cards[j], deck.cards[i]];
+    }
+}
+
+export function initializeDeck(decks: number): Deck {
+    const deck: Deck = { cards: [] };
+    for (let d = 0; d < decks; d++){
+        for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
+            for (let rank = 1; rank <= 14; rank++){
+                const card : Card = { suit: suit, rank: rank as Rank };
+                if (!validateCard(card)) continue;
+                deck.cards.push(card);
+            }
+        }
+    }
+    shuffleDeck(deck);
+    return deck;
+}
+
+export function drawCard(deck: Deck): Card | null {
+    if (deck.cards.length === 0) return null;
+    return deck.cards.pop() || null;
 }
 
 export interface Hand {
@@ -162,20 +177,24 @@ function getCardCount(hand: Hand, card: Card): number {
     return count || 0;
 }
 
-function getTrickCount(hand: Hand, lead_suit: Suit, trump: Trump): { tricks: Card[][], suit_count: number } {
+function getTrickCount(hand: Hand, lead: Card, trump: Trump): { tricks: Card[][], suit_count: number } {
     const tricks : Card[][] = [];
     let suit_count : number = 0;
-    const is_trump_suit : boolean = lead_suit === trump.suit;
+    const is_main_line : boolean = isMainLine(lead, trump);
     for (let rank = 1; rank <= 14; rank++){
         for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
             const card : Card = { suit: suit, rank: rank as Rank }
-            if (!is_trump_suit && isMainLine(card, trump)) continue;
-            if (is_trump_suit && !isMainLine(card, trump)) continue;
             if (!validateCard(card)) continue;
-            const count : number = getCardCount(hand, card);
-            while (tricks.length <= count) tricks.push([]);
-            tricks[count].push(card);
-            suit_count += count;
+            const main : boolean = isMainLine(card, trump);
+            if (!is_main_line && main) continue;
+            if (is_main_line && !main) continue;
+            if ((is_main_line && main) || (card.suit === lead.suit)) {
+                const count : number = getCardCount(hand, card);
+                if (count === 0) continue;
+                while (tricks.length <= count) tricks.push([]);
+                tricks[count].push(card);
+                suit_count += count;
+            }   
         }
     }
     // console.log("Tricks:", tricks);
@@ -195,26 +214,48 @@ export function addCardToHand(card: Card, hand: Hand): void {
     hand.cards.get(card.suit)?.set(card.rank, prev + 1);
 }
 
-export function handToString(hand: Hand): string {
-    let card_strings : string[] = [];
+const suit_order: Map<Suit, number> = new Map<Suit, number>([
+    ["spades", 3],
+    ["hearts", 2],
+    ["clubs", 1],
+    ["diamonds", 0],
+    ["jokers", 4]
+]);
+
+export function handToString(hand: Hand, trump: Trump): string {
+    let cards : Card[] = [];
     for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
         for (let rank = 1; rank <= 14; rank++){
             const card : Card = { suit : suit, rank : rank as Rank };
-            const card_string = cardToString(card);
             const num : number = getCardCount(hand, card);
-            for (let i = 0; i < num; i++) card_strings.push(card_string);
+            for (let i = 0; i < num; i++) cards.push(card);
         }
     }
-    return "[" + card_strings.join(', ') + "]";
+
+    cards.sort((b, a) => {
+        if (!isMainLine(a, trump) && !isMainLine(b, trump)) {
+            if (a.suit !== b.suit) return suit_order.get(b.suit)! - suit_order.get(a.suit)!;
+            else return b.rank - a.rank;
+        }
+        return isCardBigger(a, b, trump) ? -1 : 1;
+    })
+    return "[" + cards.map(cardToString).join(', ') + "]";
 }
 
 export interface Play {
-    kind: "single" | "pair" | "triple" | "tractor";
     cards: Card[];
     suit: Suit;
 }
 
-function getPlayStruct(play: Play, trump: Trump): { len: number; count: number; list: Card[] } | null {
+function getPlayKind(play: Play): string {
+    const cardcount : number = play.cards.length;
+    if (cardcount === 1) return "single";
+    if (cardcount === 2) return "pair";
+    if (cardcount === 3) return "triple";
+    return "tractor";
+}
+
+export function getPlayStruct(play: Play, trump: Trump): { len: number; count: number; list: Card[] } | null {
     const hand : Hand = initializeHand();
     let max_count : number = 0;
     for (const card of play.cards) {
@@ -278,10 +319,13 @@ export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): b
     const len : number = struct ? struct.len : 0;
     const count : number = struct ? struct.count : 0;
 
-    const suit : Suit = lead.suit;
+    console.log("Validating Play - Lead Struct Len:", len, "Count:", count);
 
-    const hand_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(hand, suit, trump);
-    const play_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(play_hand, suit, trump);
+    const hand_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(hand, lead.cards[0], trump);
+    const play_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(play_hand, lead.cards[0], trump);
+
+    console.log("Hand Tricks:", hand_tricks);
+    console.log("Play Tricks:", play_tricks);
 
     if (play_tricks.suit_count < Math.min(hand_tricks.suit_count, play.cards.length)) return false;
 
@@ -289,20 +333,29 @@ export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): b
 
     for (let tix = count; tix >= 2; tix--) {
 
-        const hand_trick : Card[] = hand_tricks.tricks[tix];
-        const play_trick : Card[] = play_tricks.tricks[tix];
+        const hand_trick : Card[] = hand_tricks.tricks[tix] || [];
+        const play_trick : Card[] = play_tricks.tricks[tix] || [];
 
         const pos_max : number[] = findMaxConsecutive(hand_trick, trump);
         const play_max : number[] = findMaxConsecutive(play_trick, trump);
 
         for (let i = 0; i < pos_max.length; i++){
-            if (rem_tricks === 0 || pos_max[i] > rem_tricks) break;
+            if (rem_tricks === 0 ) break;
             if (play_max.length <= i) return false; 
-            if (play_max[i] < pos_max[i]) return false; 
-            rem_tricks -= pos_max[i];
+            const pos : number = Math.min(rem_tricks, pos_max[i])
+            if (play_max[i] < pos) return false; 
+            rem_tricks -= pos;
         }
         
         if (rem_tricks === 0) break;
+
+        for (const card_a of hand_trick) {
+            let pres : boolean = false;
+            for (const card_b of play_trick){
+                pres = pres || (card_a.rank === card_b.rank && card_a.suit === card_b.suit)
+            }
+            if (!pres) return false;
+        }
     }
 
     return true;
@@ -330,7 +383,7 @@ export function playToString(play: Play): string {
 
     const card_strings : string[] = play.cards.map(cardToString);
 
-    return `${play.kind}(${card_strings.join(", ")})`;
+    return `${getPlayKind(play)}(${card_strings.join(", ")})`;
 }
 
 function findMaxConsecutive(cards: Card[], trump: Trump): number[] {
