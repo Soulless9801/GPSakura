@@ -2,6 +2,8 @@ import { useState } from "react";
 import * as ShenJiTest from '/src/shengji/core/testcase';
 import * as ShenJiCore from '/src/shengji/core/entities';
 
+import GameRoom from "./GameRoom";
+
 import "./ShengJiApp.css";
 
 export default function ShengJiApp() {
@@ -19,19 +21,19 @@ export default function ShengJiApp() {
                 <div>
                     <hr />
                     <div>
-                        <h3>Trump:</h3>
+                        <h3>Trump</h3>
                         <pre>{ShenJiCore.trumpToString(testCase.trump)}</pre>
                     </div>
                     <div>
-                        <h3>Lead:</h3>
+                        <h3>Lead</h3>
                         <pre>{ShenJiCore.playToString(testCase.lead)}</pre>
                     </div>
                     <div>
-                        <h3>Play:</h3>
+                        <h3>Play</h3>
                         <pre>{ShenJiCore.playToString(testCase.play)}</pre>
                     </div>
                     <div>
-                        <h3>Hand:</h3>
+                        <h3>Hand</h3>
                         <pre>{ShenJiCore.handToString(testCase.hand, testCase.trump)}</pre>
                     </div>
                     <div>
@@ -45,6 +47,8 @@ export default function ShengJiApp() {
                     </div>
                 </div>
             )}
+            <hr />
+            <GameRoom roomId="test-room" />
         </div>
     );
 }
