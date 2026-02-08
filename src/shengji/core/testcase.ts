@@ -45,7 +45,7 @@ function getCardFromData(data: number[], suit: ShenJiCore.Suit, trump: ShenJiCor
     const card : ShenJiCore.Card = { suit: suit, rank: data[3] as ShenJiCore.Rank };
 
     if (data[1] === 1) card.rank = trump.rank;
-    if (data[2] === 1) card.suit = trump.suit;
+    if (trump.suit && data[2] === 1) card.suit = trump.suit;
 
     if (data[1] === 1 && data[2] === 0) { // randomly pick a small trump suit that is not the trump suit
         if (card.suit === trump.suit) {
@@ -111,7 +111,7 @@ function randomLead(rng: RNG, trump: ShenJiCore.Trump): ShenJiCore.Play {
     const trickCount : number = rng.int(1, 3);
     if (trickCount === 1 || trick.cards.length === 1) return trick;
     
-    const suit : ShenJiCore.Suit = trick.suit;
+    const suit : ShenJiCore.Suit = trick.suit || "jokers"; // just in case, should never be null here
 
     const play: ShenJiCore.Play = { cards: [], suit: trick.suit };
 

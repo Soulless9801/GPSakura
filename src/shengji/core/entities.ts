@@ -4,11 +4,12 @@ export type Suit = "spades" | "hearts" | "diamonds" | "clubs" | "jokers";
 export type Rank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
 
 export interface Trump {
-    suit: Suit;
+    suit: Suit | null;
     rank: Rank;
 }
 
 export function trumpToString(trump: Trump): string {
+    if (!trump.suit) return `No Trump (${trump.rank})`;
     const card : Card = { suit: trump.suit, rank: trump.rank };
     return cardToString(card);
 }
@@ -18,10 +19,20 @@ export interface Card {
     rank: Rank;
 }
 
+
+// check if card is valid
 export function validateCard(card: Card): boolean {
     if (card.suit !== "jokers") return card.rank >= 2 && card.rank <= 14;
     return card.rank >= 1 && card.rank <= 2; // 1 = small joker, 2 = big joker
 }
+
+export function pointValue(card: Card): number {
+    if (card.rank === 5) return 5;
+    if (card.rank === 10 || card.rank === 13) return 10;
+    return 0;
+}
+
+// checker functions
 
 function isJoker(card: Card): boolean {
     return card.suit === "jokers";
@@ -43,6 +54,7 @@ function isMainLine(card: Card, trump: Trump): boolean {
     return isJoker(card) || isBigTrump(card, trump) || isSmallTrump(card, trump) || isTrumpSuit(card, trump);
 }
 
+// array representing relative value
 function getCardData(card: Card, trump: Trump): number[]{
     return [
         isJoker(card) ? 1 : 0,
@@ -52,6 +64,7 @@ function getCardData(card: Card, trump: Trump): number[]{
     ];
 }
 
+// card data for next card
 export function getNextCardData(card: Card, trump: Trump): number[] | null {
 
     if (isJoker(card) && card.rank === 2) return null; // biggest card
@@ -76,7 +89,8 @@ export function getNextCardData(card: Card, trump: Trump): number[] | null {
     return val;
 }
 
-function isCardAdjacent(card_a: Card, card_b: Card, trump: Trump): boolean { // if card_a = card_b + 1
+// check if card_a = card_b + 1
+function isCardAdjacent(card_a: Card, card_b: Card, trump: Trump): boolean {
 
     if (!isMainLine(card_a, trump) && card_a.suit !== card_b.suit) return false;
     
@@ -93,6 +107,7 @@ function isCardAdjacent(card_a: Card, card_b: Card, trump: Trump): boolean { // 
     return true;
 }
 
+// check if card_a > card_b, assuming card_b was played first (trumps in the case of equality)
 function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
     const val_a : number[] = getCardData(card_a, trump);
     const val_b : number[] = getCardData(card_b, trump);
@@ -105,6 +120,7 @@ function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
     return false;
 }
 
+// sort cards from greatest to least relative value
 export function sortCards(cards: Card[], trump: Trump): Card[] {
     return cards.sort((a, b) => {
         return isCardBigger(a, b, trump) ? -1 : 1;
@@ -141,7 +157,8 @@ export interface Deck {
     cards: Card[];
 }
 
-function shuffleDeck(deck: Deck): void {
+// deck helper functions
+export function shuffleDeck(deck: Deck): void {
     for (let i = deck.cards.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck.cards[i], deck.cards[j]] = [deck.cards[j], deck.cards[i]];
@@ -172,11 +189,12 @@ export interface Hand {
     cards: Map<Suit, Map<Rank, number>>;
 }
 
-function getCardCount(hand: Hand, card: Card): number {
+export function getCardCount(hand: Hand, card: Card): number {
     const count : number | undefined = hand.cards.get(card.suit)?.get(card.rank);
     return count || 0;
 }
 
+// get card count for cards that can be played in tricks responding the lead card
 function getTrickCount(hand: Hand, lead: Card, trump: Trump): { tricks: Card[][], suit_count: number } {
     const tricks : Card[][] = [];
     let suit_count : number = 0;
@@ -210,10 +228,16 @@ export function initializeHand(): Hand {
 }
 
 export function addCardToHand(card: Card, hand: Hand): void {
-    const prev : number = hand.cards.get(card.suit)?.get(card.rank) || 0;
+    const prev : number = getCardCount(hand, card);
     hand.cards.get(card.suit)?.set(card.rank, prev + 1);
 }
 
+export function removeCardFromHand(card: Card, hand: Hand): void {
+    const prev : number = getCardCount(hand, card);
+    hand.cards.get(card.suit)?.set(card.rank, Math.max(0, prev - 1));
+}
+
+// Ordering for display
 const suit_order: Map<Suit, number> = new Map<Suit, number>([
     ["spades", 3],
     ["hearts", 2],
@@ -244,10 +268,11 @@ export function handToString(hand: Hand, trump: Trump): string {
 
 export interface Play {
     cards: Card[];
-    suit: Suit;
+    suit: Suit | null;
 }
 
-function getPlayKind(play: Play): string {
+// determine type of play
+function getPlayKind(play: Play): string { // TODO: fix for 4+ decks
     const cardcount : number = play.cards.length;
     if (cardcount === 1) return "single";
     if (cardcount === 2) return "pair";
@@ -255,6 +280,7 @@ function getPlayKind(play: Play): string {
     return "tractor";
 }
 
+// returns structure of a play (how many consecutive, single/duple/triple)
 export function getPlayStruct(play: Play, trump: Trump): { len: number; count: number; list: Card[] } | null {
     const hand : Hand = initializeHand();
     let max_count : number = 0;
@@ -276,18 +302,15 @@ export function getPlayStruct(play: Play, trump: Trump): { len: number; count: n
             if (count > 0) return null;
         }
     }
-    // biggest cards first
     sortCards(max_list, trump);
-    // console.log("Play Struct - Len:", max_num, "Count:", max_count, "List:", cardsToString(max_list));
     return { len: max_num, count: max_count, list: max_list };
 }
 
+// check if cards are consectuive
 function isConsecutiveCards(cards: Card[], trump: Trump): boolean {
     if (cards.length === 0) return true;
     
     sortCards(cards, trump);
-
-    // console.log("Checking consecutive for:", cardsToString(cards));
 
     for (let i = 0; i < cards.length - 1; i++) {
         if (!isCardAdjacent(cards[i], cards[i + 1], trump)) return false;
@@ -295,6 +318,32 @@ function isConsecutiveCards(cards: Card[], trump: Trump): boolean {
     return true;
 }
 
+// return sorted list of lengths of consecutive card segments
+function findMaxConsecutive(cards: Card[], trump: Trump): number[] {
+    if (!cards) return [];
+    
+    sortCards(cards, trump);
+    // console.log("Finding max consecutive in:", cardsToString(cards));
+
+    let len : number = 1;
+
+    const seq : number[] = [];
+    for (let i = 0; i < cards.length - 1; i++) {
+        if (isCardAdjacent(cards[i], cards[i + 1], trump)) len++;
+        else {
+            seq.push(len);
+            len = 1;
+        }
+    }
+
+    seq.sort((a, b) => {
+        return a > b ? 1 : -1;
+    });
+
+    return seq;
+}
+
+// check if play_a conforms to play_b format
 function isPlayFormatted(play_a: Play, play_b: Play, trump: Trump){
 
     const struct_a = getPlayStruct(play_a, trump);
@@ -305,6 +354,7 @@ function isPlayFormatted(play_a: Play, play_b: Play, trump: Trump){
     return struct_a.len === struct_b.len && struct_a.count === struct_b.count && isConsecutiveCards(struct_a.list, trump);
 }
 
+// check if play is valid given current hand and lead play (assume lead is a valid play)
 export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): boolean {
     
     // check if play is subset of hand
@@ -315,18 +365,15 @@ export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): b
         if (getCardCount(play_hand, card) > getCardCount(hand, card)) return false;
     }
 
+    // get lead play struct
     const struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(lead, trump);
     const len : number = struct ? struct.len : 0;
     const count : number = struct ? struct.count : 0;
 
-    console.log("Validating Play - Lead Struct Len:", len, "Count:", count);
-
     const hand_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(hand, lead.cards[0], trump);
     const play_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(play_hand, lead.cards[0], trump);
 
-    console.log("Hand Tricks:", hand_tricks);
-    console.log("Play Tricks:", play_tricks);
-
+    // check for suit 
     if (play_tricks.suit_count < Math.min(hand_tricks.suit_count, play.cards.length)) return false;
 
     let rem_tricks : number = len;
@@ -361,7 +408,7 @@ export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): b
     return true;
 }
 
-
+//check if play_a "kills" play_b
 export function isPlayBigger(play_a: Play, play_b: Play, trump: Trump): boolean { // assumes same kind of play, play_b is a valid play
 
     sortCards(play_a.cards, trump);
@@ -384,28 +431,4 @@ export function playToString(play: Play): string {
     const card_strings : string[] = play.cards.map(cardToString);
 
     return `${getPlayKind(play)}(${card_strings.join(", ")})`;
-}
-
-function findMaxConsecutive(cards: Card[], trump: Trump): number[] {
-    if (!cards) return [];
-    
-    sortCards(cards, trump);
-    // console.log("Finding max consecutive in:", cardsToString(cards));
-
-    let len : number = 1;
-
-    const seq : number[] = [];
-    for (let i = 0; i < cards.length - 1; i++) {
-        if (isCardAdjacent(cards[i], cards[i + 1], trump)) len++;
-        else {
-            seq.push(len);
-            len = 1;
-        }
-    }
-
-    seq.sort((a, b) => {
-        return a > b ? 1 : -1;
-    });
-
-    return seq;
 }
