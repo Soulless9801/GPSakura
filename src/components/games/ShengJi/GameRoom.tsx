@@ -1,7 +1,58 @@
 import { useEffect, useState, useRef } from "react";
 import { useAbly } from "/src/shengji/server/ably";
-import * as ShenJiCore from "/src/shengji/core/entities";
-import * as ShengJiGame from "/src/shengji/core/game";
+import Ably from "ably";
+
+interface ClientRequest {
+    roomId : string;
+    action: string;
+    clientId: string;
+    payload?: any;
+}
+
+async function clientRequest(request: ClientRequest) {
+    const res =  await fetch("/.netlify/functions/shengji-game-room", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+    });
+
+    if (!res.ok) {
+        console.error("Request failed:", res.statusText);
+        return null;
+    }
+
+    return res.json();
+}
+
+async function joinRoom(roomId: string, clientId: string) {
+    const response = await clientRequest({
+        roomId,
+        action: "join",
+        clientId,
+    });
+
+    if (response) {
+        console.log("Joined room successfully:", response);
+    } else {
+        console.error("Failed to join room");
+    }
+}
+
+async function leaveRoom(roomId: string, clientId: string) {
+    const response = await clientRequest({
+        roomId,
+        action: "leave",
+        clientId,
+    });
+
+    if (response) {
+        console.log("Left room successfully:", response);
+    } else {
+        console.error("Failed to leave room");
+    }
+}
 
 interface ChatMessage {
     user: string;
@@ -11,22 +62,20 @@ interface ChatMessage {
 export default function GameRoom({ roomId }: { roomId: string }) {
 
     const ably = useAbly();
-
-    const [players, setPlayers] = useState<string[]>([]);
-
-    useEffect(() => {
-        console.log("Current players in room:", players);
-    }, [players]);
     
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [messageInput, setMessageInput] = useState("");
+
+    function getPID(): string {
+        return ably?.auth.clientId || "Unknown";
+    }
 
     function send() {
         if (!messageInput.trim()) return;
 
         if (!ably) return;
 
-        const pid = ably.auth.clientId;
+        const pid = getPID();
 
         ably.channels
             .get(`room_${roomId}`)
@@ -42,9 +91,10 @@ export default function GameRoom({ roomId }: { roomId: string }) {
 
         if (!ably) return;
 
-        const pid : string = ably.auth.clientId;
+        const pid : string = getPID();
 
-        const channel = ably.channels.get(`room_${roomId}`);
+        const options : Ably.ChannelOptions = { modes: ['OBJECT_SUBSCRIBE', 'OBJECT_PUBLISH'] };
+        const channel = ably.channels.get(`room_${roomId}`, options);
 
         let cancelled : boolean = false;
 
@@ -56,29 +106,14 @@ export default function GameRoom({ roomId }: { roomId: string }) {
                 );
             }
 
-            channel.presence.subscribe((msg) => {
-                if (cancelled) return;
-
-                const action: string = msg.action;
-                const player: string = msg.clientId;
-
-                if (action === "enter") setPlayers((prev) => [...prev, player]);
-                if (action === "leave" || action === "timeout") setPlayers((prev) => prev.filter((p) => p !== player));
-            });
-
             channel.subscribe("chat", (msg) => {
                 if (cancelled) return;
                 setMessages((prev) => [...prev, msg.data as ChatMessage]);
             });
 
-            channel.subscribe("game", (msg) => { // TODO: receive game state updates
-                if (cancelled) return;
-            });
-
             await channel.presence.enter();
 
-            const snapshot = await channel.presence.get();
-            if (!cancelled) setPlayers(snapshot.map(m => m.clientId));
+            await joinRoom(roomId, pid);
 
             console.log(`Joined room_${roomId}`);
         }
@@ -90,6 +125,7 @@ export default function GameRoom({ roomId }: { roomId: string }) {
             channel.presence.unsubscribe();
             channel.unsubscribe();
             channel.presence.leave();
+            leaveRoom(roomId, pid);
             console.log(`Unsubscribed from room_${roomId}`);
         };
 

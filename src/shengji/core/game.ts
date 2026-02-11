@@ -1,7 +1,6 @@
 import * as ShengJiCore from '/src/shengji/core/entities';
-import Ably from 'ably';
 
-export interface Game {
+export type SerializedGame = {
     deck: ShengJiCore.Deck
     round: number
 
@@ -38,217 +37,231 @@ function find(arr: string[], target: string): number {
     return -1;
 }
 
-export function initializeGame(players: string[]) : Game | null{
+export class Game {
+    private state: SerializedGame;
 
-    if (players.length < 4 && players.length % 2 == 1) return null;
-    
-    const game: Game = {
-        deck: ShengJiCore.initializeDeck(players.length / 2),
-        round: 1,
-
-        players: players,
-        hands: new Map(players.map(p => [p, ShengJiCore.initializeHand()])),
-        atk: 0,
-
-        draw: true, 
-        declare: 0, 
-        zhuang: 0,
-
-        trump: { suit: null, rank: 2 },
-        alt : 2,
-        dipai: [],
-
-        turn: 0,
-
-        score: 0,
-        points: 0,
-
-        chu: 0,
-        big: 0, 
-
-        lead: { cards: [], suit: null },
-        count: 0,
-
-        over: false,
+    constructor(state: SerializedGame) {
+        this.state = state;
     }
+
+
+    static deserialize(state: SerializedGame): Game {
+        return new Game(state);
+    }
+
+    serialize(): SerializedGame {
+        return this.state;
+    }
+
+    // this.state logic methods
+
+    initializeGame(players: string[]) {
+        if (players.length < 4 && players.length % 2 == 1) return null;
     
-    return game;
-}
+        this.state = {
+            deck: ShengJiCore.initializeDeck(players.length / 2),
+            round: 1,
 
-function finishDraw(game: Game) : void {
-    game.dipai = game.deck.cards;
-    game.deck.cards = [];
-    game.draw = false;
-    game.turn = game.zhuang;
-    game.chu = game.zhuang;
-    game.big = game.zhuang;
-    game.atk = 1 - (game.zhuang % 2);
-    game.lead = { cards: [], suit: null };
-    game.declare = 0; // reset for next round
-}
+            players: players,
+            hands: new Map(players.map(p => [p, ShengJiCore.initializeHand()])),
+            atk: 0,
 
-export function drawCard(game: Game, player: string) : boolean {
+            draw: true, 
+            declare: 0, 
+            zhuang: 0,
 
-    if (game.over || !game.draw) return false; // not drawing phase
+            trump: { suit: null, rank: 2 },
+            alt : 2,
+            dipai: [],
 
-    if (game.players[game.turn] !== player) return false; // wait your turn lil bro
-    
-    const card = ShengJiCore.drawCard(game.deck);
+            turn: 0,
 
-    if (!card) return false; // deck is empty, should never happen
+            score: 0,
+            points: 0,
 
-    ShengJiCore.addCardToHand(card, game.hands.get(player)!);
+            chu: 0,
+            big: 0, 
 
-    if (game.turn === 0) game.count++;
+            lead: { cards: [], suit: null },
+            count: 0,
 
-    game.turn = (game.turn + 1) % game.players.length;
-
-    if (game.turn === 0) {
-        if (game.deck.cards.length <= 8) {
-            finishDraw(game);
+            over: false,
         }
+        
+        return this;
     }
 
-    return true;
-}
+    finishDraw() {
+        this.state.dipai = this.state.deck.cards;
+        this.state.deck.cards = [];
+        this.state.draw = false;
+        this.state.turn = this.state.zhuang;
+        this.state.chu = this.state.zhuang;
+        this.state.big = this.state.zhuang;
+        this.state.atk = 1 - (this.state.zhuang % 2);
+        this.state.lead = { cards: [], suit: null };
+        this.state.declare = 0; // reset for next round
+    }
 
-export function callTrump(game: Game, player: string, trump: ShengJiCore.Trump) : boolean {
+    drawCard(player: string) : boolean {
 
-    if (game.over || !game.draw || !trump.suit) return false;
+        if (this.state.over || !this.state.draw) return false; // not drawing phase
 
-    const idx : number = find(game.players, player);
+        if (this.state.players[this.state.turn] !== player) return false; // wait your turn lil bro
+        
+        const card = ShengJiCore.drawCard(this.state.deck);
 
-    if (idx === -1) return false; // should never happen
+        if (!card) return false; // deck is empty, should never happen
 
-    const hand : ShengJiCore.Hand = game.hands.get(player)!;
+        ShengJiCore.addCardToHand(card, this.state.hands.get(player)!);
 
-    if (trump.suit === "jokers"){
-        const joker_s : number = ShengJiCore.getCardCount(hand, { suit: "jokers", rank: 1 });
-        const joker_b : number = ShengJiCore.getCardCount(hand, { suit: "jokers", rank: 2 });
+        if (this.state.turn === 0) this.state.count++;
 
-        if ((game.players.length === 4 && (joker_s + joker_b) >= 3) || 
-            ((joker_s + joker_b >= 4) || Math.max(joker_s, joker_b) >= 3)) { 
-            game.trump.suit = null;
-            if (game.round === 1) game.zhuang = idx;
+        this.state.turn = (this.state.turn + 1) % this.state.players.length;
+
+        if (this.state.turn === 0) {
+            if (this.state.deck.cards.length <= 8) {
+                this.finishDraw();
+            }
+        }
+
+        return true;
+    }
+
+    callTrump(player: string, trump: ShengJiCore.Trump) : boolean {
+
+        if (this.state.over || !this.state.draw || !trump.suit) return false;
+
+        const idx : number = find(this.state.players, player);
+
+        if (idx === -1) return false; // should never happen
+
+        const hand : ShengJiCore.Hand = this.state.hands.get(player)!;
+
+        if (trump.suit === "jokers"){
+            const joker_s : number = ShengJiCore.getCardCount(hand, { suit: "jokers", rank: 1 });
+            const joker_b : number = ShengJiCore.getCardCount(hand, { suit: "jokers", rank: 2 });
+
+            if ((this.state.players.length === 4 && (joker_s + joker_b) >= 3) || 
+                ((joker_s + joker_b >= 4) || Math.max(joker_s, joker_b) >= 3)) { 
+                this.state.trump.suit = null;
+                if (this.state.round === 1) this.state.zhuang = idx;
+                return true;
+            }
+
+            return false;
+        }
+        
+        if (this.state.trump.rank !== trump.rank || !this.state.trump.suit) return false; // only call same rank
+
+        const cnt: number = ShengJiCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
+
+        if (cnt > this.state.declare){
+            this.state.trump.suit = trump.suit; 
+            this.state.declare = cnt;
+            if (this.state.round === 1) this.state.zhuang = idx;
             return true;
-        }
+        } 
 
         return false;
     }
-    
-    if (game.trump.rank !== trump.rank || !game.trump.suit) return false; // only call same rank
 
-    const cnt: number = ShengJiCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
+    tryPlay(player: string, play: ShengJiCore.Play) : boolean {
 
-    if (cnt > game.declare){
-        game.trump.suit = trump.suit; 
-        game.declare = cnt;
-        if (game.round === 1) game.zhuang = idx;
+        if (this.state.over || this.state.draw) return false; // this.state is already over
+
+        if (this.state.players[this.state.turn] !== player) return false; // wait your turn lil bro
+
+        if (this.state.lead.cards.length == 0) this.state.lead = play; // first play of the trick sets the lead
+
+        const hand : ShengJiCore.Hand = this.state.hands.get(player)!;
+
+        if (!ShengJiCore.isPlayValid(play, this.state.lead, hand, this.state.trump)) return false;
+
+        if (ShengJiCore.isPlayBigger(play, this.state.lead, this.state.trump)) {
+            this.state.lead = play;
+            this.state.big = this.state.turn;
+        }
+
+        for (const card of play.cards) {
+            ShengJiCore.removeCardFromHand(card, hand);
+            this.state.points += ShengJiCore.pointValue(card);
+        }
+
+        this.state.turn = (this.state.turn + 1) % this.state.players.length;
+
+        if (this.state.turn == this.state.chu) this.endTrick();
+
         return true;
-    } 
-
-    return false;
-}
-
-export function tryPlay(game: Game, player: string, play: ShengJiCore.Play) : boolean {
-
-    if (game.over || game.draw) return false; // game is already over
-
-    if (game.players[game.turn] !== player) return false; // wait your turn lil bro
-
-    if (game.lead.cards.length == 0) game.lead = play; // first play of the trick sets the lead
-
-    const hand : ShengJiCore.Hand = game.hands.get(player)!;
-
-    if (!ShengJiCore.isPlayValid(play, game.lead, hand, game.trump)) return false;
-
-    if (ShengJiCore.isPlayBigger(play, game.lead, game.trump)) {
-        game.lead = play;
-        game.big = game.turn;
     }
 
-    for (const card of play.cards) {
-        ShengJiCore.removeCardFromHand(card, hand);
-        game.points += ShengJiCore.pointValue(card);
+    private endTrick() : void {
+
+        const team: number = this.state.big % 2;
+        
+        if (team === this.state.atk) this.state.score += this.state.points; // attacking team wins the trick, add points to score
+
+        this.state.points = 0;
+
+        this.state.count -= this.state.lead.cards.length;
+
+        if (this.state.count === 0) this.endRound(team === this.state.atk ? this.state.lead.cards.length * 2 : 0);
+
+        this.state.chu = this.state.big; // winner of the trick starts the next trick
+        this.state.turn = this.state.chu;
+        this.state.lead = { cards: [], suit: null };
     }
 
-    game.turn = (game.turn + 1) % game.players.length;
+    private swapTeams() : void {
+        
+        this.state.atk = 1 - this.state.atk;
 
-    if (game.turn == game.chu) endTrick(game);
-
-    return true;
-}
-
-function endTrick(game: Game) : void {
-
-    const team: number = game.big % 2;
-    
-    if (team === game.atk) game.score += game.points; // attacking team wins the trick, add points to score
-
-    game.points = 0;
-
-    game.count -= game.lead.cards.length;
-
-    if (game.count === 0) endRound(game, team === game.atk ? game.lead.cards.length * 2 : 0);
-
-    game.chu = game.big; // winner of the trick starts the next trick
-    game.turn = game.chu;
-    game.lead = { cards: [], suit: null };
-}
-
-function swapTeams(game: Game) : void {
-    
-    game.atk = 1 - game.atk;
-
-    // swap trumps
-    const temp : ShengJiCore.Rank = game.trump.rank;
-    game.trump.rank = game.alt;
-    game.alt = temp;
-}
-
-function endRound(game: Game, dmult: number) : void {
-
-    // calculate dipai points
-    const dipai: number = game.dipai.reduce((sum, card) => sum + ShengJiCore.pointValue(card), 0);
-
-    game.score += dipai * dmult;
-
-    const mult : number = game.players.length / 2;
-
-    if (game.score >= mult * 40) { // attacker win
-        swapTeams(game);
-        if (game.score >= mult * 60) game.trump.rank++;
-        if (game.score >= mult * 80) game.trump.rank++;
-        if (game.score >= mult * 100) game.trump.rank++;
-        game.zhuang++;
-    } else { // defender win
-        game.trump.rank++;
-        if (game.score < mult * 20) game.trump.rank++;
-        if (game.score === 0) game.trump.rank++;
-        game.zhuang += 2;
+        // swap trumps
+        const temp : ShengJiCore.Rank = this.state.trump.rank;
+        this.state.trump.rank = this.state.alt;
+        this.state.alt = temp;
     }
 
-    if (game.trump.rank > 14) endGame(game);
+    private endRound(dmult: number) : void {
 
-    game.round++;
+        // calculate dipai points
+        const dipai: number = this.state.dipai.reduce((sum, card) => sum + ShengJiCore.pointValue(card), 0);
 
-    game.score = 0;
-    
-    game.count = 0;
+        this.state.score += dipai * dmult;
 
-    game.deck = ShengJiCore.initializeDeck(game.players.length / 2); // reset deck
+        const mult : number = this.state.players.length / 2;
 
-    game.draw = true;
+        if (this.state.score >= mult * 40) { // attacker win
+            this.swapTeams();
+            if (this.state.score >= mult * 60) this.state.trump.rank++;
+            if (this.state.score >= mult * 80) this.state.trump.rank++;
+            if (this.state.score >= mult * 100) this.state.trump.rank++;
+            this.state.zhuang++;
+        } else { // defender win
+            this.state.trump.rank++;
+            if (this.state.score < mult * 20) this.state.trump.rank++;
+            if (this.state.score === 0) this.state.trump.rank++;
+            this.state.zhuang += 2;
+        }
 
-    game.zhuang %= game.players.length; // new zhuang
-}
+        if (this.state.trump.rank > 14) this.endGame();
 
-function endGame(game: Game) : void {
-    game.over = true;
-}
+        this.state.round++;
 
-export interface GameRoom {
-    id: string;
-    game: Game | null;
-    players: string[];
+        this.state.score = 0;
+        
+        this.state.count = 0;
+
+        this.state.deck = ShengJiCore.initializeDeck(this.state.players.length / 2); // reset deck
+
+        this.state.draw = true;
+
+        this.state.zhuang %= this.state.players.length; // new zhuang
+    }
+
+    private endGame() : void {
+        this.state.over = true;
+    }
+
+
 }
