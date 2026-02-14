@@ -12,7 +12,7 @@ export const handler = async () => {
     const tokenRequest = await client.auth.createTokenRequest({
         clientId: "anonymous-" + Math.random().toString(36).slice(2),
         capability: {
-            "room_*": ["subscribe", "publish", "presence"],
+            "*": ["subscribe", "presence"],
         },
     });
 

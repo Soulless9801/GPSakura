@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useAbly } from "/src/shengji/server/ably";
+import { Game } from "/src/shengji/core/game";
 import Ably from "ably";
 
 interface ClientRequest {
     roomId : string;
     action: string;
-    clientId: string;
+    clientId?: string;
     payload?: any;
 }
 
@@ -18,82 +19,85 @@ async function clientRequest(request: ClientRequest) {
         body: JSON.stringify(request),
     });
 
-    if (!res.ok) {
-        console.error("Request failed:", res.statusText);
+    if (!res) {
+        console.error("Request failed");
         return null;
     }
 
-    return res.json();
-}
+    const data = await res.json();
 
-async function joinRoom(roomId: string, clientId: string) {
-    const response = await clientRequest({
-        roomId,
-        action: "join",
-        clientId,
-    });
-
-    if (response) {
-        console.log("Joined room successfully:", response);
-    } else {
-        console.error("Failed to join room");
+    if (!res.ok) {
+        console.log("Error: ", data.error);
+        return null;
     }
-}
 
-async function leaveRoom(roomId: string, clientId: string) {
-    const response = await clientRequest({
-        roomId,
-        action: "leave",
-        clientId,
-    });
-
-    if (response) {
-        console.log("Left room successfully:", response);
-    } else {
-        console.error("Failed to leave room");
-    }
-}
-
-interface ChatMessage {
-    user: string;
-    text: string;
+    return data;
 }
 
 export default function GameRoom({ roomId }: { roomId: string }) {
 
     const ably = useAbly();
-    
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [messageInput, setMessageInput] = useState("");
 
-    function getPID(): string {
-        return ably?.auth.clientId || "Unknown";
+    async function startGame() {
+
+        const res = await clientRequest({
+            roomId,
+            action: "start",
+        });
+
+        if (res) console.log("Game Started");
     }
 
-    function send() {
-        if (!messageInput.trim()) return;
+    async function endGame() {
+        const res = await clientRequest({
+            roomId,
+            action: "end",
+        });
 
-        if (!ably) return;
-
-        const pid = getPID();
-
-        ably.channels
-            .get(`room_${roomId}`)
-            .publish("chat", {
-                user: pid || "Player",
-                text: messageInput,
-            });
-
-        setMessageInput("");
+        if (res) console.log("Game Ended");
     }
+
+    async function drawCard() {
+
+        const res = await clientRequest({
+            roomId,
+            action: "draw",
+            clientId: ably?.auth.clientId,
+        });
+
+        if (res) console.log("Card Drawn");
+    }
+
+    async function requestHand() {
+
+        const res = await clientRequest({
+            roomId,
+            action: "hand",
+            clientId: ably?.auth.clientId,
+        });
+
+        console.log(res);
+
+        if (res) console.log("Hand Requested", Game.deserialize(res.msg.hand));
+    }
+
+    async function requestGame() {
+
+        const res = await clientRequest({
+            roomId,
+            action: "state",
+        });
+
+        if (res) console.log("Game State Requested", Game.deserialize(res.msg.state));
+    }
+
+    const [players, setPlayers] = useState<string[]>([]);
 
     useEffect(() => {
 
         if (!ably) return;
 
-        const pid : string = getPID();
-
-        const options : Ably.ChannelOptions = { modes: ['OBJECT_SUBSCRIBE', 'OBJECT_PUBLISH'] };
+        const options : Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
         const channel = ably.channels.get(`room_${roomId}`, options);
 
         let cancelled : boolean = false;
@@ -106,49 +110,46 @@ export default function GameRoom({ roomId }: { roomId: string }) {
                 );
             }
 
-            channel.subscribe("chat", (msg) => {
+            await channel.attach();
+
+            channel.presence.subscribe(async () => {
                 if (cancelled) return;
-                setMessages((prev) => [...prev, msg.data as ChatMessage]);
+                const snapshot = await channel.presence.get();
+                setPlayers(prev => {
+                    const players = snapshot.map(p => p.clientId).filter(Boolean);
+                    return Array.from(new Set([...prev, ...players]));
+                });
             });
 
             await channel.presence.enter();
 
-            await joinRoom(roomId, pid);
+            const pid = ably.auth.clientId;
 
-            console.log(`Joined room_${roomId}`);
+            console.log(`Joined room_${roomId} as ${pid}`);
         }
 
         connect();
 
         return () => {
+            console.log(`Leaving room_${roomId}`);
             cancelled = true;
-            channel.presence.unsubscribe();
             channel.unsubscribe();
-            channel.presence.leave();
-            leaveRoom(roomId, pid);
-            console.log(`Unsubscribed from room_${roomId}`);
+            channel.presence.unsubscribe();
         };
 
     }, [ably, roomId]);
 
     return (
-        <div style={{ maxWidth: 400 }}>
-        <h3>Room {roomId}</h3>
-
-        <div style={{ border: "1px solid #ccc", padding: 8 }}>
-            {messages.map((m, i) => (
-                <div key={i}>
-                    <strong>{m.user}:</strong> {m.text}
-                </div>
-            ))}
-        </div>
-
-        <input
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
-        />
-        <button onClick={send}>Send</button>
-        </div>
+        <>
+            <h3>Room {roomId}</h3>
+            <div>
+                Players: {players.join(", ")}
+            </div>
+            <button onClick={() => startGame()}>Start Game</button>
+            <button onClick={() => endGame()}>End Game</button>
+            <button onClick={() => drawCard()}>Draw Card</button>
+            <button onClick={() => requestHand()}>Request Hand</button>
+            <button onClick={() => requestGame()}>Request Game State</button>
+        </>
     );
 }
