@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useAbly } from "/src/shengji/server/ably";
-import { Game } from "/src/shengji/core/game";
+import * as ShengJiGame from "/src/shengji/core/game";
+import * as ShengJiCore from "/src/shengji/core/entities";
 import Ably from "ably";
+import { X } from "node_modules/@upstash/redis/zmscore-BjNXmrug";
 
 interface ClientRequest {
     roomId : string;
@@ -37,58 +39,60 @@ async function clientRequest(request: ClientRequest) {
 export default function GameRoom({ roomId }: { roomId: string }) {
 
     const ably = useAbly();
+    const lastActionAtRef = useRef(0);
+    const actionCooldownMs = 1000;
+
+    const [hand, setHand] = useState<ShengJiCore.Hand>();
+
+    const [game, setGame] = useState<ShengJiGame.GameState>();
+
+    async function runAction(actionFn: () => Promise<any>) {
+        const now = Date.now();
+        if (now - lastActionAtRef.current < actionCooldownMs) {
+            return null;
+        }
+        lastActionAtRef.current = now;
+        return actionFn();
+    }
 
     async function startGame() {
-
-        const res = await clientRequest({
-            roomId,
-            action: "start",
-        });
-
-        if (res) console.log("Game Started");
+        return runAction(() =>
+            clientRequest({
+                roomId,
+                action: "start",
+            })
+        );
     }
 
     async function endGame() {
-        const res = await clientRequest({
-            roomId,
-            action: "end",
-        });
-
-        if (res) console.log("Game Ended");
+        return runAction(() =>
+            clientRequest({
+                roomId,
+                action: "end",
+            })
+        );
     }
 
     async function drawCard() {
-
-        const res = await clientRequest({
-            roomId,
-            action: "draw",
-            clientId: ably?.auth.clientId,
-        });
-
-        if (res) console.log("Card Drawn");
+        return runAction(() =>
+            clientRequest({
+                roomId,
+                action: "draw",
+                clientId: ably?.auth.clientId,
+            })
+        );
     }
 
     async function requestHand() {
+        const res = await runAction(() =>
+            clientRequest({
+                roomId,
+                action: "hand",
+                clientId: ably?.auth.clientId,
+            })
+        );
 
-        const res = await clientRequest({
-            roomId,
-            action: "hand",
-            clientId: ably?.auth.clientId,
-        });
-
-        console.log(res);
-
-        if (res) console.log("Hand Requested", Game.deserialize(res.msg.hand));
-    }
-
-    async function requestGame() {
-
-        const res = await clientRequest({
-            roomId,
-            action: "state",
-        });
-
-        if (res) console.log("Game State Requested", Game.deserialize(res.msg.state));
+        if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
     }
 
     const [players, setPlayers] = useState<string[]>([]);
@@ -112,12 +116,11 @@ export default function GameRoom({ roomId }: { roomId: string }) {
 
             await channel.attach();
 
-            channel.presence.subscribe(async () => {
+            channel.presence.subscribe((msg) => {
                 if (cancelled) return;
-                const snapshot = await channel.presence.get();
-                setPlayers(prev => {
-                    const players = snapshot.map(p => p.clientId).filter(Boolean);
-                    return Array.from(new Set([...prev, ...players]));
+                channel.presence.get().then(presence => {
+                    const playerIds = presence.map(p => p.clientId);
+                    setPlayers(playerIds);
                 });
             });
 
@@ -125,13 +128,24 @@ export default function GameRoom({ roomId }: { roomId: string }) {
 
             const pid = ably.auth.clientId;
 
-            console.log(`Joined room_${roomId} as ${pid}`);
+            channel.subscribe('state_change', (msg) => { // game state updated
+                if (cancelled) return;
+                const game = ShengJiGame.Game.deserialize(msg.data.game);
+                setGame(game as ShengJiGame.GameState);
+            });
+
+            channel.subscribe('hand_change', (msg) => { // someone's hand changed
+                if (cancelled) return;
+                if (msg.data.clientId === pid) requestHand();
+            }); 
+
+            // console.log(`Joined room_${roomId} as ${pid}`);
         }
 
         connect();
 
         return () => {
-            console.log(`Leaving room_${roomId}`);
+            // console.log(`Leaving room_${roomId}`);
             cancelled = true;
             channel.unsubscribe();
             channel.presence.unsubscribe();
@@ -148,8 +162,14 @@ export default function GameRoom({ roomId }: { roomId: string }) {
             <button onClick={() => startGame()}>Start Game</button>
             <button onClick={() => endGame()}>End Game</button>
             <button onClick={() => drawCard()}>Draw Card</button>
-            <button onClick={() => requestHand()}>Request Hand</button>
-            <button onClick={() => requestGame()}>Request Game State</button>
+            <div>
+                <h4>Hand</h4>
+                {hand && game && (
+                    <div>
+                        {ShengJiCore.handToString(hand, game.trump)}
+                    </div>
+                )}
+            </div>
         </>
     );
 }
