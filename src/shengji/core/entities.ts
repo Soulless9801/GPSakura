@@ -1,5 +1,3 @@
-import { feDropShadow } from "motion/react-client";
-
 export type Suit = "spades" | "hearts" | "diamonds" | "clubs" | "jokers";
 export type Rank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
 
@@ -168,7 +166,7 @@ export function shuffleDeck(deck: Deck): void {
 export function initializeDeck(decks: number): Deck {
     const deck: Deck = { cards: [] };
     for (let d = 0; d < decks; d++){
-        for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
+        for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
             for (let rank = 1; rank <= 14; rank++){
                 const card : Card = { suit: suit, rank: rank as Rank };
                 if (!validateCard(card)) continue;
@@ -246,7 +244,7 @@ const suit_order: Map<Suit, number> = new Map<Suit, number>([
     ["jokers", 4]
 ]);
 
-export function handToString(hand: Hand, trump: Trump): string {
+export function handToString(hand: Hand, trump: Trump | null): string {
     let cards : Card[] = [];
     for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
         for (let rank = 1; rank <= 14; rank++){
@@ -257,7 +255,7 @@ export function handToString(hand: Hand, trump: Trump): string {
     }
 
     cards.sort((b, a) => {
-        if (!isMainLine(a, trump) && !isMainLine(b, trump)) {
+        if (!trump || (!isMainLine(a, trump) && !isMainLine(b, trump))) {
             if (a.suit !== b.suit) return suit_order.get(b.suit)! - suit_order.get(a.suit)!;
             else return b.rank - a.rank;
         }
@@ -277,6 +275,8 @@ function getPlayKind(play: Play): string { // TODO: fix for 4+ decks
     if (cardcount === 1) return "single";
     if (cardcount === 2) return "pair";
     if (cardcount === 3) return "triple";
+    if (cardcount === 4) return "quad/tractor";
+    if (cardcount === 5) return "quint";
     return "tractor";
 }
 
