@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as ShenJiTest from '/src/shengji/core/testcase';
 import * as ShenJiCore from '/src/shengji/core/entities';
 
-import GameRoom from "./GameRoom";
+import GameRoom from "/src/shengji/components/GameRoom/GameRoom";
+import Hand from "/src/shengji/components/Hand/Hand";
 
 import "./ShengJiApp.css";
 
@@ -13,6 +14,12 @@ export default function ShengJiApp() {
     const newTestCase = () => {
         setTestCase(ShenJiTest.genTestCase());
     };
+
+    const [cards, setCards] = useState<ShenJiCore.Card[]>([]);
+
+    useEffect(() => {
+        setCards(ShenJiCore.handToCards(testCase?.hand || ShenJiCore.initializeHand()));
+    }, [testCase]);
 
     return (
         <div className="shengjiWrapper">
@@ -48,7 +55,9 @@ export default function ShengJiApp() {
                 </div>
             )}
             <hr />
-            <GameRoom roomId="test-room" />
+            {testCase && (
+                <div><Hand cards={cards} /></div>
+            )}
         </div>
     );
 }
