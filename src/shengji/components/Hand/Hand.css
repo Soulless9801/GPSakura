@@ -1,0 +1,9 @@
+.sj-hand {
+    position: relative;
+    width: 100%;
+    display: flex;
+}
+
+.sj-hand > * {
+    position: absolute;
+}

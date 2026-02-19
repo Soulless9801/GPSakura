@@ -12,11 +12,14 @@ export function trumpToString(trump: Trump): string {
     return cardToString(card);
 }
 
+export function trumpToCard(trump: Trump): Card | null {
+    return { suit: trump.suit ? trump.suit : "jokers", rank: trump.rank };
+}
+
 export interface Card {
     suit: Suit;
     rank: Rank;
 }
-
 
 // check if card is valid
 export function validateCard(card: Card): boolean {
@@ -118,6 +121,11 @@ function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
     return false;
 }
 
+// check if cards are exactly the same
+export function isCardEqual(card_a: Card, card_b: Card): boolean {
+    return card_a.suit === card_b.suit && card_a.rank === card_b.rank;
+}
+
 // sort cards from greatest to least relative value
 export function sortCards(cards: Card[], trump: Trump): Card[] {
     return cards.sort((a, b) => {
@@ -125,6 +133,7 @@ export function sortCards(cards: Card[], trump: Trump): Card[] {
     });
 }
 
+// stringifiers
 export function cardToString(card: Card): string {
 
     if (card.suit === "jokers") return (card.rank === 1 ? "SJ" : "BJ");
@@ -244,7 +253,7 @@ const suit_order: Map<Suit, number> = new Map<Suit, number>([
     ["jokers", 4]
 ]);
 
-export function handToString(hand: Hand, trump: Trump | null): string {
+export function handToCards(hand: Hand): Card[] {
     let cards : Card[] = [];
     for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
         for (let rank = 1; rank <= 14; rank++){
@@ -253,6 +262,12 @@ export function handToString(hand: Hand, trump: Trump | null): string {
             for (let i = 0; i < num; i++) cards.push(card);
         }
     }
+    return cards;
+}
+
+export function handToString(hand: Hand, trump: Trump | null): string {
+    
+    const cards : Card[] = handToCards(hand);
 
     cards.sort((b, a) => {
         if (!trump || (!isMainLine(a, trump) && !isMainLine(b, trump))) {
