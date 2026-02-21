@@ -1,6 +1,7 @@
 .sj-hand {
     position: relative;
     width: 100%;
+    height: 140px; /* Exact height of card */
     display: flex;
 }
 

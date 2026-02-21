@@ -121,14 +121,15 @@ exports.handler = async function handler(event, context) {
 
             const presence = await channel.presence.get();
             const players = presence.items.map(p => p.clientId);
+            console.log("Initializing with players:", players);
+
+
             const game = new ShengJiGame.Game({});
             if (!game.initializeGame(players)) return errorJSON("Failed to initialize game");
 
             const ser_game = game.serializeGame();
 
             await saveGame(redis, roomId, ser_game);
-
-            console.log("Game initialized with players:", players);
 
             publish(channel, "state_change", { game: ser_game });
 
@@ -139,9 +140,7 @@ exports.handler = async function handler(event, context) {
 
             if (!clientId) return errorJSON("Missing clientId");
 
-            console.log("A");
             const game = await getGame();
-            console.log("B");
             if (!game) return errorJSON("Game not found");
             
             if (!game.drawCard(clientId)) return errorJSON("Failed to draw card");
@@ -173,6 +172,42 @@ exports.handler = async function handler(event, context) {
             publish(channel, "state_change", { game: ser_game });
 
             return successJSON({ msg: "Trump called" });
+        }
+
+        if (action === "dipai") {
+
+            if (!clientId) return errorJSON("Missing clientId");
+
+            const game = await getGame();
+            if (!game) return errorJSON("Game not found");
+
+            const res = game.getDipai(clientId);
+
+            if (!res) return errorJSON("Not the zhuang");
+
+            return successJSON({ dipai: JSON.stringify(res) });
+        }
+
+        if (action === "exchange") {
+
+            if (!clientId) return errorJSON("Missing clientId");
+
+            const game = await getGame();
+            if (!game) return errorJSON("Game not found");
+
+            const give = payload && payload.give;
+            const receive = payload && payload.receive;
+
+            if (!game.exchangeDipai(clientId, give, receive)) return errorJSON("Failed to exchange Dipai");
+
+            const ser_game = game.serializeGame();
+            await saveGame(redis, roomId, ser_game);
+
+            publish(channel, "state_change", { game: ser_game});
+
+            publish(channel, "hand_change", { clientId: clientId });
+
+            return successJSON({ msg: "Dipai exchanged successfully" });
         }
 
         if (action === "play") { // ACTION: PLAY CARDS

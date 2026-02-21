@@ -3,7 +3,7 @@ import { useAbly } from "/src/shengji/server/ably";
 import * as ShengJiGame from "/src/shengji/core/game";
 import * as ShengJiCore from "/src/shengji/core/entities";
 import Ably from "ably";
-import { X } from "node_modules/@upstash/redis/zmscore-BjNXmrug";
+import Hand from "/src/shengji/components/Hand/Hand";
 
 interface ClientRequest {
     roomId : string;
@@ -36,7 +36,15 @@ async function clientRequest(request: ClientRequest) {
     return data;
 }
 
-export default function GameRoom({ roomId }: { roomId: string }) {
+function PlayerList({ players }: { players: string[] }) {
+    return (
+        <div>
+            Players: {players.join(", ")}
+        </div>
+    );
+}
+
+export default function GameRoom({ roomId, username }: { roomId: string, username: string }) {
 
     const ably = useAbly();
     const lastActionAtRef = useRef(0);
@@ -83,6 +91,20 @@ export default function GameRoom({ roomId }: { roomId: string }) {
         );
     }
 
+    const [dipai, setDipai] = useState<ShengJiCore.Card[]>([]);
+
+    async function getDipai() {
+        const res = await runAction(() => 
+            clientRequest({
+                roomId,
+                action: "dipai",
+                clientId: ably?.auth.clientId,
+            })
+        );
+
+        if (res?.dipai) setDipai(JSON.parse(res.dipai) as ShengJiCore.Card[]);
+    }
+
     async function requestHand() {
         const res = await runAction(() =>
             clientRequest({
@@ -119,12 +141,14 @@ export default function GameRoom({ roomId }: { roomId: string }) {
             channel.presence.subscribe((msg) => {
                 if (cancelled) return;
                 channel.presence.get().then(presence => {
-                    const playerIds = presence.map(p => p.clientId);
-                    setPlayers(playerIds);
+                    const users = presence.map(p => p.data.username);
+                    setPlayers(users);
                 });
             });
 
-            await channel.presence.enter();
+            await channel.presence.enter({ username: username });
+
+            console.log(`Joined room_${roomId} as ${username}`);
 
             const pid = ably.auth.clientId;
 
@@ -156,18 +180,14 @@ export default function GameRoom({ roomId }: { roomId: string }) {
     return (
         <>
             <h3>Room {roomId}</h3>
-            <div>
-                Players: {players.join(", ")}
-            </div>
+            <PlayerList players={players} />
             <button onClick={() => startGame()}>Start Game</button>
             <button onClick={() => endGame()}>End Game</button>
             <button onClick={() => drawCard()}>Draw Card</button>
             <div>
                 <h4>Hand</h4>
                 {hand && game && (
-                    <div>
-                        {ShengJiCore.handToString(hand, game.trump)}
-                    </div>
+                    <Hand cards={ShengJiCore.handToCards(hand)} />
                 )}
             </div>
         </>

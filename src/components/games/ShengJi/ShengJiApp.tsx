@@ -21,6 +21,21 @@ export default function ShengJiApp() {
         setCards(ShenJiCore.handToCards(testCase?.hand || ShenJiCore.initializeHand()));
     }, [testCase]);
 
+    // Live Game
+
+    const [tempId, setTempId] = useState<string>("");
+    const [roomId, setRoomId] = useState<string | null>(null);
+
+    const [username, setUsername] = useState<string>("");
+
+    const joinRoom = () => {
+        if (!tempId || !username) {
+            alert("Please enter a username and room ID");
+            return;
+        }
+        setRoomId(tempId);
+    };
+
     return (
         <div className="shengjiWrapper">
             <button onClick={newTestCase}>Generate New Test Case</button>
@@ -54,9 +69,18 @@ export default function ShengJiApp() {
                     </div>
                 </div>
             )}
-            <hr />
             {testCase && (
                 <div><Hand cards={cards} /></div>
+            )}
+            <hr />
+            {!roomId ? (
+                <div>
+                    <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                    <input type="text" placeholder="Room ID" value={tempId} onChange={(e) => setTempId(e.target.value)} />
+                    <button onClick={() => joinRoom()}>Join Room</button>
+                </div>
+            ) : (
+                <GameRoom roomId={roomId} username={username} />
             )}
         </div>
     );
