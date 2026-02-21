@@ -369,16 +369,24 @@ function isPlayFormatted(play_a: Play, play_b: Play, trump: Trump){
     return struct_a.len === struct_b.len && struct_a.count === struct_b.count && isConsecutiveCards(struct_a.list, trump);
 }
 
-// check if play is valid given current hand and lead play (assume lead is a valid play)
-export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): boolean {
-    
-    // check if play is subset of hand
+export function isPlaySubset(play: Play, hand: Hand): Hand | null {
     const play_hand : Hand = initializeHand();
 
     for (const card of play.cards){
         addCardToHand(card, play_hand);
-        if (getCardCount(play_hand, card) > getCardCount(hand, card)) return false;
+        if (getCardCount(play_hand, card) > getCardCount(hand, card)) return null;
     }
+
+    return play_hand;
+}
+
+// check if play is valid given current hand and lead play (assume lead is a valid play)
+export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): boolean {
+    
+    // check if play is subset of hand
+    const play_hand : Hand | null = isPlaySubset(play, hand);
+
+    if (!play_hand) return false;
 
     // get lead play struct
     const struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(lead, trump);

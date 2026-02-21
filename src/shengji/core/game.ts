@@ -22,12 +22,13 @@ export type GameState = {
     points: number
 
     chu: number // index of player who started the current trick
-    big: number // index of player who currently has the biggest play in the current trick
 
-    lead: ShengJiCore.Play
+    lead: number // index of player with biggest play
+    plays: ShengJiCore.Play[]
     count: number // number left for eahc player
 
     over: boolean
+    dip: boolean // diapi exchanged or not
 }
 
 function find(arr: string[], target: string): number {
@@ -35,6 +36,29 @@ function find(arr: string[], target: string): number {
         if (arr[i] === target) return i;
     }
     return -1;
+}
+
+function nullPlay(): ShengJiCore.Play {
+    return { cards: [], suit: null};
+}
+
+function replacer(key: string, value: any) {
+    if (value instanceof Map) {
+        return {
+            dataType: 'Map',
+            value: Array.from(value.entries()), // or with spread: value: [...value]
+        };
+    } else {
+        return value;
+    }
+}
+        
+function reviver(key: string, value: any) {
+    if (value && value.dataType === 'Map') {
+        return new Map(value.value);
+    } else {
+        return value;
+    }
 }
 
 export class Game {
@@ -51,31 +75,12 @@ export class Game {
         this.dipai = dipai;
     }
 
-    private static replacer(key: string, value: any) {
-        if (value instanceof Map) {
-            return {
-                dataType: 'Map',
-                value: Array.from(value.entries()), // or with spread: value: [...value]
-            };
-        } else {
-            return value;
-        }
-    }
-        
-    private static reviver(key: string, value: any) {
-        if (value && value.dataType === 'Map') {
-            return new Map(value.value);
-        } else {
-            return value;
-        }
-    }
-
     static serialize(obj: object): string {
-        return JSON.stringify(obj, Game.replacer);
+        return JSON.stringify(obj, replacer);
     }
 
     static deserialize(string: string): unknown {
-        return JSON.parse(string, Game.reviver);
+        return JSON.parse(string, reviver);
     }
 
     static deserializeGame(game: string): Game {
@@ -124,12 +129,13 @@ export class Game {
             points: 0,
 
             chu: 0,
-            big: 0, 
 
-            lead: { cards: [], suit: null },
+            lead: 0,
+            plays: Array.from({ length: players.length }, () => (nullPlay())),
             count: 0,
 
             over: false,
+            dip: false,
         }
 
         this.hands = new Map(players.map(p => [p, ShengJiCore.initializeHand()]));
@@ -140,14 +146,14 @@ export class Game {
     }
 
     finishDraw() {
+        this.state.dip = true; // dipai exchange time
         this.dipai = this.deck.cards;
         this.deck.cards = [];
         this.state.draw = false;
         this.state.turn = this.state.zhuang;
         this.state.chu = this.state.zhuang;
-        this.state.big = this.state.zhuang;
         this.state.atk = 1 - (this.state.zhuang % 2);
-        this.state.lead = { cards: [], suit: null };
+        this.state.lead = this.state.zhuang;
         this.state.declare = 0; // reset for next round
     }
 
@@ -220,9 +226,48 @@ export class Game {
         return false;
     }
 
+    exchangeDipai(player: string, give: ShengJiCore.Play, receive: ShengJiCore.Play) : boolean {
+        
+        if (this.state.over || !this.state.dip) return false;
+
+        if (this.state.players[this.state.zhuang] !== player) return false;
+
+        const hand = this.hands.get(player);
+
+        if (!hand) return false; // should never happen
+
+        const play_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset(give, hand);
+
+        if (!play_hand) return false;
+
+        const dipai_hand : ShengJiCore.Hand = ShengJiCore.initializeHand();
+
+        for (const card of this.dipai) ShengJiCore.addCardToHand(card, dipai_hand);
+
+        const dip_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset(receive, dipai_hand);
+
+        if (!dip_hand) return false;
+
+        for (const card of give.cards){
+            ShengJiCore.removeCardFromHand(card, hand);
+            ShengJiCore.addCardToHand(card, dipai_hand);
+        }
+
+        for (const card of receive.cards){
+            ShengJiCore.addCardToHand(card, hand);
+            ShengJiCore.removeCardFromHand(card, dipai_hand);
+        }
+
+        this.dipai = ShengJiCore.handToCards(dipai_hand); // convert back to array
+
+        this.state.dip = false; // time to play!
+
+        return true;
+    }
+
     tryPlay(player: string, play: ShengJiCore.Play) : boolean {
 
-        if (this.state.over || this.state.draw) return false; // this.state is already over
+        if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
 
         if (this.state.players[this.state.turn] !== player) return false; // wait your turn lil bro
 
@@ -230,14 +275,15 @@ export class Game {
 
         if (!hand) return false; // should never happen
 
-        if (this.state.lead.cards.length == 0) this.state.lead = play; // first play of the trick sets the lead
+        const lead : ShengJiCore.Play = this.state.plays[this.state.lead];
 
-        if (!ShengJiCore.isPlayValid(play, this.state.lead, hand, this.state.trump)) return false;
+        if (!ShengJiCore.isPlayValid(play, lead, hand, this.state.trump)) return false;
 
-        if (ShengJiCore.isPlayBigger(play, this.state.lead, this.state.trump)) {
-            this.state.lead = play;
-            this.state.big = this.state.turn;
-        }
+        const idx : number = find(this.state.players, player);
+
+        this.state.plays[idx] = play;
+
+        if (ShengJiCore.isPlayBigger(play, lead, this.state.trump)) this.state.lead = idx;
 
         for (const card of play.cards) {
             ShengJiCore.removeCardFromHand(card, hand);
@@ -253,19 +299,21 @@ export class Game {
 
     private endTrick() : void {
 
-        const team: number = this.state.big % 2;
+        const team: number = this.state.lead % 2;
         
         if (team === this.state.atk) this.state.score += this.state.points; // attacking team wins the trick, add points to score
 
         this.state.points = 0;
 
-        this.state.count -= this.state.lead.cards.length;
+        const lead : ShengJiCore.Play = this.state.plays[this.state.lead];
 
-        if (this.state.count === 0) this.endRound(team === this.state.atk ? this.state.lead.cards.length * 2 : 0);
+        this.state.count -= lead.cards.length;
 
-        this.state.chu = this.state.big; // winner of the trick starts the next trick
+        if (this.state.count === 0) this.endRound(team === this.state.atk ? lead.cards.length * 2 : 0);
+
+        this.state.chu = this.state.lead; // winner of the trick starts the next trick
         this.state.turn = this.state.chu;
-        this.state.lead = { cards: [], suit: null };
+        this.state.plays = Array.from({ length: this.state.players.length }, () => (nullPlay()));
     }
 
     private swapTeams() : void {
@@ -332,7 +380,9 @@ export class Game {
         return this.deck;
     }
     
-    getDipai() : ShengJiCore.Card[] {
+    getDipai(player: string) : ShengJiCore.Card[] | null {
+
+        if (this.state.players[this.state.zhuang] !== player) return null; // not allowed to view cards
         return this.dipai;
     }
 }

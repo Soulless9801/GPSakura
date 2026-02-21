@@ -70,8 +70,8 @@ export default function Hand({ cards, className = "" }) {
                             <Card card={card} onClick={(c, a) => handleClick(c, a)}/>
 
                         </motion.div>
-                        )
-                    })}
+                    )
+                })}
             </div>
         </>
 	);
