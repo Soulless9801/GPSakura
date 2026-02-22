@@ -178,7 +178,7 @@ export class Game {
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
 
         if (this.state.turn === 0) {
-            if (this.deck.cards.length <= 8) {
+            if (this.state.count === 25) {
                 this.finishDraw();
             }
         }
@@ -231,6 +231,8 @@ export class Game {
         if (this.state.over || !this.state.dip) return false;
 
         if (this.state.players[this.state.zhuang] !== player) return false;
+
+        if (give.cards.length !== receive.cards.length) return false; // must exchange same number of cards
 
         const hand = this.hands.get(player);
 

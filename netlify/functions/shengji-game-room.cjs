@@ -131,7 +131,7 @@ exports.handler = async function handler(event, context) {
 
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: ser_game });
+            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             return successJSON({ msg: "Game started" });
         }
@@ -149,11 +149,11 @@ exports.handler = async function handler(event, context) {
 
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: ser_game });
+            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
-            publish(channel, "hand_change", { clientId: clientId });
+            const hand = game.getHand(clientId);
 
-            return successJSON({ msg: "Card drawn" });
+            return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
         }
 
         if (action === "trump") { // ACTION: CALL TRUMP
@@ -163,13 +163,13 @@ exports.handler = async function handler(event, context) {
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
 
-            const trump = payload && payload.trump;
+            const trump = JSON.parse(payload && payload.trump);
             if (!game.tryCallTrump(clientId, trump)) return errorJSON("Invalid trump call");
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: ser_game });
+            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             return successJSON({ msg: "Trump called" });
         }
@@ -203,11 +203,11 @@ exports.handler = async function handler(event, context) {
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: ser_game});
+            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
-            publish(channel, "hand_change", { clientId: clientId });
+            const hand = game.getHand(clientId);
 
-            return successJSON({ msg: "Dipai exchanged successfully" });
+            return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
         }
 
         if (action === "play") { // ACTION: PLAY CARDS
@@ -223,21 +223,9 @@ exports.handler = async function handler(event, context) {
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: ser_game });
-
-            publish(channel, "hand_change", { clientId: clientId });
-
-            return successJSON({ msg: "Play accepted" });
-        }
-
-        if (action === "hand") { // ACTION: REQUEST HAND
-            if (!clientId) return errorJSON("Missing clientId");
-
-            const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
-            if (!hand) return errorJSON("Hand not found");
 
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
         }
