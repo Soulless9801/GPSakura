@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import * as ShenJiTest from '/src/shengji/core/testcase';
 import * as ShenJiCore from '/src/shengji/core/entities';
 
 import GameRoom from "/src/shengji/components/GameRoom/GameRoom";
-import Hand from "/src/shengji/components/Hand/Hand";
+import Hand, { HandRef } from "/src/shengji/components/Hand/Hand";
 
 import "./ShengJiApp.css";
 
@@ -16,6 +16,7 @@ export default function ShengJiApp() {
     };
 
     const [cards, setCards] = useState<ShenJiCore.Card[]>([]);
+    const testCardRef = useRef<HandRef>(null);
 
     useEffect(() => {
         setCards(ShenJiCore.handToCards(testCase?.hand || ShenJiCore.initializeHand()));
@@ -37,7 +38,7 @@ export default function ShengJiApp() {
     };
 
     return (
-        <div className="shengjiWrapper">
+        <div className="sjWrapper">
             <button onClick={newTestCase}>Generate New Test Case</button>
             {testCase && (
                 <div>
@@ -70,7 +71,7 @@ export default function ShengJiApp() {
                 </div>
             )}
             {testCase && (
-                <div><Hand cards={cards} /></div>
+                <div><Hand ref={testCardRef} cards={cards} /></div>
             )}
             <hr />
             {!roomId ? (

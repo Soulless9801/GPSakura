@@ -284,14 +284,24 @@ export interface Play {
     suit: Suit | null;
 }
 
+export function isAllSame(cards: Card[]): boolean {
+    if (cards.length === 0) return true;
+    const suit : Suit = cards[0].suit;
+    const rank : Rank = cards[0].rank;
+    for (const card of cards) {
+        if (card.suit !== suit || card.rank !== rank) return false;
+    }
+    return true;
+}
+
 // determine type of play
 function getPlayKind(play: Play): string { // TODO: fix for 4+ decks
     const cardcount : number = play.cards.length;
     if (cardcount === 1) return "single";
     if (cardcount === 2) return "pair";
     if (cardcount === 3) return "triple";
-    if (cardcount === 4) return "quad/tractor";
-    if (cardcount === 5) return "quint";
+    if (cardcount === 4 && isAllSame(play.cards)) return "quadruple";
+    if (cardcount === 5) return "quintuple";
     return "tractor";
 }
 
