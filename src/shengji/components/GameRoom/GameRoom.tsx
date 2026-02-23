@@ -82,11 +82,31 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         );
     }
 
+    async function speedDraw() {
+        await clientRequest({
+            roomId,
+            action: "speed_draw",
+            clientId: ably?.auth.clientId,
+        });
+    }
+
     async function drawCard() {
         const res = await runAction(() =>
             clientRequest({
                 roomId,
                 action: "draw",
+                clientId: ably?.auth.clientId,
+            })
+        );
+
+        if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
+    }
+
+    async function getHand() {
+        const res = await runAction(() =>
+            clientRequest({
+                roomId,
+                action: "hand",
                 clientId: ably?.auth.clientId,
             })
         );
@@ -103,10 +123,10 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 action: "trump",
                 clientId: ably?.auth.clientId,
                 payload: {
-                    trump: {
+                    trump: JSON.stringify({
                         suit: cards[0].suit,
                         rank: cards[0].rank,
-                    },
+                    }),
                 }
             })
         );
@@ -246,20 +266,21 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                     <button onClick={() => startGame()}>Start Game</button>
                 </div>
             )}
-            {phase && phase == "dipai" && (
+            {phase && phase === "dipai" && (
                 <div>
-                    {game!.players[game!.zhuang] === ably?.auth.clientId && (
+                    {game && game.players[game.zhuang] === ably?.auth.clientId && (
                         <>
                             <h4>You are the zhuang!</h4>
                             <Hand ref={dipaiRef} cards={dipai || []} />
-                            <button onClick={() => exchangeDipai()}>ExchangeDipai</button>
+                            <button onClick={() => exchangeDipai()}>Exchange Dipai</button>
+                            <button onClick={() => getDipai()}>Get Dipai</button>
                         </>
                     ) || (
-                        <h4>You are a nong! Waiting for {player_map[game!.zhuang]} to look at their dipai. </h4>
+                        <h4>You are a nong! Waiting for {game ? player_map[game.zhuang] : "Unknown"} to look at their dipai. </h4>
                     )}
                 </div>
             )}
-            {phase && phase == "draw" && (
+            {phase && phase === "draw" && (
                 <div>
                     <button onClick={() => drawCard()}>Draw Card</button>
                     <button onClick={() => callTrump()}>Call Trump</button>
@@ -267,13 +288,16 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             )}
             {phase && phase !== "game_over" && (
                 <div>
+                    <h4>Trump: {game && ShengJiCore.trumpToString(game.trump)}</h4>
                     <h4>Hand</h4>
                     <Hand ref={handRef} cards={hand ? ShengJiCore.handToCards(hand) : []} />
+                    <button onClick={() => getHand()}>Refresh Hand</button>
                     {phase === "play" && (
                         <button onClick={() => playCards()}>Play Cards</button>
                     )}
                 </div>
             )}
+            <button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
         </>
     );
 }

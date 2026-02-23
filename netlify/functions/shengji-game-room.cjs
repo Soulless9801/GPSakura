@@ -86,7 +86,7 @@ exports.handler = async function handler(event, context) {
         const body = JSON.parse(event.body || '{}');
         const { roomId, action, clientId, payload } = body;
 
-        // console.log(`Received request: ${action} from client ${clientId} for room_${roomId}`);
+        console.log(`Received request: ${action} from client ${clientId} for room_${roomId}`);
 
         if (!roomId || !action) return errorJSON("Missing roomId or action");
 
@@ -156,6 +156,36 @@ exports.handler = async function handler(event, context) {
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
         }
 
+        if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
+
+            const game = await getGame();
+            if (!game) return errorJSON("Game not found");
+            
+            if (!game.speedDraw()) return errorJSON("Failed to speed draw");
+
+            const ser_game = game.serializeGame();
+
+            await saveGame(redis, roomId, ser_game);
+
+            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+
+            return successJSON({ msg: "Speed draw successful" });
+        }
+
+        if (action === "hand") { // ACTION: GET HAND
+
+            if (!clientId) return errorJSON("Missing clientId");
+
+            const game = await getGame();
+            if (!game) return errorJSON("Game not found");
+
+            const hand = game.getHand(clientId);
+
+            if (!hand) return errorJSON("Failed to get hand");
+
+            return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
+        }
+
         if (action === "trump") { // ACTION: CALL TRUMP
             
             if (!clientId) return errorJSON("Missing clientId");
@@ -163,8 +193,10 @@ exports.handler = async function handler(event, context) {
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
 
+            // console.log("Payload for trump call:", payload);
             const trump = JSON.parse(payload && payload.trump);
-            if (!game.tryCallTrump(clientId, trump)) return errorJSON("Invalid trump call");
+            // console.log("Received Trump:", trump);
+            if (!game.callTrump(clientId, trump)) return errorJSON("Invalid trump call");
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
@@ -195,8 +227,10 @@ exports.handler = async function handler(event, context) {
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
 
-            const give = payload && payload.give;
-            const receive = payload && payload.receive;
+            const give = JSON.parse(payload && payload.give);
+            const receive = JSON.parse(payload && payload.receive);
+
+            console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
 
             if (!game.exchangeDipai(clientId, give, receive)) return errorJSON("Failed to exchange Dipai");
 

@@ -40,15 +40,19 @@ function isJoker(card: Card): boolean {
 }
 
 function isBigTrump(card: Card, trump: Trump): boolean {
-    return card.suit === trump.suit && card.rank === trump.rank;
+    return isTrumpSuit(card, trump) && isTrumpRank(card, trump);
 }
 
 function isSmallTrump(card: Card, trump: Trump): boolean {
-    return !isBigTrump(card, trump) && card.rank === trump.rank;
+    return !isTrumpSuit(card, trump) && isTrumpRank(card, trump);
 }
 
 function isTrumpSuit(card: Card, trump: Trump): boolean {
     return card.suit === trump.suit;
+}
+
+function isTrumpRank(card: Card, trump: Trump): boolean {
+    return card.rank === trump.rank;
 }
 
 function isMainLine(card: Card, trump: Trump): boolean {
@@ -59,7 +63,7 @@ function isMainLine(card: Card, trump: Trump): boolean {
 function getCardData(card: Card, trump: Trump): number[]{
     return [
         isJoker(card) ? 1 : 0,
-        isSmallTrump(card, trump) ? 1 : 0,
+        isTrumpRank(card, trump) ? 1 : 0,
         isTrumpSuit(card, trump) ? 1 : 0,
         card.rank
     ];
@@ -70,7 +74,7 @@ export function getNextCardData(card: Card, trump: Trump): number[] | null {
 
     if (isJoker(card) && card.rank === 2) return null; // biggest card
 
-    if (isBigTrump(card, trump)) return [1, 0, 0, 1];
+    if (isBigTrump(card, trump)) return [1, 0, 0, 1]; // small joker
 
     const val : number[] = getCardData(card, trump);
 
@@ -126,9 +130,22 @@ export function isCardEqual(card_a: Card, card_b: Card): boolean {
     return card_a.suit === card_b.suit && card_a.rank === card_b.rank;
 }
 
+// Ordering for display
+const suit_order: Map<Suit, number> = new Map<Suit, number>([
+    ["spades", 3],
+    ["hearts", 2],
+    ["clubs", 1],
+    ["diamonds", 0],
+    ["jokers", 4]
+]);
+
 // sort cards from greatest to least relative value
-export function sortCards(cards: Card[], trump: Trump): Card[] {
-    return cards.sort((a, b) => {
+export function sortCards(cards: Card[], trump: Trump | null): Card[] {
+    return cards.sort((b, a) => {
+        if (!trump || (!isMainLine(a, trump) && !isMainLine(b, trump))) {
+            if (a.suit !== b.suit) return suit_order.get(b.suit)! - suit_order.get(a.suit)!;
+            else return b.rank - a.rank;
+        }
         return isCardBigger(a, b, trump) ? -1 : 1;
     });
 }
@@ -244,15 +261,6 @@ export function removeCardFromHand(card: Card, hand: Hand): void {
     hand.cards.get(card.suit)?.set(card.rank, Math.max(0, prev - 1));
 }
 
-// Ordering for display
-const suit_order: Map<Suit, number> = new Map<Suit, number>([
-    ["spades", 3],
-    ["hearts", 2],
-    ["clubs", 1],
-    ["diamonds", 0],
-    ["jokers", 4]
-]);
-
 export function handToCards(hand: Hand): Card[] {
     let cards : Card[] = [];
     for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
@@ -269,13 +277,8 @@ export function handToString(hand: Hand, trump: Trump | null): string {
     
     const cards : Card[] = handToCards(hand);
 
-    cards.sort((b, a) => {
-        if (!trump || (!isMainLine(a, trump) && !isMainLine(b, trump))) {
-            if (a.suit !== b.suit) return suit_order.get(b.suit)! - suit_order.get(a.suit)!;
-            else return b.rank - a.rank;
-        }
-        return isCardBigger(a, b, trump) ? -1 : 1;
-    })
+    sortCards(cards, trump);
+
     return "[" + cards.map(cardToString).join(', ') + "]";
 }
 
@@ -454,7 +457,7 @@ export function isPlayBigger(play_a: Play, play_b: Play, trump: Trump): boolean 
 
     if (!formatted_play || play_a.suit !== play_b.suit) return false;
 
-    for (let i = 0; i < play_b.cards.length; i++) if (!isCardBigger(play_a.cards[i], play_b.cards[i], trump)) return false;
+    for (let i = play_b.cards.length - 1; i >= 0; i--) if (!isCardBigger(play_a.cards[i], play_b.cards[i], trump)) return false;
     
     return true;
 }

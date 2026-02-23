@@ -157,6 +157,18 @@ export class Game {
         this.state.declare = 0; // reset for next round
     }
 
+    speedDraw() {
+        if (this.state.over || !this.state.draw) return false;
+
+        while (this.state.count < 25) {
+            const player = this.state.players[this.state.turn];
+            this.drawCard(player);
+        }
+
+        this.finishDraw();
+        return true;
+    }
+
     drawCard(player: string) : boolean {
 
         if (this.state.over || !this.state.draw) return false; // not drawing phase
@@ -190,9 +202,13 @@ export class Game {
 
         if (this.state.over || !this.state.draw || !trump.suit) return false;
 
+        console.log(`Player ${player} calls trump ${ShengJiCore.trumpToString(trump)}`);
+
         const idx : number = find(this.state.players, player);
 
         if (idx === -1) return false; // should never happen
+
+        console.log(`Player index: ${idx}`);
 
         const hand = this.hands.get(player);
 
@@ -212,7 +228,7 @@ export class Game {
             return false;
         }
         
-        if (this.state.trump.rank !== trump.rank || !this.state.trump.suit) return false; // only call same rank
+        if (this.state.trump.rank !== trump.rank) return false; // only call same rank
 
         const cnt: number = ShengJiCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
 
@@ -226,19 +242,19 @@ export class Game {
         return false;
     }
 
-    exchangeDipai(player: string, give: ShengJiCore.Play, receive: ShengJiCore.Play) : boolean {
+    exchangeDipai(player: string, give: ShengJiCore.Card[], receive: ShengJiCore.Card[]) : boolean {
         
         if (this.state.over || !this.state.dip) return false;
 
         if (this.state.players[this.state.zhuang] !== player) return false;
 
-        if (give.cards.length !== receive.cards.length) return false; // must exchange same number of cards
+        if (give.length !== receive.length) return false; // must exchange same number of cards
 
         const hand = this.hands.get(player);
 
         if (!hand) return false; // should never happen
 
-        const play_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset(give, hand);
+        const play_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset({ cards: give } as ShengJiCore.Play, hand);
 
         if (!play_hand) return false;
 
@@ -246,16 +262,16 @@ export class Game {
 
         for (const card of this.dipai) ShengJiCore.addCardToHand(card, dipai_hand);
 
-        const dip_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset(receive, dipai_hand);
+        const dip_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset({ cards: receive } as ShengJiCore.Play, dipai_hand);
 
         if (!dip_hand) return false;
 
-        for (const card of give.cards){
+        for (const card of give){
             ShengJiCore.removeCardFromHand(card, hand);
             ShengJiCore.addCardToHand(card, dipai_hand);
         }
 
-        for (const card of receive.cards){
+        for (const card of receive){
             ShengJiCore.addCardToHand(card, hand);
             ShengJiCore.removeCardFromHand(card, dipai_hand);
         }
