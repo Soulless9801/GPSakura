@@ -330,6 +330,8 @@ export function getPlayStruct(play: Play, trump: Trump): { len: number; count: n
             if (count > 0) return null;
         }
     }
+    if (max_num === 0 || max_count === 0) return null; // must have at least 1 card
+    if (max_count === 1 && max_num > 1) return null; // if single, must be only 1 card
     sortCards(max_list, trump);
     return { len: max_num, count: max_count, list: max_list };
 }
@@ -396,15 +398,26 @@ export function isPlaySubset(play: Play, hand: Hand): Hand | null {
 // check if play is valid given current hand and lead play (assume lead is a valid play)
 export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): boolean {
     
+    console.log("Validating play:", playToString(play), "Lead:", playToString(lead), "Hand:", handToString(hand, trump));
+
     // check if play is subset of hand
     const play_hand : Hand | null = isPlaySubset(play, hand);
 
     if (!play_hand) return false;
 
     // get lead play struct
-    const struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(lead, trump);
-    const len : number = struct ? struct.len : 0;
-    const count : number = struct ? struct.count : 0;
+    const lead_struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(lead, trump);
+
+    console.log(lead_struct);
+
+    if (!lead_struct){
+        const play_struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(play, trump);
+        if (!play_struct) return false; // must be a valid play format
+        return true; // if no lead, any valid play is fine
+    }
+
+    const len : number = lead_struct.len;
+    const count : number = lead_struct.count;
 
     const hand_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(hand, lead.cards[0], trump);
     const play_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(play_hand, lead.cards[0], trump);
@@ -445,7 +458,9 @@ export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): b
 }
 
 //check if play_a "kills" play_b
-export function isPlayBigger(play_a: Play, play_b: Play, trump: Trump): boolean { // assumes same kind of play, play_b is a valid play
+export function isPlayBigger(play_a: Play, play_b: Play, trump: Trump): boolean { // assumes same kind of play, both plays are valid
+
+    if (play_b.cards.length === 0) return true; // if no cards played, any play is bigger
 
     sortCards(play_a.cards, trump);
     sortCards(play_b.cards, trump);
