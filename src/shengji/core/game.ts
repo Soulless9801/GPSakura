@@ -31,13 +31,6 @@ export type GameState = {
     dip: boolean // diapi exchanged or not
 }
 
-function find(arr: string[], target: string): number {
-    for (let i = 0; i < arr.length; i++) {
-        if (arr[i] === target) return i;
-    }
-    return -1;
-}
-
 function nullPlay(): ShengJiCore.Play {
     return { cards: [], suit: null};
 }
@@ -73,6 +66,14 @@ export class Game {
         this.hands = hands;
         this.deck = deck;
         this.dipai = dipai;
+    }
+
+    static find(arr: string[] | null, target: string | null): number {
+        if (!arr || !target) return -1;
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i] === target) return i;
+        }
+        return -1;
     }
 
     static serialize(obj: object): string {
@@ -202,13 +203,13 @@ export class Game {
 
         if (this.state.over || !this.state.draw || !trump.suit) return false;
 
-        console.log(`Player ${player} calls trump ${ShengJiCore.trumpToString(trump)}`);
+        // console.log(`Player ${player} calls trump ${ShengJiCore.trumpToString(trump)}`);
 
-        const idx : number = find(this.state.players, player);
+        const idx : number = Game.find(this.state.players, player);
 
         if (idx === -1) return false; // should never happen
 
-        console.log(`Player index: ${idx}`);
+        // console.log(`Player index: ${idx}`);
 
         const hand = this.hands.get(player);
 
@@ -293,11 +294,19 @@ export class Game {
 
         if (!hand) return false; // should never happen
 
+        // console.log(hand);
+
         const lead : ShengJiCore.Play = this.state.plays[this.state.lead];
 
         if (!ShengJiCore.isPlayValid(play, lead, hand, this.state.trump)) return false;
 
-        const idx : number = find(this.state.players, player);
+        // console.log(`Player ${player} plays ${ShengJiCore.playToString(play)}`);
+
+        const idx : number = Game.find(this.state.players, player);
+
+        if (idx === -1) return false; // should never happen
+
+        // console.log(`Player index: ${idx}`);
 
         this.state.plays[idx] = play;
 
@@ -316,6 +325,8 @@ export class Game {
     }
 
     private endTrick() : void {
+
+        console.log(`Trick ends. Lead: Player ${this.state.players[this.state.lead]}, Play: ${ShengJiCore.playToString(this.state.plays[this.state.lead])}, Points: ${this.state.points}`);
 
         const team: number = this.state.lead % 2;
         
@@ -350,6 +361,8 @@ export class Game {
         const dipai: number = this.dipai.reduce((sum, card) => sum + ShengJiCore.pointValue(card), 0);
 
         this.state.score += dipai * dmult;
+
+        console.log(`Round ends. Score: ${this.state.score}`);
 
         const mult : number = this.state.players.length / 2;
 

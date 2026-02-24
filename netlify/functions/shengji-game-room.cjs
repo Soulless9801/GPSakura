@@ -112,6 +112,12 @@ exports.handler = async function handler(event, context) {
             return ShengJiGame.Game.deserializeGame(JSON.stringify(ser_game));
         }
 
+        function getHand(game, clientId) {
+            const hand = game.getHand(clientId);
+            if (!hand) return null;
+            return ShengJiGame.Game.serialize(hand);
+        }
+
         if (action === "start") { // ACTION: START GAME
             
             const exist = await getGame();
@@ -146,13 +152,10 @@ exports.handler = async function handler(event, context) {
             if (!game.drawCard(clientId)) return errorJSON("Failed to draw card");
 
             const ser_game = game.serializeGame();
-
             await saveGame(redis, roomId, ser_game);
-
             publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
-
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
         }
 
@@ -164,12 +167,10 @@ exports.handler = async function handler(event, context) {
             if (!game.speedDraw()) return errorJSON("Failed to speed draw");
 
             const ser_game = game.serializeGame();
-
             await saveGame(redis, roomId, ser_game);
 
             publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
-
-            return successJSON({ msg: "Speed draw successful" });
+            return successJSON({});
         }
 
         if (action === "hand") { // ACTION: GET HAND
@@ -202,8 +203,7 @@ exports.handler = async function handler(event, context) {
             await saveGame(redis, roomId, ser_game);
 
             publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
-
-            return successJSON({ msg: "Trump called" });
+            return successJSON({});
         }
 
         if (action === "dipai") {
@@ -216,7 +216,6 @@ exports.handler = async function handler(event, context) {
             const res = game.getDipai(clientId);
 
             if (!res) return errorJSON("Not the zhuang");
-
             return successJSON({ dipai: JSON.stringify(res) });
         }
 
@@ -230,17 +229,15 @@ exports.handler = async function handler(event, context) {
             const give = JSON.parse(payload && payload.give);
             const receive = JSON.parse(payload && payload.receive);
 
-            console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
+            // console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
 
             if (!game.exchangeDipai(clientId, give, receive)) return errorJSON("Failed to exchange Dipai");
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-
             publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
-
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
         }
 
@@ -251,16 +248,16 @@ exports.handler = async function handler(event, context) {
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
 
-            const play = payload && payload.play;
+            const play = JSON.parse(payload && payload.play);
             if (!game.tryPlay(clientId, play)) return errorJSON("Invalid play");
+
+            // console.log(`Client ${clientId} played: ${JSON.stringify(play)}`);
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-
             publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
-
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
         }
 
