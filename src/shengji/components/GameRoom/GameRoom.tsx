@@ -1,23 +1,41 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAbly } from "/src/shengji/server/ably";
 import * as ShengJiGame from "/src/shengji/core/game";
 import * as ShengJiCore from "/src/shengji/core/entities";
 import Ably from "ably";
 import Hand, { HandRef } from "/src/shengji/components/Hand/Hand";
 
+import './GameRoom.css';
+
+function PlayerList({ players, teams }: { players: string[], teams: boolean[] }) {
+
+    const a = players.filter((p, i) => teams[i]);
+    const b = players.filter((p, i) => !teams[i]);
+
+    return (
+        <div className="sj-playerWrapper">
+            <h4>Players</h4>
+            <div className="sj-playerList">
+                <div className="sj-teamList">
+                    {a.map((p, i) => (
+                        <div key={i} className="sj-teamPlayer">{p}</div>
+                    ))}
+                </div>
+                <div className="sj-teamList">
+                    {b.map((p, i) => (
+                        <div key={i} className="sj-teamPlayer">{p}</div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 interface ClientRequest {
     roomId : string;
     action: string;
     clientId?: string;
     payload?: any;
-}
-
-function PlayerList({ players }: { players: string[] }) {
-    return (
-        <div>
-            Players: {players.join(", ")}
-        </div>
-    );
 }
 
 async function clientRequest(request: ClientRequest) {
@@ -182,15 +200,35 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
     }
 
+    const getChannel = () => {
+        if (!ably) return null;
+        const options : Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
+        return ably.channels.get(`room_${roomId}`, options);
+    }
+
     const [players, setPlayers] = useState<string[]>([]);
-    const player_map : Record<string, string> = {};
+    const [teams, setTeams] = useState<boolean[]>([]);
+    const [team, setTeam] = useState<boolean>(false);
 
     useEffect(() => {
 
         if (!ably) return;
+        const channel = getChannel();
+        if (!channel) return;
 
-        const options : Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
-        const channel = ably.channels.get(`room_${roomId}`, options);
+        const update = async () => {
+            await channel.presence.enter({ username: username, team: team });
+        }
+
+        update();
+
+    }, [username, team]);
+
+    useEffect(() => {
+
+        if (!ably) return;
+        const channel = getChannel();
+        if (!channel) return;
 
         let cancelled : boolean = false;
 
@@ -207,35 +245,27 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             channel.presence.subscribe((msg) => {
                 if (cancelled) return;
                 channel.presence.get().then(presence => {
-                    const pids = presence.map(p => p.clientId);
-                    const users = presence.map(p => p.data.username);
-                    setPlayers(users);
-                    pids.forEach((pid, i) => {
-                        player_map[pid] = users[i];
-                    });
+                    setPlayers(presence.map(p => p.data.username));
+                    setTeams(presence.map(p => p.data.team));
                 });
             });
 
-            await channel.presence.enter({ username: username });
+            await channel.presence.enter({ username: username, team: team });
 
-            console.log(`Joined room_${roomId} as ${username}`);
+            // console.log(`Joined room_${roomId} as ${username} on team ${team ? "1" : "2"}`);
 
             const pid = ably.auth.clientId;
 
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
                 const game = JSON.parse(msg.data.game) as ShengJiGame.GameState;
-                // console.log("Received game update: ", game);
                 setGame(game);
             });
-
-            // console.log(`Joined room_${roomId} as ${pid}`);
         }
 
         connect();
 
         return () => {
-            // console.log(`Leaving room_${roomId}`);
             cancelled = true;
             channel.unsubscribe();
             channel.presence.unsubscribe();
@@ -244,10 +274,16 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     }, [ably, roomId]);
 
     const [phase, setPhase] = useState<string | null>(null);
+    const [pidx, setPidx] = useState<number>(-1);
 
     useEffect(() => {
-        if (!game) setPhase(null);
-        else if (game.over) setPhase("game_over");
+        if (!game) { 
+            setPhase(null); 
+            setHand(null);
+            return; 
+        }
+        setPidx(ShengJiGame.Game.find(game.players, ably?.auth.clientId || null));
+        if (game.over) setPhase("over");
         else if (game.draw) setPhase("draw");
         else if (game.dip) {
             setPhase("dipai");
@@ -257,25 +293,28 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     }, [game]);
 
     useEffect(() => {
-        if (phase === "dipai" || phase === "play" && !hand) getHand();
-        // console.log("Phase changed to: ", phase); 
+        if (!phase || phase === "over") setHand(null);
+        if (phase && phase !== "over" && !hand) getHand();
+        if (phase !== "dipai") setDipai([]);
     }, [phase]);
 
     return (
         <>
             <h3>Room {roomId}</h3>
+            <h3>Username: {username}</h3>
             <button onClick={() => endGame()}> End Game</button>
             {!phase && (
                 <div>
-                    <PlayerList players={players} />
+                    <PlayerList players={players} teams={teams} />
+                    <button onClick={() => setTeam(p => !p)}>Switch Team</button>
                     <button onClick={() => startGame()}>Start Game</button>
                 </div>
             )}
-            {game && (
+            {game && phase && (
                 <div>
-                    {phase && phase === "dipai" && (
+                    {phase === "dipai" && (
                         <div>
-                            {game.players[game.zhuang] === ably?.auth.clientId && (
+                            {pidx === game.zhuang && (
                                 <>
                                     <h4>You are the zhuang!</h4>
                                     <Hand ref={dipaiRef} cards={dipai || []} />
@@ -283,32 +322,35 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                     <button onClick={() => getDipai()}>Get Dipai</button>
                                 </>
                             ) || (
-                                <h4>You are a nong! Waiting for {game ? player_map[game.zhuang] : "Unknown"} to look at their dipai. </h4>
+                                <h4>You are a nong! Waiting for {game.users[game.zhuang]} to look at their dipai. </h4>
                             )}
                         </div>
                     )}
-                    {phase && phase === "draw" && (
+                    {phase === "draw" && (
                         <div>
                             <button onClick={() => drawCard()}>Draw Card</button>
                             <button onClick={() => callTrump()}>Call Trump</button>
                         </div>
                     )}
-                    {phase && phase === "play" && (
+                    {phase === "play" && (
                         <div>
-                            <h4>Current Player: {player_map[game.turn]}</h4>
-                            <h4>Current Lead: {player_map[game.lead]}</h4>
+                            <h4>Current Player: {game.users[game.turn]}</h4>
+                            <h4>Current Lead: {game.users[game.lead]}</h4>
+                            <h4>Current Zhuang: {game.users[game.zhuang]}</h4>
                             {game.plays.map((play, i) => (
                                 <div key={i}>
-                                    <span>{player_map[game.players[i]]}: </span>
+                                    <span>{game.users[i]}: </span>
                                     <span>{ShengJiCore.playToString(play)}</span>
                                 </div>
                             ))}
                         </div>
                     )}
-                    {phase && phase !== "game_over" && (
+                    {phase !== "over" && (
                         <div>
                             {/*teams is index*/}
-                            <h4>Your Team: {game.players.map((p, i) => (i - ShengJiGame.Game.find(game.players, ably?.auth.clientId || null)) % 2 ? null : player_map[p]).filter(n => n !== null).join(", ")}</h4>
+                            <h4>Points: {game.score}</h4>
+                            <h4>Role: {(pidx - game.atk) % 2 ? "Defense" : "Attack"}</h4>
+                            <h4>Your Team: {game.users.map((p, i) => (i - pidx) % 2 ? null : p).filter(n => n !== null).join(", ")}</h4>
                             <h4>Trump: {ShengJiCore.trumpToString(game.trump)}</h4>
                             <h4>Hand</h4>
                             <Hand ref={handRef} cards={hand ? ShengJiCore.handToCards(hand) : []} />

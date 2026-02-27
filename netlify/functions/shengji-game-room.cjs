@@ -1,6 +1,7 @@
 const Ably = require('ably');
 const { Redis } = require('@upstash/redis');
 
+import { b } from 'motion/react-client';
 import * as ShengJiGame from '/src/shengji/core/game';
 
 function errorJSON(message, code = 400) {
@@ -97,9 +98,7 @@ exports.handler = async function handler(event, context) {
         const rlClientId = clientId || "unknown";
         const key = `rl:${roomId}:${rlClientId}:${action}`;
         const isAllowed = await rateLimit(redis, key, limit, windowSeconds);
-        if (!isAllowed) {
-            return errorJSON("Rate limit exceeded", 429);
-        }
+        if (!isAllowed) return errorJSON("Rate limit exceeded", 429);
 
         // get room live object
 
@@ -126,12 +125,28 @@ exports.handler = async function handler(event, context) {
             // console.log("Initializing game...");
 
             const presence = await channel.presence.get();
-            const players = presence.items.map(p => p.clientId);
-            console.log("Initializing with players:", players);
+            const items = presence.items;
+            const a = items.filter(p => p.data.team);
+            const b = items.filter(p => !p.data.team);
 
+            if (a.length !== b.length) return errorJSON("Teams must be balanced");
+
+            const players = [];
+            const users = [];
+
+            for (let i = 0; i < Math.max(a.length, b.length); i++) {
+                if (i < a.length) {
+                    players.push(a[i].clientId); 
+                    users.push(a[i].data.username);
+                }
+                if (i < b.length) {
+                    players.push(b[i].clientId); 
+                    users.push(b[i].data.username);
+                }
+            }
 
             const game = new ShengJiGame.Game({});
-            if (!game.initializeGame(players)) return errorJSON("Failed to initialize game");
+            if (!game.initializeGame(players, users)) return errorJSON("Failed to initialize game");
 
             const ser_game = game.serializeGame();
 
