@@ -1,0 +1,23 @@
+.sj-playerWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.sj-playerList {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    padding: 10px;
+}
+
+.sj-teamList {
+    width: 100%;
+    list-style: none;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--primary-color);
+}
+
+.sj-teamPlayer {
+    text-align: center;
+}

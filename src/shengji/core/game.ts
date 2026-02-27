@@ -2,9 +2,10 @@ import * as ShengJiCore from '/src/shengji/core/entities';
 
 export type GameState = {
     // deck: ShengJiCore.Deck
-    round: number
+    round: number // current round number, starting from 1
 
     players: string[]
+    users: string[]
     // hands: Map<string, ShengJiCore.Hand> // index corresponds to players
     atk: number // index of attacking team (0 or 1)
 
@@ -61,6 +62,8 @@ export class Game {
     private deck: ShengJiCore.Deck;
     private dipai: ShengJiCore.Card[];
 
+    private static cpp = 4; // cards per player
+
     constructor(state: GameState, hands: Map<string, ShengJiCore.Hand>, deck: ShengJiCore.Deck, dipai: ShengJiCore.Card[]) {
         this.state = state;
         this.hands = hands;
@@ -105,7 +108,7 @@ export class Game {
 
     // this.state logic methods
 
-    initializeGame(players: string[]) {
+    initializeGame(players: string[], users: string[]) {
         if (players.length < 2 || players.length % 2 == 1) return null;
     
         this.state = {
@@ -113,6 +116,7 @@ export class Game {
             round: 1,
 
             players: players,
+            users: users,
             // hands: new Map(players.map(p => [p, ShengJiCore.initializeHand()])),
             atk: 0,
 
@@ -161,12 +165,11 @@ export class Game {
     speedDraw() {
         if (this.state.over || !this.state.draw) return false;
 
-        while (this.state.count < 25) {
+        while (this.state.draw) {
             const player = this.state.players[this.state.turn];
             this.drawCard(player);
         }
 
-        this.finishDraw();
         return true;
     }
 
@@ -190,8 +193,8 @@ export class Game {
 
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
 
-        if (this.state.turn === 0) {
-            if (this.state.count === 25) {
+        if (this.state.turn === (this.state.round === 1 ? 0: this.state.zhuang)) {
+            if (this.state.count === Game.cpp) {
                 this.finishDraw();
             }
         }
@@ -392,6 +395,8 @@ export class Game {
         this.state.draw = true;
 
         this.state.zhuang %= this.state.players.length; // new zhuang
+
+        this.state.turn = this.state.zhuang;
     }
 
     endGame() : void {
