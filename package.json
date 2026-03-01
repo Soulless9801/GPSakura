@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:functions": "esbuild netlify/functions/*.cjs --outdir=netlify/built --platform=node --target=node18 --bundle",
+    "build:functions": "esbuild netlify/functions/*.js --outdir=netlify/built --platform=node --target=node18 --bundle --format=esm",
     "lint": "eslint .",
     "preview": "vite preview"
   },
