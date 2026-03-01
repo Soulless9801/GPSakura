@@ -33,8 +33,8 @@ function getAbly() {
     });
 }
 
-function publish(channel, event, data) {
-    channel.publish(event, { timestamp: Date.now(), ...data });
+async function publish(channel, event, data) {
+    await channel.publish(event, { timestamp: Date.now(), ...data });
 }
 
 let redisClient = null;
