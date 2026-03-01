@@ -8,8 +8,6 @@ const { SPREADSHEET_ID } = process.env;
 
 export const handler = async (event, context) => {
 
-    console.log("HANDLER EXECTUED");
-
     let csv;
 
     try {
