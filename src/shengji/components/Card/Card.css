@@ -6,7 +6,6 @@
     aspect-ratio: 2.5 / 3.5;
     width: 100px; /* 140 px height */
     border-radius: 8px;
-    color: black;
     background-color: #fff;
     position: relative;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -14,7 +13,7 @@
     user-select: none;
     border: none !important;
     translate: 0 0;
-    transition: translate 0.3s ease, box-shadow 0.3s ease;
+    transition: translate 0.3s ease, box-shadow 0.3s ease, color 0s !important;
 }
 
 .sj-card.selected {

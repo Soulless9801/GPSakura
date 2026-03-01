@@ -111,7 +111,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     async function callTrump() {
         const cards = handRef.current?.getActiveCards() || [];
-        if (!ShengJiCore.isAllSame(cards)) return; // must be all same cards to call trump
+        if (!ShengJiCore.isAllSame(cards) && !ShengJiCore.isAllJokers(cards)) return; // must be all same card or jokers to call trump
         return runAction(() =>
             clientRequest({
                 roomId,
@@ -226,7 +226,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 if (cancelled) return;
                 const state = JSON.parse(msg.data.game) as ShengJiGame.GameState;
                 setGame(state);
-                console.log("Updated:", state);
+                // console.log("Updated:", state);
             });
         }
 
@@ -283,7 +283,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             {game && phase && (
                 <div className="sjg-phase">
                     {phase !== "over" && (
-                        <section>
+                        <div>
                             <div className="sjg-info__area">
                                 <div className="sjg-trump">
                                     <p>Trump</p>
@@ -294,7 +294,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                     <p>Zhuang: <strong>{game.users[game.zhuang]}</strong></p>
                                 </div>
                                 <div className="sjg-info">
-                                    <p>Team: {(game.atk === (team ? 1 : 0)) ? "Attack" : "Defense"}</p>
+                                    <p>Team: {(game.atk === (team ? 0 : 1)) ? "Attack" : "Defense"}</p>
                                     <p>Points: <strong>{game.score}</strong></p>
                                 </div>
                                 <div className="sjg-info">
@@ -352,7 +352,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                 </div>
                             </div>
                             {/*<button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
-                        </section>        
+                        </div>        
                     )}
                 </div>
             )}

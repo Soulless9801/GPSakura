@@ -313,6 +313,8 @@ export class Game {
 
         // console.log(`Player index: ${idx}`);
 
+        if (this.state.plays[idx].cards.length > 0) this.state.plays = Array.from({ length: this.state.players.length }, () => (nullPlay())); // reset plays if player is replaying
+
         this.state.plays[idx] = play;
 
         if (ShengJiCore.isPlayBigger(play, lead, this.state.trump)) this.state.lead = idx;
@@ -347,7 +349,6 @@ export class Game {
 
         this.state.chu = this.state.lead; // winner of the trick starts the next trick
         this.state.turn = this.state.chu;
-        this.state.plays = Array.from({ length: this.state.players.length }, () => (nullPlay()));
     }
 
     private swapTeams() : void {
@@ -393,6 +394,10 @@ export class Game {
         this.state.count = 0;
 
         this.deck = ShengJiCore.initializeDeck(this.state.players.length / 2); // reset deck
+
+        for (const player of this.state.players) this.hands.set(player, ShengJiCore.initializeHand()); // reset hands
+
+        this.dipai = [];
 
         this.state.draw = true;
 

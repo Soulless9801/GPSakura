@@ -35,10 +35,12 @@ export default function Card({ card, className = "", onClick = null }) {
 	}, [card]);
 
 	const handleClick = useCallback(() => {
-		const isActive = !active;
-		if (onClick) onClick(card, isActive);
-		setActive(isActive);
+		setActive(active => !active);
 	}, [onClick]);
+
+	useEffect(() => {
+		if (onClick) onClick(card, active);
+	}, [active, card, onClick]);
 
 	return (
 		<button
@@ -46,17 +48,17 @@ export default function Card({ card, className = "", onClick = null }) {
 			aria-label={`${rank}${card.suit}`}
 			onClick={handleClick}
 		>
-			<div className="sj-card__corner">
-				<div className="sj-card__rank">{rank}</div>
-				<div className="sj-card__suit">{suit}</div>
-			</div>
-			<div className="sj-card__center">
-				<div className="sj-card__suit">{suit}</div>
-			</div>
-			<div className="sj-card__corner sj-card__corner--rot">
-				<div className="sj-card__rank">{rank}</div>
-				<div className="sj-card__suit">{suit}</div>
-			</div>
+			<section className="sj-card__corner">
+				<section className="sj-card__rank">{rank}</section>
+				<section className="sj-card__suit">{suit}</section>
+			</section>
+			<section className="sj-card__center">
+				<section className="sj-card__suit">{suit}</section>
+			</section>
+			<section className="sj-card__corner sj-card__corner--rot">
+				<section className="sj-card__rank">{rank}</section>
+				<section className="sj-card__suit">{suit}</section>
+			</section>
 		</button>
 	);
 }

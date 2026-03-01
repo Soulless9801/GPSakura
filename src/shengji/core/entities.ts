@@ -297,9 +297,17 @@ export function isAllSame(cards: Card[]): boolean {
     return true;
 }
 
+export function isAllJokers(cards: Card[]): boolean {
+    for (const card of cards) {
+        if (card.suit !== "jokers") return false;
+    }
+    return true;
+}
+
 // determine type of play
 function getPlayKind(play: Play): string { // TODO: fix for 4+ decks
     const cardcount : number = play.cards.length;
+    if (cardcount === 0) return "none";
     if (cardcount === 1) return "single";
     if (cardcount === 2) return "pair";
     if (cardcount === 3) return "triple";
@@ -414,7 +422,7 @@ export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): b
         const play_struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(play, trump);
         if (!play_struct) return false; // must be a valid play format
         return true; // if no lead, any valid play is fine
-    }
+    } else if (play.cards.length !== lead.cards.length) return false; // must be same amount of cards
 
     const len : number = lead_struct.len;
     const count : number = lead_struct.count;
