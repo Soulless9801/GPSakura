@@ -1,7 +1,11 @@
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 import Ably from 'ably';
 import { Redis } from '@upstash/redis';
 
-import * as ShengJiGame from '../../src/shengji/core/game';
+import * as ShengJiGame from '../../src/shengji/core/game.ts';
 
 function errorJSON(message, code = 400) {
     return {

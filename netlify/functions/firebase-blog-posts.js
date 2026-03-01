@@ -1,37 +1,34 @@
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
+import fs from 'node:fs';
+import path from 'node:path';
+import * as firebase from 'firebase/app';
+import * as fireStore from 'firebase/firestore';
 
 dotenv.config();
 
-const fs = require('fs');
-const path = require('path');
-
-const firebase = require('firebase/app');
-const fireStore = require('firebase/firestore');
-
-const { 
-    FIREBASE_API_KEY, 
-    FIREBASE_AUTH_DOMAIN, 
+const {
+    FIREBASE_API_KEY,
+    FIREBASE_AUTH_DOMAIN,
     FIREBASE_DATABASE_URL,
-    FIREBASE_PROJECT_ID, 
-    FIREBASE_STORAGE_BUCKET, 
-    FIREBASE_MESSAGING_SENDER_ID, 
-    FIREBASE_APP_ID, 
-    FIREBASE_MEASUREMENT_ID 
+    FIREBASE_PROJECT_ID,
+    FIREBASE_STORAGE_BUCKET,
+    FIREBASE_MESSAGING_SENDER_ID,
+    FIREBASE_APP_ID,
+    FIREBASE_MEASUREMENT_ID,
 } = process.env;
 
 const firebaseConfig = {
-    apiKey: FIREBASE_API_KEY, 
+    apiKey: FIREBASE_API_KEY,
     autoDomain: FIREBASE_AUTH_DOMAIN,
-    databaseURL: FIREBASE_DATABASE_URL, 
-    projectId: FIREBASE_PROJECT_ID, 
-    storageBucket: FIREBASE_STORAGE_BUCKET, 
-    messagingSenderId: FIREBASE_MESSAGING_SENDER_ID, 
-    appId: FIREBASE_APP_ID, 
-    measurementId: FIREBASE_MEASUREMENT_ID
+    databaseURL: FIREBASE_DATABASE_URL,
+    projectId: FIREBASE_PROJECT_ID,
+    storageBucket: FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+    appId: FIREBASE_APP_ID,
+    measurementId: FIREBASE_MEASUREMENT_ID,
 };
 
-exports.handler = async (event, context) => {
-    
+export const handler = async (event, context) => {
     let firebaseApp;
 
     if (!firebase.getApps().length) firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -40,17 +37,16 @@ exports.handler = async (event, context) => {
     let posts;
 
     try {
-
         const db = fireStore.getFirestore(firebaseApp);
-    
+
         const q = fireStore.query(fireStore.collection(db, 'posts'));
 
         const snap = await fireStore.getDocs(q);
 
         if (snap.empty) throw new Error();
 
-        posts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        posts = posts.map(post => {
+        posts = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        posts = posts.map((post) => {
             return {
                 ...post,
                 created: post.created.toDate().toISOString(),
@@ -59,15 +55,13 @@ exports.handler = async (event, context) => {
         });
 
         posts = JSON.stringify(posts);
-
     } catch (error) {
-        // console.log(`Error: ${error.message}`);
         const filePath = path.resolve('./netlify/functions/data/firebaseBlogPosts.json');
         posts = fs.readFileSync(filePath, 'utf8');
     }
 
     return {
         statusCode: 200,
-        body: posts
-    }
+        body: posts,
+    };
 };
