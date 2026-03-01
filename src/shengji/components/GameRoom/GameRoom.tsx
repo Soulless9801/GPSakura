@@ -177,35 +177,24 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
     }
 
-    const getChannel = () => {
-        if (!ably) return null;
-        const options : Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
-        return ably.channels.get(`room_${roomId}`, options);
-    }
+    const channelRef = useRef<Ably.RealtimeChannel | null>(null);
 
     const [players, setPlayers] = useState<string[]>([]);
     const [teams, setTeams] = useState<boolean[]>([]);
     const [team, setTeam] = useState<boolean>(false);
 
     useEffect(() => {
-
-        if (!ably) return;
-        const channel = getChannel();
+        const channel = channelRef.current;
         if (!channel) return;
-
-        const update = async () => {
-            await channel.presence.enter({ username: username, team: team });
-        }
-
-        update();
-
+        channel.presence.update({ username: username, team: team });
     }, [username, team]);
 
     useEffect(() => {
 
         if (!ably) return;
-        const channel = getChannel();
-        if (!channel) return;
+        const options: Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
+        const channel = ably.channels.get(`room_${roomId}`, options);
+        channelRef.current = channel;
 
         let cancelled : boolean = false;
 
@@ -245,6 +234,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
         return () => {
             cancelled = true;
+            channelRef.current = null;
             channel.unsubscribe();
             channel.presence.unsubscribe();
         };

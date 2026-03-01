@@ -15,6 +15,7 @@ export function useAbly(): Ably.Realtime | null {
         return () => {
             client.close();
         };
+        
     }, []);
 
     return ably;
