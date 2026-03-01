@@ -398,7 +398,7 @@ export function isPlaySubset(play: Play, hand: Hand): Hand | null {
 // check if play is valid given current hand and lead play (assume lead is a valid play)
 export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): boolean {
     
-    console.log("Validating play:", playToString(play), "Lead:", playToString(lead), "Hand:", handToString(hand, trump));
+    // console.log("Validating play:", playToString(play), "Lead:", playToString(lead), "Hand:", handToString(hand, trump));
 
     // check if play is subset of hand
     const play_hand : Hand | null = isPlaySubset(play, hand);
@@ -408,7 +408,7 @@ export function isPlayValid(play: Play, lead: Play, hand: Hand, trump: Trump): b
     // get lead play struct
     const lead_struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(lead, trump);
 
-    console.log(lead_struct);
+    // console.log(lead_struct);
 
     if (!lead_struct){
         const play_struct : { len: number; count: number; list: Card[] } | null = getPlayStruct(play, trump);

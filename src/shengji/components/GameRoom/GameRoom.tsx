@@ -235,8 +235,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
-                const game = JSON.parse(msg.data.game) as ShengJiGame.GameState;
-                setGame(game);
+                const state = JSON.parse(msg.data.game) as ShengJiGame.GameState;
+                setGame(state);
             });
         }
 
@@ -303,7 +303,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                     <p>Zhuang: <strong>{game.users[game.zhuang]}</strong></p>
                                 </div>
                                 <div className="sjg-info">
-                                    <p>Team: {(game.atk === (team ? 1 : 0) ? "Attack" : "Defense")}</p>
+                                    <p>Team: {(game.atk === (team ? 1 : 0)) ? "Attack" : "Defense"}</p>
                                     <p>Points: <strong>{game.score}</strong></p>
                                 </div>
                                 <div className="sjg-info">

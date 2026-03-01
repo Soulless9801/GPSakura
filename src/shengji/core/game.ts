@@ -331,7 +331,7 @@ export class Game {
 
     private endTrick() : void {
 
-        console.log(`Trick ends. Lead: Player ${this.state.players[this.state.lead]}, Play: ${ShengJiCore.playToString(this.state.plays[this.state.lead])}, Points: ${this.state.points}`);
+        // console.log(`Trick ends. Lead: Player ${this.state.players[this.state.lead]}, Play: ${ShengJiCore.playToString(this.state.plays[this.state.lead])}, Points: ${this.state.points}`);
 
         const team: number = this.state.lead % 2;
         
@@ -367,7 +367,7 @@ export class Game {
 
         this.state.score += dipai * dmult;
 
-        console.log(`Round ends. Score: ${this.state.score}`);
+        // console.log(`Round ends. Score: ${this.state.score}`);
 
         const mult : number = this.state.players.length / 2;
 
