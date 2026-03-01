@@ -62,7 +62,9 @@ export class Game {
     private deck: ShengJiCore.Deck;
     private dipai: ShengJiCore.Card[];
 
-    private static cpp = 4; // cards per player
+    private static cpp = 25; // cards per player
+    private static minPlayers = 4; 
+    private static maxPlayers = 8;
 
     constructor(state: GameState, hands: Map<string, ShengJiCore.Hand>, deck: ShengJiCore.Deck, dipai: ShengJiCore.Card[]) {
         this.state = state;
@@ -109,7 +111,7 @@ export class Game {
     // this.state logic methods
 
     initializeGame(players: string[], users: string[]) {
-        if (players.length < 2 || players.length % 2 == 1) return null;
+        if (players.length < Game.minPlayers || players.length % 2 == 1 || players.length > Game.maxPlayers) return null;
     
         this.state = {
             // deck: ShengJiCore.initializeDeck(players.length / 2),
