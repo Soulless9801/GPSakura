@@ -63,7 +63,7 @@ export class Game {
     private dipai: ShengJiCore.Card[];
 
     private static cpp = 25; // cards per player
-    private static minPlayers = 4; 
+    private static minPlayers = 2; 
     private static maxPlayers = 8;
 
     constructor(state: GameState, hands: Map<string, ShengJiCore.Hand>, deck: ShengJiCore.Deck, dipai: ShengJiCore.Card[]) {

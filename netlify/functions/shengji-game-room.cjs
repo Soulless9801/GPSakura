@@ -1,9 +1,7 @@
 const Ably = require('ably');
 const { Redis } = require('@upstash/redis');
 
-import { b } from 'motion/react-client';
-import * as ShengJiGame from '/src/shengji/core/game';
-import { error } from 'jquery';
+const ShengJiGame = require('/src/shengji/core/game');
 
 function errorJSON(message, code = 400) {
     return {
