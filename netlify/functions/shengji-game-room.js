@@ -155,7 +155,7 @@ export async function handler(event) {
 
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             return successJSON({ msg: "Game started" });
         }
@@ -171,7 +171,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
@@ -189,7 +189,7 @@ export async function handler(event) {
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
             return successJSON({});
         }
 
@@ -222,7 +222,7 @@ export async function handler(event) {
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
 
-            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
             return successJSON({});
         }
 
@@ -255,7 +255,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
@@ -275,7 +275,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
             return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
@@ -287,7 +287,7 @@ export async function handler(event) {
 
             await redis.del(GAME_KEY_PREFIX + roomId);
 
-            publish(channel, "state_change", { game: null });
+            await publish(channel, "state_change", { game: null });
 
             return successJSON({ msg: "Game ended" });
         } 
