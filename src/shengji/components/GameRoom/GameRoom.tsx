@@ -299,16 +299,16 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                     <Card card={ShengJiCore.trumpToCard(game.trump)} />
                                 </div>
                                 <div className="sjg-info">
-                                    <p>Round: {game.round}</p>
-                                    <p>Zhuang: {game.users[game.zhuang]}</p>
+                                    <p>Trump: <strong>{game.trump.rank}</strong></p>
+                                    <p>Zhuang: <strong>{game.users[game.zhuang]}</strong></p>
                                 </div>
                                 <div className="sjg-info">
                                     <p>Team: {(game.atk === (team ? 1 : 0) ? "Attack" : "Defense")}</p>
-                                    <p>Points: {game.score}</p>
+                                    <p>Points: <strong>{game.score}</strong></p>
                                 </div>
                                 <div className="sjg-info">
-                                    <p>Lead: {game.users[game.lead]}</p>
-                                    <p>Turn: {game.users[game.turn]}</p>
+                                    <p>Lead: <strong>{game.users[game.lead]}</strong></p>
+                                    <p>Turn: <strong>{game.users[game.turn]}</strong></p>
                                 </div>
                             </div>
                             <hr />
@@ -332,7 +332,6 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                 <div className="sjg-draw">
                                     <div className="sjg-button__group">
                                         <button onClick={() => drawCard()}>Draw Card</button>
-                                        <button onClick={() => callTrump()}>Call Trump</button>
                                     </div>
                                 </div>
                             )}
@@ -354,6 +353,9 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                 <div className="sjg-button__group">
                                     {phase === "play" && (
                                         <button onClick={() => playCards()}>Play Cards</button>
+                                    )}
+                                    {(phase === "dipai" || phase === "draw") && (
+                                        <button onClick={() => callTrump()}>Call Trump</button>
                                     )}
                                     <button onClick={() => getHand()}>Refresh Hand</button>
                                 </div>
