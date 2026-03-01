@@ -9,3 +9,7 @@
 
 [dev]
   port = 8080
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["./src/shengji/core/game.ts"]
