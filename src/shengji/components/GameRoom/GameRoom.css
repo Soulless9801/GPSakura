@@ -1,23 +1,180 @@
-.sj-playerWrapper {
+/* Main container */
+.sjg-room {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;;
+}
+
+.sjg-room div {
+    transition: var(--transition-timers);
+}
+
+/* Header section */
+
+.sjg-room p {
+    margin: 8px 0;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+/* Player */
+.sjg-player__wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: var(--bg-color-secondary);
+    border-radius: 8px;
 }
-.sj-playerList {
+
+.sjg-player__list {
     display: flex;
     flex-direction: row;
     width: 100%;
-    padding: 10px;
+    gap: 10px;
 }
 
-.sj-teamList {
+.sjg-player__team {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    background-color: var(--bg-color-secondary);
+}
+
+.sjg-player__player {
+    padding: 8px 12px;
+    text-align: center;
+    color: var(--primary-color);
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.sjg-hand__wrapper {
+    display: flex;
+    padding: 1rem;
+    overflow-x: auto;
     width: 100%;
-    list-style: none;
+}
+
+.sjg-lobby {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: var(--bg-color-secondary);
+    max-width: 600px;
+}
+
+/* Phase */
+.sjg-phase {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background: var(--bg-color-secondary);
+    border-radius: 8px;
+}
+
+.sjg-room button {
+    padding: 10px;
+    border: none;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Dipai */
+.sjg-dipai {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 15px;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 4px;
+}
+
+/* Draw */
+.sjg-draw {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+    text-align: center;
+}
+
+/* Play */
+.sjg-play {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sjg-info__area {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 15px;
+    background: var(--bg-color-secondary);
+    border-radius: 6px;
+}
+
+.sjg-info {
+    display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--primary-color);
+    flex-direction: column;
 }
 
-.sj-teamPlayer {
-    text-align: center;
+/* Plays */
+.sjg-plays {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+    padding: 15px;
+    background: var(--bg-color-secondary);
+    border-radius: 6px;
+}
+
+.sjg-play__player {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.sjg-play__player span {
+    font-weight: 500;
+    min-width: 100px;
+}
+
+/* Trump */
+.sjg-trump {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 1rem;
+}
+
+/* Hand section */
+.sjg-hand {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--bg-color-secondary);
+}
+
+/* Action buttons group */
+.sjg-button__group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sjg-button__group button {
+    flex: 1;
 }
