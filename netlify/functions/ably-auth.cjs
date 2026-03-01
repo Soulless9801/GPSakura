@@ -8,7 +8,7 @@ const Ably = require('ably');
 
 const client = new Ably.Rest(ABLY_API_KEY);
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
 
     const clientId = `player_${Math.random().toString(36).slice(2)}`;
     
