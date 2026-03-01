@@ -1,7 +1,7 @@
 const Ably = require('ably');
 const { Redis } = require('@upstash/redis');
 
-const ShengJiGame = require('/src/shengji/core/game');
+const ShengJiGame = require('../../src/shengji/core/game');
 
 function errorJSON(message, code = 400) {
     return {
