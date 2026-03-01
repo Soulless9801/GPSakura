@@ -74,7 +74,7 @@ export default function ShengJiApp() {
                 <div><Hand ref={testCardRef} cards={cards} /></div>
             )}
             <hr />
-            {!roomId ? (
+            {!roomId || !username ? (
                 <div>
                     <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
                     <input type="text" placeholder="Room ID" value={tempId} onChange={(e) => setTempId(e.target.value)} />

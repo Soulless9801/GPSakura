@@ -19,7 +19,7 @@
 
 .sj-card.selected {
     border-color: 1px solid #007bff;
-    box-shadow: 0 0 2px 2px yellowgreen;
+    box-shadow: 0 0 2px 2px #007bff;
     translate: 0 -10px;
 }
 

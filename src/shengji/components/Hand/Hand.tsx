@@ -67,9 +67,8 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
     };
 
 	return (
-        <>
-            <div><p>Selected Cards: {ShengJiCore.cardsToString(active)}</p></div>
-            <div className={`sj-hand ${className}`.trim()}>
+        <div className={`${className}`.trim()}>
+            <div className="sj-hand">
                 {cards.map((card, index) => {
                     if (!layout || !layout[index]) return null;
                     return (
@@ -94,7 +93,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
                     )
                 })}
             </div>
-        </>
+        </div>
 	);
 });
 

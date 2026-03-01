@@ -4,32 +4,9 @@ import * as ShengJiGame from "/src/shengji/core/game";
 import * as ShengJiCore from "/src/shengji/core/entities";
 import Ably from "ably";
 import Hand, { HandRef } from "/src/shengji/components/Hand/Hand";
+import Card from "/src/shengji/components/Card/Card";
 
 import './GameRoom.css';
-
-function PlayerList({ players, teams }: { players: string[], teams: boolean[] }) {
-
-    const a = players.filter((p, i) => teams[i]);
-    const b = players.filter((p, i) => !teams[i]);
-
-    return (
-        <div className="sj-playerWrapper">
-            <h4>Players</h4>
-            <div className="sj-playerList">
-                <div className="sj-teamList">
-                    {a.map((p, i) => (
-                        <div key={i} className="sj-teamPlayer">{p}</div>
-                    ))}
-                </div>
-                <div className="sj-teamList">
-                    {b.map((p, i) => (
-                        <div key={i} className="sj-teamPlayer">{p}</div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-}
 
 interface ClientRequest {
     roomId : string;
@@ -299,70 +276,117 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     }, [phase]);
 
     return (
-        <>
-            <h3>Room {roomId}</h3>
-            <h3>Username: {username}</h3>
-            <button onClick={() => endGame()}> End Game</button>
+        <div className="sjg-room">
+            <p>Room {roomId}</p>
+            <p>Username: {username}</p>
+            {/*<button onClick={() => endGame()}> End Game</button>*/}
             {!phase && (
-                <div>
+                <div className="sjg-lobby">
                     <PlayerList players={players} teams={teams} />
-                    <button onClick={() => setTeam(p => !p)}>Switch Team</button>
-                    <button onClick={() => startGame()}>Start Game</button>
+                    <div className="sjg-button__group">
+                        <button onClick={() => setTeam(p => !p)}>Switch Team</button>
+                        <button onClick={() => startGame()}>Start Game</button>
+                    </div>
                 </div>
             )}
             {game && phase && (
-                <div>
-                    {phase === "dipai" && (
-                        <div>
-                            {pidx === game.zhuang && (
-                                <>
-                                    <h4>You are the zhuang!</h4>
-                                    <Hand ref={dipaiRef} cards={dipai || []} />
-                                    <button onClick={() => exchangeDipai()}>Exchange Dipai</button>
-                                    <button onClick={() => getDipai()}>Get Dipai</button>
-                                </>
-                            ) || (
-                                <h4>You are a nong! Waiting for {game.users[game.zhuang]} to look at their dipai. </h4>
-                            )}
-                        </div>
-                    )}
-                    {phase === "draw" && (
-                        <div>
-                            <button onClick={() => drawCard()}>Draw Card</button>
-                            <button onClick={() => callTrump()}>Call Trump</button>
-                        </div>
-                    )}
-                    {phase === "play" && (
-                        <div>
-                            <h4>Current Player: {game.users[game.turn]}</h4>
-                            <h4>Current Lead: {game.users[game.lead]}</h4>
-                            <h4>Current Zhuang: {game.users[game.zhuang]}</h4>
-                            {game.plays.map((play, i) => (
-                                <div key={i}>
-                                    <span>{game.users[i]}: </span>
-                                    <span>{ShengJiCore.playToString(play)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <div className="sjg-phase">
                     {phase !== "over" && (
-                        <div>
-                            {/*teams is index*/}
-                            <h4>Points: {game.score}</h4>
-                            <h4>Role: {(pidx - game.atk) % 2 ? "Defense" : "Attack"}</h4>
-                            <h4>Your Team: {game.users.map((p, i) => (i - pidx) % 2 ? null : p).filter(n => n !== null).join(", ")}</h4>
-                            <h4>Trump: {ShengJiCore.trumpToString(game.trump)}</h4>
-                            <h4>Hand</h4>
-                            <Hand ref={handRef} cards={hand ? ShengJiCore.handToCards(hand) : []} />
-                            <button onClick={() => getHand()}>Refresh Hand</button>
-                            {phase === "play" && (
-                                <button onClick={() => playCards()}>Play Cards</button>
+                        <section>
+                            <div className="sjg-info__area">
+                                <div className="sjg-trump">
+                                    <p>Trump</p>
+                                    <Card card={ShengJiCore.trumpToCard(game.trump)} />
+                                </div>
+                                <div className="sjg-info">
+                                    <p>Round: {game.round}</p>
+                                    <p>Zhuang: {game.users[game.zhuang]}</p>
+                                </div>
+                                <div className="sjg-info">
+                                    <p>Team: {(game.atk === (team ? 1 : 0) ? "Attack" : "Defense")}</p>
+                                    <p>Points: {game.score}</p>
+                                </div>
+                                <div className="sjg-info">
+                                    <p>Lead: {game.users[game.lead]}</p>
+                                    <p>Turn: {game.users[game.turn]}</p>
+                                </div>
+                            </div>
+                            <hr />
+                            {phase === "dipai" && (
+                                <div className="sjg-dipai">
+                                    {pidx === game.zhuang && (
+                                        <>
+                                            <p>Dipai</p>
+                                            <Hand ref={dipaiRef} cards={dipai || []} className="sjg-hand__wrapper"/>
+                                            <div className="sjg-button__group">
+                                                <button onClick={() => exchangeDipai()}>Exchange Dipai</button>
+                                                <button onClick={() => getDipai()}>Get Dipai</button>
+                                            </div>
+                                        </>
+                                    ) || (
+                                        <p>Waiting for <strong>{game.users[game.zhuang]}</strong> to look at their dipai.</p>
+                                    )}
+                                </div>
                             )}
-                        </div>
+                            {phase === "draw" && (
+                                <div className="sjg-draw">
+                                    <div className="sjg-button__group">
+                                        <button onClick={() => drawCard()}>Draw Card</button>
+                                        <button onClick={() => callTrump()}>Call Trump</button>
+                                    </div>
+                                </div>
+                            )}
+                            {phase === "play" && (
+                                <div className="sjg-play">
+                                    <div className="sjg-plays">
+                                        {game.plays.map((play, i) => (
+                                            <div key={i} className="sjg-play__player">
+                                                <span>{game.users[i]}</span>
+                                                <Hand cards={play.cards} className="sjg-hand__wrapper"/>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <div className="sjg-hand">
+                                <hr />
+                                <Hand ref={handRef} cards={hand ? ShengJiCore.handToCards(hand) : []} className="sjg-hand__wrapper"/>
+                                <div className="sjg-button__group">
+                                    {phase === "play" && (
+                                        <button onClick={() => playCards()}>Play Cards</button>
+                                    )}
+                                    <button onClick={() => getHand()}>Refresh Hand</button>
+                                </div>
+                            </div>
+                            {/*<button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
+                        </section>        
                     )}
-                    <button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
                 </div>
             )}
-        </>
+        </div>
+    );
+}
+
+function PlayerList({ players, teams }: { players: string[], teams: boolean[] }) {
+
+    const a = players.filter((p, i) => teams[i]);
+    const b = players.filter((p, i) => !teams[i]);
+
+    return (
+        <div className="sjg-player__wrapper">
+            <p>Teams</p>
+            <div className="sjg-player__list">
+                <div className="sjg-player__team">
+                    {a.map((p, i) => (
+                        <div key={i} className="sjg-player__player">{p}</div>
+                    ))}
+                </div>
+                <div className="sjg-player__team">
+                    {b.map((p, i) => (
+                        <div key={i} className="sjg-player__player">{p}</div>
+                    ))}
+                </div>
+            </div>
+        </div>
     );
 }

@@ -3,6 +3,7 @@ const { Redis } = require('@upstash/redis');
 
 import { b } from 'motion/react-client';
 import * as ShengJiGame from '/src/shengji/core/game';
+import { error } from 'jquery';
 
 function errorJSON(message, code = 400) {
     return {
@@ -176,6 +177,8 @@ exports.handler = async function handler(event, context) {
 
         if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
 
+            return errorJSON("Speed draw is disabled", 403);
+
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
             
@@ -277,6 +280,8 @@ exports.handler = async function handler(event, context) {
         }
 
         if (action === "end") { // ACTION: END GAME
+
+            return errorJSON("Ending game is disabled", 403);
 
             await redis.del(GAME_KEY_PREFIX + roomId);
 
