@@ -237,6 +237,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 if (cancelled) return;
                 const state = JSON.parse(msg.data.game) as ShengJiGame.GameState;
                 setGame(state);
+                console.log("Updated:", state);
             });
         }
 
