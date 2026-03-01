@@ -1,7 +1,7 @@
-const Ably = require('ably');
-const { Redis } = require('@upstash/redis');
+import Ably from 'ably';
+import { Redis } from '@upstash/redis';
 
-const ShengJiGame = require('../../src/shengji/core/game');
+import * as ShengJiGame from '../../src/shengji/core/game';
 
 function errorJSON(message, code = 400) {
     return {
@@ -73,7 +73,7 @@ const RATE_LIMIT_RULES = {
     default: [1, 1],
 };
 
-exports.handler = async function handler(event, context) {
+export async function handler(event) {
 
     const redis = getRedis();
 
