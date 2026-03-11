@@ -141,6 +141,7 @@ const suit_order: Map<Suit, number> = new Map<Suit, number>([
 
 // sort cards from greatest to least relative value
 export function sortCards(cards: Card[], trump: Trump | null): Card[] {
+    // console.log("Sorting cards:", cardsToString(cards), "Trump:", trumpToString(trump || { suit: null, rank: 0 })); 
     return cards.sort((b, a) => {
         if (!trump || (!isMainLine(a, trump) && !isMainLine(b, trump))) {
             if (a.suit !== b.suit) return suit_order.get(b.suit)! - suit_order.get(a.suit)!;
@@ -261,7 +262,7 @@ export function removeCardFromHand(card: Card, hand: Hand): void {
     hand.cards.get(card.suit)?.set(card.rank, Math.max(0, prev - 1));
 }
 
-export function handToCards(hand: Hand): Card[] {
+export function handToCards(hand: Hand, trump: Trump | null): Card[] {
     let cards : Card[] = [];
     for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
         for (let rank = 1; rank <= 14; rank++){
@@ -270,14 +271,15 @@ export function handToCards(hand: Hand): Card[] {
             for (let i = 0; i < num; i++) cards.push(card);
         }
     }
+
+    sortCards(cards, trump);
+
     return cards;
 }
 
 export function handToString(hand: Hand, trump: Trump | null): string {
     
-    const cards : Card[] = handToCards(hand);
-
-    sortCards(cards, trump);
+    const cards : Card[] = handToCards(hand, trump);
 
     return "[" + cards.map(cardToString).join(', ') + "]";
 }
@@ -340,7 +342,7 @@ export function getPlayStruct(play: Play, trump: Trump): { len: number; count: n
     }
     if (max_num === 0 || max_count === 0) return null; // must have at least 1 card
     if (max_count === 1 && max_num > 1) return null; // if single, must be only 1 card
-    sortCards(max_list, trump);
+    if (!isConsecutiveCards(max_list, trump)) return null; // must be consecutive cards (auto sorts)
     return { len: max_num, count: max_count, list: max_list };
 }
 
@@ -351,7 +353,7 @@ function isConsecutiveCards(cards: Card[], trump: Trump): boolean {
     sortCards(cards, trump);
 
     for (let i = 0; i < cards.length - 1; i++) {
-        if (!isCardAdjacent(cards[i], cards[i + 1], trump)) return false;
+        if (!isCardAdjacent(cards[i + 1], cards[i], trump)) return false;
     }
     return true;
 }

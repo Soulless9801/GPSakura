@@ -5,6 +5,13 @@
     gap: 1rem;;
 }
 
+.sjg-room__info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 10px;
+}
+
 .sjg-room div {
     transition: var(--transition-timers);
 }
@@ -66,7 +73,6 @@
     flex-direction: column;
     padding: 20px;
     background-color: var(--bg-color-secondary);
-    max-width: 600px;
 }
 
 /* Phase */

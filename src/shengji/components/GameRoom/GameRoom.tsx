@@ -41,9 +41,39 @@ async function clientRequest(request: ClientRequest) {
 
 export default function GameRoom({ roomId, username }: { roomId: string, username: string }) {
 
-    const ably = useAbly();
+    const [ablyRequest, setAblyRequest] = useState<{ clientId: string; signature: string | null }>({ clientId: "", signature: null });
+    const ably = useAbly({ request: ablyRequest });
+
+    useEffect(() => {
+
+        async function getIdentity() {
+            let clientId = localStorage.getItem("ablyClientId");
+            let signature = localStorage.getItem("ablySignature");
+            if (!clientId || !signature) {
+                clientId = `player_${Math.random().toString(36).substring(2, 10)}`;
+                localStorage.setItem("ablyClientId", clientId);
+                signature =  await fetch("/.netlify/functions/create-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ 
+                        action: "create",
+                        clientId: clientId,
+                    }),
+                }).then(res => res.json()).then(data => data.signature);
+                localStorage.setItem("ablySignature", signature || "");
+            }
+
+            setAblyRequest({ clientId: clientId || "", signature: signature || null });
+        }
+
+        getIdentity();
+
+    }, []);
+
     const lastActionAtRef = useRef(0);
-    const actionCooldownMs = 1000;
+    const actionCooldownMs = 1000; // UX throttling
 
     const [hand, setHand] = useState<ShengJiCore.Hand | null>();
     const handRef = useRef<HandRef>(null);
@@ -95,6 +125,18 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         );
 
         if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
+    }
+
+    async function getState() {
+        const res = await runAction(() =>
+            clientRequest({
+                roomId,
+                action: "state",
+                clientId: ably?.auth.clientId,
+            })
+        );
+
+        if (res?.game) setGame(JSON.parse(res.game) as ShengJiGame.GameState);
     }
 
     async function getHand() {
@@ -180,8 +222,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     const channelRef = useRef<Ably.RealtimeChannel | null>(null);
 
     const [players, setPlayers] = useState<string[]>([]);
-    const [teams, setTeams] = useState<boolean[]>([]);
-    const [team, setTeam] = useState<boolean>(false);
+    const [teams, setTeams] = useState<number[]>([]);
+    const [team, setTeam] = useState<number>(-1);
 
     useEffect(() => {
         const channel = channelRef.current;
@@ -220,14 +262,14 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             // console.log(`Joined room_${roomId} as ${username} on team ${team ? "1" : "2"}`);
 
-            const pid = ably.auth.clientId;
-
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
                 const state = JSON.parse(msg.data.game) as ShengJiGame.GameState;
                 setGame(state);
                 // console.log("Updated:", state);
             });
+
+            await getState();
         }
 
         connect();
@@ -250,7 +292,10 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             setHand(null);
             return; 
         }
-        setPidx(ShengJiGame.Game.find(game.players, ably?.auth.clientId || null));
+        const idx = ShengJiGame.Game.find(game.players, ably?.auth.clientId || null);
+        setPidx(idx);
+        if (idx === -1) setTeam(-1); // spectator
+        else setTeam(idx % 2);
         if (game.over) setPhase("over");
         else if (game.draw) setPhase("draw");
         else if (game.dip) {
@@ -268,14 +313,17 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     return (
         <div className="sjg-room">
-            <p>Room {roomId}</p>
-            <p>Username: {username}</p>
-            {/*<button onClick={() => endGame()}> End Game</button>*/}
+            <div className="sjg-room__info">
+                <p>Room <strong>{roomId}</strong></p>
+                <p>Username: <strong>{username}</strong></p>
+                <p>PlayerID: <strong>{ably?.auth.clientId}</strong></p>
+            </div>
+            <button onClick={() => endGame()}> End Game</button>
             {!phase && (
                 <div className="sjg-lobby">
                     <PlayerList players={players} teams={teams} />
                     <div className="sjg-button__group">
-                        <button onClick={() => setTeam(p => !p)}>Switch Team</button>
+                        <button onClick={() => setTeam(p => 1 - Math.abs(p))}>{team === -1 ? `Join Game` : `Switch Team`}</button>
                         <button onClick={() => startGame()}>Start Game</button>
                     </div>
                 </div>
@@ -288,13 +336,14 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                 <div className="sjg-trump">
                                     <p>Trump</p>
                                     <Card card={ShengJiCore.trumpToCard(game.trump)} />
+                                    <div>Declared <strong>{game.declare}</strong>x by <strong>{game.users[game.whodec]}</strong></div>
                                 </div>
                                 <div className="sjg-info">
                                     <p>Trump: <strong>{game.trump.rank}</strong></p>
                                     <p>Zhuang: <strong>{game.users[game.zhuang]}</strong></p>
                                 </div>
                                 <div className="sjg-info">
-                                    <p>Team: {(game.atk === (team ? 0 : 1)) ? "Attack" : "Defense"}</p>
+                                    <p>Team: {(team === -1 ? "Spectator" : (game.atk === team) ? "Attack" : "Defense")}</p>
                                     <p>Points: <strong>{game.score}</strong></p>
                                 </div>
                                 <div className="sjg-info">
@@ -303,6 +352,18 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                 </div>
                             </div>
                             <hr />
+                            {phase === "play" && (
+                                <div className="sjg-play">
+                                    <div className="sjg-plays">
+                                        {game.plays.map((play, i) => (
+                                            <div key={i} className="sjg-play__player">
+                                                <span>{game.users[i]}</span>
+                                                <Hand cards={play.cards} className="sjg-hand__wrapper"/>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             {phase === "dipai" && (
                                 <div className="sjg-dipai">
                                     {pidx === game.zhuang && (
@@ -319,39 +380,31 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                     )}
                                 </div>
                             )}
-                            {phase === "draw" && (
-                                <div className="sjg-draw">
-                                    <div className="sjg-button__group">
-                                        <button onClick={() => drawCard()}>Draw Card</button>
-                                    </div>
-                                </div>
-                            )}
-                            {phase === "play" && (
-                                <div className="sjg-play">
-                                    <div className="sjg-plays">
-                                        {game.plays.map((play, i) => (
-                                            <div key={i} className="sjg-play__player">
-                                                <span>{game.users[i]}</span>
-                                                <Hand cards={play.cards} className="sjg-hand__wrapper"/>
+                            {team !== -1 && (
+                                <div className="sjg-team">
+                                    {phase === "draw" && (
+                                        <div className="sjg-draw">
+                                            <div className="sjg-button__group">
+                                                <button onClick={() => drawCard()}>Draw Card</button>
                                             </div>
-                                        ))}
+                                        </div>
+                                    )}
+                                    <div className="sjg-hand">
+                                        <hr />
+                                        <Hand ref={handRef} cards={hand ? ShengJiCore.handToCards(hand, game.trump) : []} className="sjg-hand__wrapper"/>
+                                        <div className="sjg-button__group">
+                                            {phase === "play" && (
+                                                <button onClick={() => playCards()}>Play Cards</button>
+                                            )}
+                                            {(phase === "dipai" || phase === "draw") && (
+                                                <button onClick={() => callTrump()}>Call Trump</button>
+                                            )}
+                                            <button onClick={() => getHand()}>Refresh Hand</button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
-                            <div className="sjg-hand">
-                                <hr />
-                                <Hand ref={handRef} cards={hand ? ShengJiCore.handToCards(hand) : []} className="sjg-hand__wrapper"/>
-                                <div className="sjg-button__group">
-                                    {phase === "play" && (
-                                        <button onClick={() => playCards()}>Play Cards</button>
-                                    )}
-                                    {(phase === "dipai" || phase === "draw") && (
-                                        <button onClick={() => callTrump()}>Call Trump</button>
-                                    )}
-                                    <button onClick={() => getHand()}>Refresh Hand</button>
-                                </div>
-                            </div>
-                            {/*<button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
+                            <button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
                         </div>        
                     )}
                 </div>
@@ -360,10 +413,10 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     );
 }
 
-function PlayerList({ players, teams }: { players: string[], teams: boolean[] }) {
+function PlayerList({ players, teams }: { players: string[], teams: number[] }) {
 
-    const a = players.filter((p, i) => teams[i]);
-    const b = players.filter((p, i) => !teams[i]);
+    const a = players.filter((p, i) => teams[i] === 0);
+    const b = players.filter((p, i) => teams[i] === 1);
 
     return (
         <div className="sjg-player__wrapper">

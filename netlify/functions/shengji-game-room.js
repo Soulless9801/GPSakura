@@ -114,12 +114,6 @@ export async function handler(event) {
             return ShengJiGame.Game.deserializeGame(JSON.stringify(ser_game));
         }
 
-        function getHand(game, clientId) {
-            const hand = game.getHand(clientId);
-            if (!hand) return null;
-            return ShengJiGame.Game.serialize(hand);
-        }
-
         if (action === "start") { // ACTION: START GAME
             
             const exist = await getGame();
@@ -129,8 +123,8 @@ export async function handler(event) {
 
             const presence = await channel.presence.get();
             const items = presence.items;
-            const a = items.filter(p => p.data.team);
-            const b = items.filter(p => !p.data.team);
+            const a = items.filter(p => p.data.team === 0);
+            const b = items.filter(p => p.data.team === 1);
 
             if (a.length !== b.length) return errorJSON("Teams must be balanced");
 
@@ -179,7 +173,7 @@ export async function handler(event) {
 
         if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
 
-            return errorJSON("Speed draw is disabled", 403);
+            // return errorJSON("Speed draw is disabled", 403);
 
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
@@ -191,6 +185,15 @@ export async function handler(event) {
 
             await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
             return successJSON({});
+        }
+
+        if (action === "state") {// ACTION: GET GAME STATE
+
+            const game = await getGame();
+
+            if (!game) return errorJSON("Game not found");
+
+            return successJSON({ game: JSON.stringify(game.getState()) });
         }
 
         if (action === "hand") { // ACTION: GET HAND
@@ -249,7 +252,7 @@ export async function handler(event) {
             const give = JSON.parse(payload && payload.give);
             const receive = JSON.parse(payload && payload.receive);
 
-            // console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
+            console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
 
             if (!game.exchangeDipai(clientId, give, receive)) return errorJSON("Failed to exchange Dipai");
 
@@ -269,9 +272,10 @@ export async function handler(event) {
             if (!game) return errorJSON("Game not found");
 
             const play = JSON.parse(payload && payload.play);
-            if (!game.tryPlay(clientId, play)) return errorJSON("Invalid play");
 
-            // console.log(`Client ${clientId} played: ${JSON.stringify(play)}`);
+            console.log(`Client ${clientId} attempts to play: ${JSON.stringify(play)}`);
+
+            if (!game.tryPlay(clientId, play)) return errorJSON("Invalid play");
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
@@ -283,7 +287,7 @@ export async function handler(event) {
 
         if (action === "end") { // ACTION: END GAME
 
-            return errorJSON("Ending game is disabled", 403);
+            // return errorJSON("Ending game is disabled", 403);
 
             await redis.del(GAME_KEY_PREFIX + roomId);
 

@@ -11,6 +11,7 @@ export type GameState = {
 
     draw: boolean // currently drawing cards
     declare: number // curr declare amount
+    whodec: number // index of player who declared trump
     zhuang: number // index of start player
 
     trump: ShengJiCore.Trump
@@ -29,7 +30,7 @@ export type GameState = {
     count: number // number left for eahc player
 
     over: boolean
-    dip: boolean // diapi exchanged or not
+    dip: boolean // diapi exchanging or not
 }
 
 function nullPlay(): ShengJiCore.Play {
@@ -124,6 +125,7 @@ export class Game {
 
             draw: true, 
             declare: 0, 
+            whodec: 0,
             zhuang: 0,
 
             trump: { suit: null, rank: 2 },
@@ -206,7 +208,7 @@ export class Game {
 
     callTrump(player: string, trump: ShengJiCore.Trump) : boolean {
 
-        if (this.state.over || !this.state.draw || !trump.suit) return false;
+        if (this.state.over || (!this.state.draw && !this.state.dip) || !trump.suit) return false;
 
         // console.log(`Player ${player} calls trump ${ShengJiCore.trumpToString(trump)}`);
 
@@ -241,6 +243,7 @@ export class Game {
         if (cnt > this.state.declare){
             this.state.trump.suit = trump.suit; 
             this.state.declare = cnt;
+            this.state.whodec = idx;
             if (this.state.round === 1) this.state.zhuang = idx;
             return true;
         } 
@@ -255,6 +258,8 @@ export class Game {
         if (this.state.players[this.state.zhuang] !== player) return false;
 
         if (give.length !== receive.length) return false; // must exchange same number of cards
+
+        console.log(give, receive); 
 
         const hand = this.hands.get(player);
 
@@ -282,7 +287,7 @@ export class Game {
             ShengJiCore.removeCardFromHand(card, dipai_hand);
         }
 
-        this.dipai = ShengJiCore.handToCards(dipai_hand); // convert back to array
+        this.dipai = ShengJiCore.handToCards(dipai_hand, null); // convert back to array
 
         this.state.dip = false; // time to play!
 
@@ -301,12 +306,6 @@ export class Game {
 
         // console.log(hand);
 
-        const lead : ShengJiCore.Play = this.state.plays[this.state.lead];
-
-        if (!ShengJiCore.isPlayValid(play, lead, hand, this.state.trump)) return false;
-
-        // console.log(`Player ${player} plays ${ShengJiCore.playToString(play)}`);
-
         const idx : number = Game.find(this.state.players, player);
 
         if (idx === -1) return false; // should never happen
@@ -314,6 +313,14 @@ export class Game {
         // console.log(`Player index: ${idx}`);
 
         if (this.state.plays[idx].cards.length > 0) this.state.plays = Array.from({ length: this.state.players.length }, () => (nullPlay())); // reset plays if player is replaying
+
+        const lead : ShengJiCore.Play = this.state.plays[this.state.lead];
+
+        // console.log("Validating Play");
+
+        if (!ShengJiCore.isPlayValid(play, lead, hand, this.state.trump)) return false;
+
+        // console.log(`Player ${player} plays ${ShengJiCore.playToString(play)}`);
 
         this.state.plays[idx] = play;
 
@@ -404,6 +411,8 @@ export class Game {
         this.state.zhuang %= this.state.players.length; // new zhuang
 
         this.state.turn = this.state.zhuang;
+
+        this.state.whodec = this.state.zhuang;
     }
 
     endGame() : void {

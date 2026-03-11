@@ -52,6 +52,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
     useEffect(() => {
         setLayout(computeLayout(cards));
         setActive([]);
+        // console.log("Cards received by Hand: ", cards);
     }, [cards]);
 
     const handleClick = (card: ShengJiCore.Card, isActive: boolean) => {
