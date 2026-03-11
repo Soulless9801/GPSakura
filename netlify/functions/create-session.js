@@ -20,62 +20,29 @@ export function verify(clientId, signature) {
 export const handler = async (event) => {
 
     const body = JSON.parse(event.body || '{}');
-    const { action, clientId, signature } = body;
+    const { clientId } = body;
+
+    console.log(`Creating session for clientId: ${clientId}`);
 
     const clientVal = clientId && clientId.trim() !== "" && clientId.startsWith("player_");
-    const signatureVal = signature && signature.trim() !== "";
 
-    if (action === "create") {
-
-        if (!clientVal) {
-            return {
-                statusCode: 400,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ error: "Invalid clientId" }),
-            };
-        }
-
-        const signature = sign(clientId);
-        
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ clientId, signature }),
-        };
-
-    } else if (action === "verify") {
-
-        if (!clientVal || !signatureVal) {
-            return {
-                statusCode: 400,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ error: "Missing clientId or signature" }),
-            };
-        }
-
-        const isValid = verify(clientId, signature);
-
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ valid: isValid }),
-        };
-
-    } else {
+    if (!clientVal) {
         return {
             statusCode: 400,
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ error: "Invalid action" }),
+            body: JSON.stringify({ error: "Invalid clientId" }),
         };
     }
+
+    const signature = sign(clientId);
+    
+    return {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ signature }),
+    };
 };

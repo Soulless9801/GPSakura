@@ -57,8 +57,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ 
-                        action: "create",
+                    body: JSON.stringify({
                         clientId: clientId,
                     }),
                 }).then(res => res.json()).then(data => data.signature);
@@ -404,7 +403,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                     </div>
                                 </div>
                             )}
-                            <button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
+                            {/*<button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
                         </div>        
                     )}
                 </div>
