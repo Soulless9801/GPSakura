@@ -19,7 +19,7 @@ export default function ShengJiApp() {
     const testCardRef = useRef<HandRef>(null);
 
     useEffect(() => {
-        setCards(ShenJiCore.handToCards(testCase?.hand || ShenJiCore.initializeHand()));
+        setCards(ShenJiCore.handToCards(testCase?.hand || ShenJiCore.initializeHand(), testCase?.trump || null));
     }, [testCase]);
 
     // Live Game

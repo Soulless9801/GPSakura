@@ -35,12 +35,10 @@ export default function Card({ card, className = "", onClick = null }) {
 	}, [card]);
 
 	const handleClick = useCallback(() => {
-		setActive(active => !active);
-	}, [onClick]);
-
-	useEffect(() => {
-		if (onClick) onClick(card, active);
-	}, [active, card, onClick]);
+		const nactive = !active;
+		setActive(nactive);
+		if (onClick) onClick(card, nactive);
+	}, [active, onClick, card]);
 
 	return (
 		<button
