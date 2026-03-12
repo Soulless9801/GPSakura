@@ -154,6 +154,14 @@ export class Game {
         return this;
     }
 
+    changeUsername(player: string, user: string) {
+        const idx = Game.find(this.state.players, player);
+        if (idx === -1) return false;
+
+        this.state.users[idx] = user;
+        return true;
+    }
+
     finishDraw() {
         this.state.dip = true; // dipai exchange time
         this.dipai = this.deck.cards;
@@ -310,7 +318,7 @@ export class Game {
 
         if (idx === -1) return false; // should never happen
 
-        // console.log(`Player index: ${idx}`);
+        // console.log(`Player index: ${idx}`); 
 
         if (this.state.plays[idx].cards.length > 0) this.state.plays = Array.from({ length: this.state.players.length }, () => (nullPlay())); // reset plays if player is replaying
 

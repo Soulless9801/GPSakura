@@ -68,12 +68,6 @@ async function saveGame(redis, roomId, ser_game) {
 }
 
 const RATE_LIMIT_RULES = {
-    draw: [1, 1],
-    play: [1, 1],
-    trump: [1, 1],
-    start: [1, 1],
-    hand: [1, 1],
-    state: [1, 1],
     default: [1, 1],
 };
 
@@ -146,12 +140,30 @@ export async function handler(event) {
             if (!game.initializeGame(players, users)) return errorJSON("Failed to initialize game");
 
             const ser_game = game.serializeGame();
-
             await saveGame(redis, roomId, ser_game);
-
             await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
-            return successJSON({ msg: "Game started" });
+            return successJSON({});
+        }
+
+        if (action === "username") { // ACTION: UPDATE USERNAME
+
+            if (!clientId) return errorJSON("Missing clientId");
+
+            const username = payload && payload.username;
+            if (!username) return errorJSON("Missing username");
+
+            const game = await getGame();
+
+            if (!game || !game.changeUsername(clientId, username)) return errorJSON("No game found");
+
+            console.log(`Client ${clientId} changes username to ${username}`);
+
+            const ser_game = game.serializeGame();
+            await saveGame(redis, roomId, ser_game);
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+
+            return successJSON({});
         }
 
         if (action === "draw") { // ACTION: DRAW CARD
@@ -182,8 +194,8 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-
             await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+
             return successJSON({});
         }
 
@@ -224,8 +236,8 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-
             await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+
             return successJSON({});
         }
 

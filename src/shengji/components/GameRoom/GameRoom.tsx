@@ -15,30 +15,6 @@ interface ClientRequest {
     payload?: any;
 }
 
-async function clientRequest(request: ClientRequest) {
-    const res =  await fetch("/.netlify/functions/shengji-game-room", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
-    });
-
-    if (!res) {
-        console.error("Request failed");
-        return null;
-    }
-
-    const data = await res.json();
-
-    if (!res.ok) {
-        // console.log("Error: ", data.error); --- IGNORE ---
-        return null;
-    }
-
-    return data;
-}
-
 export default function GameRoom({ roomId, username }: { roomId: string, username: string }) {
 
     const [ablyRequest, setAblyRequest] = useState<{ clientId: string; signature: string | null }>({ clientId: "", signature: null });
@@ -71,39 +47,75 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     }, []);
 
-    const lastActionAtRef = useRef(0);
-    const actionCooldownMs = 1000; // UX throttling
+    const [game, setGame] = useState<ShengJiGame.GameState>();
 
     const [hand, setHand] = useState<ShengJiCore.Hand | null>();
     const handRef = useRef<HandRef>(null);
 
-    const [game, setGame] = useState<ShengJiGame.GameState>();
+    const [dipai, setDipai] = useState<ShengJiCore.Card[] | null>([]);
+    const dipaiRef = useRef<HandRef>(null);
 
-    async function runAction(actionFn: () => Promise<any>) {
-        const now = Date.now();
-        if (now - lastActionAtRef.current < actionCooldownMs) {
-            return null;
-        }
-        lastActionAtRef.current = now;
-        return actionFn();
+    // UX throttling
+
+    const timeout = 1000
+
+    function disableButtons() {
+
+        const btns = document.querySelectorAll<HTMLButtonElement>(".sjg-button__game");
+
+        console.log(`Disabling ${btns.length} buttons for ${timeout}ms`);
+
+        btns.forEach(btn => {
+            btn.disabled = true;
+        });
+
+        setTimeout(() => {
+            btns.forEach(btn => {
+                btn.disabled = false;
+            });
+        }, timeout);
     }
 
+    async function clientRequest(request: ClientRequest) {
+        const res =  await fetch("/.netlify/functions/shengji-game-room", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+        });
+
+        disableButtons();
+
+        if (!res) {
+            console.error("Request failed");
+            return null;
+        }
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            // console.log("Error: ", data.error); --- IGNORE ---
+            return null;
+        }
+
+        return data;
+    }
+
+    // Server actions
+
     async function startGame() {
-        return runAction(() =>
-            clientRequest({
-                roomId,
-                action: "start",
-            })
-        );
+        return clientRequest({
+            roomId,
+            action: "start",
+        });
     }
 
     async function endGame() {
-        return runAction(() =>
-            clientRequest({
-                roomId,
-                action: "end",
-            })
-        );
+        return clientRequest({
+            roomId,
+            action: "end",
+        });
     }
 
     async function speedDraw() {
@@ -115,87 +127,73 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     }
 
     async function drawCard() {
-        const res = await runAction(() =>
-            clientRequest({
-                roomId,
-                action: "draw",
-                clientId: ably?.auth.clientId,
-            })
-        );
+        const res = await clientRequest({
+            roomId,
+            action: "draw",
+            clientId: ably?.auth.clientId,
+        });
 
         if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
     }
 
     async function getState() {
-        const res = await runAction(() =>
-            clientRequest({
-                roomId,
-                action: "state",
-                clientId: ably?.auth.clientId,
-            })
-        );
+        const res = await clientRequest({
+            roomId,
+            action: "state",
+            clientId: ably?.auth.clientId,
+        });
 
         if (res?.game) setGame(JSON.parse(res.game) as ShengJiGame.GameState);
     }
 
     async function getHand() {
-        const res = await runAction(() =>
-            clientRequest({
-                roomId,
-                action: "hand",
-                clientId: ably?.auth.clientId,
-            })
-        );
+        const res = await clientRequest({
+            roomId,
+            action: "hand",
+            clientId: ably?.auth.clientId,
+        });
 
         if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
     }
 
     async function callTrump() {
         const cards = handRef.current?.getActiveCards() || [];
+        if (cards.length === 0) return; // must select cards to call trump
         if (!ShengJiCore.isAllSame(cards) && !ShengJiCore.isAllJokers(cards)) return; // must be all same card or jokers to call trump
-        return runAction(() =>
-            clientRequest({
-                roomId,
-                action: "trump",
-                clientId: ably?.auth.clientId,
-                payload: {
-                    trump: JSON.stringify({
-                        suit: cards[0].suit,
-                        rank: cards[0].rank,
-                    }),
-                }
-            })
-        );
+        return clientRequest({
+            roomId,
+            action: "trump",
+            clientId: ably?.auth.clientId,
+            payload: {
+                trump: JSON.stringify({
+                    suit: cards[0].suit,
+                    rank: cards[0].rank,
+                }),
+            }
+        });
     }
 
     async function playCards() {
         const cards = handRef.current?.getActiveCards() || [];
         const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) };
-        const res = await runAction(() =>
-            clientRequest({
-                roomId,
-                action: "play",
-                clientId: ably?.auth.clientId,
-                payload: {
-                    play: JSON.stringify(play),
-                }
-            })
-        );
+        const res = await clientRequest({
+            roomId,
+            action: "play",
+            clientId: ably?.auth.clientId,
+            payload: {
+                play: JSON.stringify(play),
+            }
+        });
 
         if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
     }
 
-    const [dipai, setDipai] = useState<ShengJiCore.Card[] | null>([]);
-    const dipaiRef = useRef<HandRef>(null);
-
     async function getDipai() {
-        const res = await runAction(() => 
-            clientRequest({
-                roomId,
-                action: "dipai",
-                clientId: ably?.auth.clientId,
-            })
-        );
+        const res = await clientRequest({
+            roomId,
+            action: "dipai",
+            clientId: ably?.auth.clientId,
+        });
 
         if (res?.dipai) setDipai(JSON.parse(res.dipai) as ShengJiCore.Card[]);
     }
@@ -203,32 +201,60 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     async function exchangeDipai() {
         const give = handRef.current?.getActiveCards() || [];
         const receive = dipaiRef.current?.getActiveCards() || [];
-        const res = await runAction(() =>
-            clientRequest({
-                roomId,
-                action: "exchange",
-                clientId: ably?.auth.clientId,
-                payload: {
-                    give: JSON.stringify(give),
-                    receive: JSON.stringify(receive),
-                }
-            })
-        );
+        const res = await clientRequest({
+            roomId,
+            action: "exchange",
+            clientId: ably?.auth.clientId,
+            payload: {
+                give: JSON.stringify(give),
+                receive: JSON.stringify(receive),
+            }
+        });
 
         if (res?.hand) setHand(ShengJiGame.Game.deserialize(res.hand) as ShengJiCore.Hand);
     }
 
+    async function changeUsername(user: string) {
+        return clientRequest({
+            roomId,
+            action: "username",
+            clientId: ably?.auth.clientId,
+            payload: {
+                username: user,
+            }
+        });
+    }
+
+    // Ably realtime
+
     const channelRef = useRef<Ably.RealtimeChannel | null>(null);
 
-    const [players, setPlayers] = useState<string[]>([]);
-    const [teams, setTeams] = useState<number[]>([]);
     const [team, setTeam] = useState<number>(-1);
 
     useEffect(() => {
         const channel = channelRef.current;
         if (!channel) return;
         channel.presence.update({ username: username, team: team });
+        changeUsername(username);
     }, [username, team]);
+
+    // initialize connection
+
+    const [connectionState, setConnectionState] = useState<string>("");
+
+    useEffect(() => {
+        if (!ably) return;
+        const onConnectionStateChange = (state: Ably.ConnectionStateChange) => {
+            setConnectionState(state.current);
+        };
+        ably.connection.on(onConnectionStateChange);
+        return () => {
+            ably.connection.off(onConnectionStateChange);
+        };
+    }, [ably]);
+
+    const [players, setPlayers] = useState<string[]>([]);
+    const [teams, setTeams] = useState<number[]>([]);
 
     useEffect(() => {
 
@@ -282,6 +308,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     }, [ably, roomId]);
 
+    // respond to game state changes
+
     const [phase, setPhase] = useState<string | null>(null);
     const [pidx, setPidx] = useState<number>(-1);
 
@@ -291,10 +319,13 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             setHand(null);
             return; 
         }
+        // find index in list of players
         const idx = ShengJiGame.Game.find(game.players, ably?.auth.clientId || null);
         setPidx(idx);
+        // adjust team
         if (idx === -1) setTeam(-1); // spectator
         else setTeam(idx % 2);
+        // phase update
         if (game.over) setPhase("over");
         else if (game.draw) setPhase("draw");
         else if (game.dip) {
@@ -313,11 +344,12 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     return (
         <div className="sjg-room">
             <div className="sjg-room__info">
-                <p>Room <strong>{roomId}</strong></p>
+                <p>Room: <strong>{roomId}</strong></p>
                 <p>Username: <strong>{username}</strong></p>
                 <p>PlayerID: <strong>{ably?.auth.clientId}</strong></p>
+                <p>Connection: <strong>{connectionState}</strong></p>
             </div>
-            <button onClick={() => endGame()}> End Game</button>
+            <button className="sjg-button__game" onClick={() => endGame()}>End Game</button>
             {!phase && (
                 <div className="sjg-lobby">
                     <PlayerList players={players} teams={teams} />
@@ -370,8 +402,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                             <p>Dipai</p>
                                             <Hand ref={dipaiRef} cards={dipai || []} className="sjg-hand__wrapper"/>
                                             <div className="sjg-button__group">
-                                                <button onClick={() => exchangeDipai()}>Exchange Dipai</button>
-                                                <button onClick={() => getDipai()}>Get Dipai</button>
+                                                <button className="sjg-button__game" onClick={() => exchangeDipai()}>Exchange Dipai</button>
+                                                <button className="sjg-button__game" onClick={() => getDipai()}>Get Dipai</button>
                                             </div>
                                         </>
                                     ) || (
@@ -384,7 +416,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                     {phase === "draw" && (
                                         <div className="sjg-draw">
                                             <div className="sjg-button__group">
-                                                <button onClick={() => drawCard()}>Draw Card</button>
+                                                <button className="sjg-button__game" onClick={() => drawCard()}>Draw Card</button>
                                             </div>
                                         </div>
                                     )}
@@ -393,17 +425,17 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                                         <Hand ref={handRef} cards={hand ? ShengJiCore.handToCards(hand, game.trump) : []} className="sjg-hand__wrapper"/>
                                         <div className="sjg-button__group">
                                             {phase === "play" && (
-                                                <button onClick={() => playCards()}>Play Cards</button>
+                                                <button className="sjg-button__game" onClick={() => playCards()}>Play Cards</button>
                                             )}
                                             {(phase === "dipai" || phase === "draw") && (
-                                                <button onClick={() => callTrump()}>Call Trump</button>
+                                                <button className="sjg-button__game" onClick={() => callTrump()}>Call Trump</button>
                                             )}
-                                            <button onClick={() => getHand()}>Refresh Hand</button>
+                                            <button className="sjg-button__game" onClick={() => getHand()}>Refresh Hand</button>
                                         </div>
                                     </div>
                                 </div>
                             )}
-                            {/*<button onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
+                            {/*<button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
                         </div>        
                     )}
                 </div>
