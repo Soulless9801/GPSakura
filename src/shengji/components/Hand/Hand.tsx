@@ -5,7 +5,8 @@ import Card from '/src/shengji/components/Card/Card';
 
 import './Hand.css';
 
-import * as ShengJiCore from "/src/shengji/core/entities";
+import * as SJCore from "/src/shengji/core/entities";
+import * as SJComp from "/src/shengji/core/comparison";
 
 interface CardLayout {
     x: number;
@@ -15,7 +16,7 @@ interface CardLayout {
     z: number;
 }
 
-function computeLayout(cards: ShengJiCore.Card[]): CardLayout[] | null {
+function computeLayout(cards: SJCore.Card[]): CardLayout[] | null {
 
     if (!cards || cards.length === 0) return null;
 
@@ -31,19 +32,19 @@ function computeLayout(cards: ShengJiCore.Card[]): CardLayout[] | null {
 }
 
 interface HandProps {
-    cards: ShengJiCore.Card[];
+    cards: SJCore.Card[];
     className?: string;
 }
 
 export interface HandRef {
-    getActiveCards: () => ShengJiCore.Card[];
+    getActiveCards: () => SJCore.Card[];
 }
 
 const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "" }, ref) {
 
     const [layout, setLayout] = useState<CardLayout[] | null>(null);
 
-    const [active, setActive] = useState<ShengJiCore.Card[]>([]);
+    const [active, setActive] = useState<SJCore.Card[]>([]);
 
     useImperativeHandle(ref, () => ({
         getActiveCards: () => active
@@ -55,11 +56,11 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
         // console.log("Cards received by Hand: ", cards);
     }, [cards]);
 
-    const handleClick = (card: ShengJiCore.Card, isActive: boolean) => {
+    const handleClick = (card: SJCore.Card, isActive: boolean) => {
         setActive(prev => {
             if (isActive) return [...prev, card];
             else {
-                const idx = prev.findIndex(c => ShengJiCore.isCardEqual(c, card));
+                const idx = prev.findIndex(c => SJComp.isCardEqual(c, card));
                 if (idx === -1) return prev;
                 prev.splice(idx, 1);
                 return [...prev];
