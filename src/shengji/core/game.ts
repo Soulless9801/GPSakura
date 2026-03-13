@@ -1,12 +1,22 @@
-import * as ShengJiCore from '/src/shengji/core/entities';
+import * as SJCore from '/src/shengji/core/entities';
+import * as SJComp from '/src/shengji/core/comparison';
+import * as SJConv from '/src/shengji/core/convert';
+
+type Suit = SJCore.Suit;
+type Rank = SJCore.Rank;
+type Trump = SJCore.Trump;
+type Card = SJCore.Card;
+type Deck = SJCore.Deck;
+type Hand = SJCore.Hand;
+type Play = SJCore.Play;
 
 export type GameState = {
-    // deck: ShengJiCore.Deck
+    // deck: Deck
     round: number // current round number, starting from 1
 
     players: string[]
     users: string[]
-    // hands: Map<string, ShengJiCore.Hand> // index corresponds to players
+    // hands: Map<string, Hand> // index corresponds to players
     atk: number // index of attacking team (0 or 1)
 
     draw: boolean // currently drawing cards
@@ -14,9 +24,9 @@ export type GameState = {
     whodec: number // index of player who declared trump
     zhuang: number // index of start player
 
-    trump: ShengJiCore.Trump
-    alt : ShengJiCore.Rank; // trump rank of attacking team
-    // dipai: ShengJiCore.Card[] // cards on the table
+    trump: Trump
+    alt : Rank; // trump rank of attacking team
+    // dipai: Card[] // cards on the table
 
     turn: number
 
@@ -26,14 +36,14 @@ export type GameState = {
     chu: number // index of player who started the current trick
 
     lead: number // index of player with biggest play
-    plays: ShengJiCore.Play[]
+    plays: Play[]
     count: number // number left for eahc player
 
     over: boolean
     dip: boolean // diapi exchanging or not
 }
 
-function nullPlay(): ShengJiCore.Play {
+function nullPlay(): Play {
     return { cards: [], suit: null};
 }
 
@@ -59,15 +69,15 @@ function reviver(key: string, value: any) {
 export class Game {
 
     private state: GameState;
-    private hands: Map<string, ShengJiCore.Hand>;
-    private deck: ShengJiCore.Deck;
-    private dipai: ShengJiCore.Card[];
+    private hands: Map<string, Hand>;
+    private deck: Deck;
+    private dipai: Card[];
 
     private static cpp = 25; // cards per player
     private static minPlayers = 2; 
     private static maxPlayers = 8;
 
-    constructor(state: GameState, hands: Map<string, ShengJiCore.Hand>, deck: ShengJiCore.Deck, dipai: ShengJiCore.Card[]) {
+    constructor(state: GameState, hands: Map<string, Hand>, deck: Deck, dipai: Card[]) {
         this.state = state;
         this.hands = hands;
         this.deck = deck;
@@ -94,9 +104,9 @@ export class Game {
         const { state, hands, deck, dipai } = JSON.parse(game);
         return new Game(
             Game.deserialize(state) as GameState,
-            Game.deserialize(hands) as Map<string, ShengJiCore.Hand>,
-            Game.deserialize(deck) as ShengJiCore.Deck,
-            Game.deserialize(dipai) as ShengJiCore.Card[]
+            Game.deserialize(hands) as Map<string, Hand>,
+            Game.deserialize(deck) as Deck,
+            Game.deserialize(dipai) as Card[]
         );
     }
 
@@ -115,12 +125,12 @@ export class Game {
         if (players.length < Game.minPlayers || players.length % 2 == 1 || players.length > Game.maxPlayers) return null;
     
         this.state = {
-            // deck: ShengJiCore.initializeDeck(players.length / 2),
+            // deck: SJCore.initializeDeck(players.length / 2),
             round: 1,
 
             players: players,
             users: users,
-            // hands: new Map(players.map(p => [p, ShengJiCore.initializeHand()])),
+            // hands: new Map(players.map(p => [p, SJCore.initializeHand()])),
             atk: 0,
 
             draw: true, 
@@ -147,8 +157,8 @@ export class Game {
             dip: false,
         }
 
-        this.hands = new Map(players.map(p => [p, ShengJiCore.initializeHand()]));
-        this.deck = ShengJiCore.initializeDeck(players.length / 2);
+        this.hands = new Map(players.map(p => [p, SJCore.initializeHand()]));
+        this.deck = SJCore.initializeDeck(players.length / 2);
         this.dipai = [];
         
         return this;
@@ -191,7 +201,7 @@ export class Game {
 
         if (this.state.players[this.state.turn] !== player) return false; // wait your turn lil bro
         
-        const card = ShengJiCore.drawCard(this.deck);
+        const card = SJCore.drawCard(this.deck);
 
         if (!card) return false; // deck is empty, should never happen
 
@@ -199,7 +209,7 @@ export class Game {
 
         if (!hand) return false; // should never happen
 
-        ShengJiCore.addCardToHand(card, hand);
+        SJCore.addCardToHand(card, hand);
 
         if (this.state.turn === 0) this.state.count++;
 
@@ -214,11 +224,11 @@ export class Game {
         return true;
     }
 
-    callTrump(player: string, trump: ShengJiCore.Trump) : boolean {
+    callTrump(player: string, trump: Trump) : boolean {
 
         if (this.state.over || (!this.state.draw && !this.state.dip) || !trump.suit) return false;
 
-        // console.log(`Player ${player} calls trump ${ShengJiCore.trumpToString(trump)}`);
+        // console.log(`Player ${player} calls trump ${SJCore.trumpToString(trump)}`);
 
         const idx : number = Game.find(this.state.players, player);
 
@@ -231,8 +241,8 @@ export class Game {
         if (!hand) return false; // should never happen
 
         if (trump.suit === "jokers"){
-            const joker_s : number = ShengJiCore.getCardCount(hand, { suit: "jokers", rank: 1 });
-            const joker_b : number = ShengJiCore.getCardCount(hand, { suit: "jokers", rank: 2 });
+            const joker_s : number = SJCore.getCardCount(hand, { suit: "jokers", rank: 1 });
+            const joker_b : number = SJCore.getCardCount(hand, { suit: "jokers", rank: 2 });
 
             if ((this.state.players.length === 4 && (joker_s + joker_b) >= 3) || 
                 ((joker_s + joker_b >= 4) || Math.max(joker_s, joker_b) >= 3)) { 
@@ -246,7 +256,7 @@ export class Game {
         
         if (this.state.trump.rank !== trump.rank) return false; // only call same rank
 
-        const cnt: number = ShengJiCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
+        const cnt: number = SJCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
 
         if (cnt > this.state.declare){
             this.state.trump.suit = trump.suit; 
@@ -259,7 +269,7 @@ export class Game {
         return false;
     }
 
-    exchangeDipai(player: string, give: ShengJiCore.Card[], receive: ShengJiCore.Card[]) : boolean {
+    exchangeDipai(player: string, give: Card[], receive: Card[]) : boolean {
         
         if (this.state.over || !this.state.dip) return false;
 
@@ -273,36 +283,36 @@ export class Game {
 
         if (!hand) return false; // should never happen
 
-        const play_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset({ cards: give } as ShengJiCore.Play, hand);
+        const play_hand : Hand | null = SJComp.isPlaySubset({ cards: give } as Play, hand);
 
         if (!play_hand) return false;
 
-        const dipai_hand : ShengJiCore.Hand = ShengJiCore.initializeHand();
+        const dipai_hand : Hand = SJCore.initializeHand();
 
-        for (const card of this.dipai) ShengJiCore.addCardToHand(card, dipai_hand);
+        for (const card of this.dipai) SJCore.addCardToHand(card, dipai_hand);
 
-        const dip_hand : ShengJiCore.Hand | null = ShengJiCore.isPlaySubset({ cards: receive } as ShengJiCore.Play, dipai_hand);
+        const dip_hand : Hand | null = SJComp.isPlaySubset({ cards: receive } as Play, dipai_hand);
 
         if (!dip_hand) return false;
 
         for (const card of give){
-            ShengJiCore.removeCardFromHand(card, hand);
-            ShengJiCore.addCardToHand(card, dipai_hand);
+            SJCore.removeCardFromHand(card, hand);
+            SJCore.addCardToHand(card, dipai_hand);
         }
 
         for (const card of receive){
-            ShengJiCore.addCardToHand(card, hand);
-            ShengJiCore.removeCardFromHand(card, dipai_hand);
+            SJCore.addCardToHand(card, hand);
+            SJCore.removeCardFromHand(card, dipai_hand);
         }
 
-        this.dipai = ShengJiCore.handToCards(dipai_hand, null); // convert back to array
+        this.dipai = SJConv.handToCards(dipai_hand, null); // convert back to array
 
         this.state.dip = false; // time to play!
 
         return true;
     }
 
-    tryPlay(player: string, play: ShengJiCore.Play) : boolean {
+    tryPlay(player: string, play: Play) : boolean {
 
         if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
 
@@ -322,21 +332,21 @@ export class Game {
 
         if (this.state.plays[idx].cards.length > 0) this.state.plays = Array.from({ length: this.state.players.length }, () => (nullPlay())); // reset plays if player is replaying
 
-        const lead : ShengJiCore.Play = this.state.plays[this.state.lead];
+        const lead : Play = this.state.plays[this.state.lead];
 
         // console.log("Validating Play");
 
-        if (!ShengJiCore.isPlayValid(play, lead, hand, this.state.trump)) return false;
+        if (!SJComp.isPlayValid(play, lead, hand, this.state.trump)) return false;
 
-        // console.log(`Player ${player} plays ${ShengJiCore.playToString(play)}`);
+        // console.log(`Player ${player} plays ${SJCore.playToString(play)}`);
 
         this.state.plays[idx] = play;
 
-        if (ShengJiCore.isPlayBigger(play, lead, this.state.trump)) this.state.lead = idx;
+        if (SJComp.isPlayBigger(play, lead, this.state.trump)) this.state.lead = idx;
 
         for (const card of play.cards) {
-            ShengJiCore.removeCardFromHand(card, hand);
-            this.state.points += ShengJiCore.pointValue(card);
+            SJCore.removeCardFromHand(card, hand);
+            this.state.points += SJCore.pointValue(card);
         }
 
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
@@ -348,7 +358,7 @@ export class Game {
 
     private endTrick() : void {
 
-        // console.log(`Trick ends. Lead: Player ${this.state.players[this.state.lead]}, Play: ${ShengJiCore.playToString(this.state.plays[this.state.lead])}, Points: ${this.state.points}`);
+        // console.log(`Trick ends. Lead: Player ${this.state.players[this.state.lead]}, Play: ${SJCore.playToString(this.state.plays[this.state.lead])}, Points: ${this.state.points}`);
 
         const team: number = this.state.lead % 2;
         
@@ -356,7 +366,7 @@ export class Game {
 
         this.state.points = 0;
 
-        const lead : ShengJiCore.Play = this.state.plays[this.state.lead];
+        const lead : Play = this.state.plays[this.state.lead];
 
         this.state.count -= lead.cards.length;
 
@@ -371,7 +381,7 @@ export class Game {
         this.state.atk = 1 - this.state.atk;
 
         // swap trumps
-        const temp : ShengJiCore.Rank = this.state.trump.rank;
+        const temp : Rank = this.state.trump.rank;
         this.state.trump.rank = this.state.alt;
         this.state.alt = temp;
     }
@@ -379,7 +389,7 @@ export class Game {
     private endRound(dmult: number) : void {
 
         // calculate dipai points
-        const dipai: number = this.dipai.reduce((sum, card) => sum + ShengJiCore.pointValue(card), 0);
+        const dipai: number = this.dipai.reduce((sum, card) => sum + SJCore.pointValue(card), 0);
 
         this.state.score += dipai * dmult;
 
@@ -408,9 +418,9 @@ export class Game {
         
         this.state.count = 0;
 
-        this.deck = ShengJiCore.initializeDeck(this.state.players.length / 2); // reset deck
+        this.deck = SJCore.initializeDeck(this.state.players.length / 2); // reset deck
 
-        for (const player of this.state.players) this.hands.set(player, ShengJiCore.initializeHand()); // reset hands
+        for (const player of this.state.players) this.hands.set(player, SJCore.initializeHand()); // reset hands
 
         this.dipai = [];
 
@@ -431,16 +441,16 @@ export class Game {
         return this.state;
     }
 
-    getHand(player: string) : ShengJiCore.Hand | null {
+    getHand(player: string) : Hand | null {
         const hand = this.hands.get(player);
         return hand ? hand : null;
     }
 
-    getDeck() : ShengJiCore.Deck {
+    getDeck() : Deck {
         return this.deck;
     }
     
-    getDipai(player: string) : ShengJiCore.Card[] | null {
+    getDipai(player: string) : Card[] | null {
 
         if (this.state.players[this.state.zhuang] !== player) return null; // not allowed to view cards
         return this.dipai;

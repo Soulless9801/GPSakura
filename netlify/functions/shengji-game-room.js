@@ -5,7 +5,7 @@ dotenv.config();
 import Ably from 'ably';
 import { Redis } from '@upstash/redis';
 
-import * as ShengJiGame from '../../src/shengji/core/game.ts';
+import * as SJGame from '../../src/shengji/core/game.ts';
 
 function errorJSON(message, code = 400) {
     return {
@@ -105,7 +105,7 @@ export async function handler(event) {
         async function getGame() {
             const ser_game = await loadGame(redis, roomId);
             if (!ser_game) return null;
-            return ShengJiGame.Game.deserializeGame(JSON.stringify(ser_game));
+            return SJGame.Game.deserializeGame(JSON.stringify(ser_game));
         }
 
         if (action === "start") { // ACTION: START GAME
@@ -136,7 +136,7 @@ export async function handler(event) {
                 }
             }
 
-            const game = new ShengJiGame.Game({});
+            const game = new SJGame.Game({});
             if (!game.initializeGame(players, users)) return errorJSON("Failed to initialize game");
 
             const ser_game = game.serializeGame();
@@ -157,7 +157,7 @@ export async function handler(event) {
 
             if (!game || !game.changeUsername(clientId, username)) return errorJSON("No game found");
 
-            console.log(`Client ${clientId} changes username to ${username}`);
+            // console.log(`Client ${clientId} changes username to ${username}`);
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
@@ -180,7 +180,7 @@ export async function handler(event) {
             await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
-            return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
+            return successJSON({ hand: SJGame.Game.serialize(hand) });
         }
 
         if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
@@ -219,7 +219,7 @@ export async function handler(event) {
 
             if (!hand) return errorJSON("Failed to get hand");
 
-            return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
+            return successJSON({ hand: SJGame.Game.serialize(hand) });
         }
 
         if (action === "trump") { // ACTION: CALL TRUMP
@@ -264,7 +264,7 @@ export async function handler(event) {
             const give = JSON.parse(payload && payload.give);
             const receive = JSON.parse(payload && payload.receive);
 
-            console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
+            // console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
 
             if (!game.exchangeDipai(clientId, give, receive)) return errorJSON("Failed to exchange Dipai");
 
@@ -273,7 +273,7 @@ export async function handler(event) {
             await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
-            return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
+            return successJSON({ hand: SJGame.Game.serialize(hand) });
         }
 
         if (action === "play") { // ACTION: PLAY CARDS
@@ -285,7 +285,7 @@ export async function handler(event) {
 
             const play = JSON.parse(payload && payload.play);
 
-            console.log(`Client ${clientId} attempts to play: ${JSON.stringify(play)}`);
+            // console.log(`Client ${clientId} attempts to play: ${JSON.stringify(play)}`);
 
             if (!game.tryPlay(clientId, play)) return errorJSON("Invalid play");
 
@@ -294,7 +294,7 @@ export async function handler(event) {
             await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
 
             const hand = game.getHand(clientId);
-            return successJSON({ hand: ShengJiGame.Game.serialize(hand) });
+            return successJSON({ hand: SJGame.Game.serialize(hand) });
         }
 
         if (action === "end") { // ACTION: END GAME

@@ -6,7 +6,7 @@
     aspect-ratio: 2.5 / 3.5;
     width: 100px; /* 140 px height */
     border-radius: 8px;
-    background-color: #fff;
+    background-color: #fff !important;
     position: relative;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     font-weight: bold;
@@ -22,23 +22,30 @@
     translate: 0 -10px;
 }
 
-.sj-card:hover, .sj-card.selected:hover {
-    translate: 0 -10px;
-    background-color: #fff; /* Keep background white on hover */
+@media (hover: hover) {
+    .sj-card:hover, .sj-card.selected:hover {
+        translate: 0 -10px;
+    }
+    .sj-card__red:hover,
+    .sj-card__red.selected:hover
+    {
+        color: #d32f2f !important;
+    }
+    .sj-card__black:hover,
+    .sj-card__black.selected:hover
+    {
+        color: #000 !important;
+    }
 }
 
-.sj-card--red, 
-.sj-card--red:hover,
-.sj-card--red.selected,
-.sj-card--red.selected:hover
+.sj-card__red,
+.sj-card__red.selected
 {
     color: #d32f2f !important;
 }
 
-.sj-card--black,
-.sj-card--black:hover,
-.sj-card--black.selected,
-.sj-card--black.selected:hover
+.sj-card__black,
+.sj-card__black.selected
 {
     color: #000 !important;
 }

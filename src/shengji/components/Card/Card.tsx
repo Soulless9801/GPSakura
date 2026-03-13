@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
-import * as ShengJiCore from "/src/shengji/core/entities";
+
+import { Card as CardType } from "/src/shengji/core/entities";
 
 import "./Card.css";
 
-const suitToEntity = {
+const suitToEntity: Record<string, string> = {
 	spades: "\u2660",
 	hearts: "\u2665",
 	diamonds: "\u2666",
@@ -11,22 +12,20 @@ const suitToEntity = {
 	jokers: "王"
 };
 
-const rankToLabel = {
+const rankToLabel: Record<number, string> = {
 	11: "J",
 	12: "Q",
 	13: "K",
 	14: "A",
 };
 
-export default function Card({ card, className = "", onClick = null }) {
+interface CardProps {
+	card: CardType | null;
+	className?: string;
+	onClick?: ((card: CardType, active: boolean) => void) | null;
+}
 
-	if (!card) return null;
-
-	const isJoker = card.suit === "jokers";
-	const isRed = card.suit === "hearts" || card.suit === "diamonds" || (isJoker && card.rank === 2);
-
-	const rank = isJoker ? (card.rank === 2 ? "大" : "小") : rankToLabel[card.rank] || String(card.rank);
-	const suit = suitToEntity[card.suit] || "?";
+export default function Card({ card, className = "", onClick = null }: CardProps) {
 
 	const [active, setActive] = useState(false);
 
@@ -37,12 +36,20 @@ export default function Card({ card, className = "", onClick = null }) {
 	const handleClick = useCallback(() => {
 		const nactive = !active;
 		setActive(nactive);
-		if (onClick) onClick(card, nactive);
+		if (onClick && card) onClick(card, nactive);
 	}, [active, onClick, card]);
+
+	if (!card) return null;
+
+	const isJoker = card.suit === "jokers";
+	const isRed = card.suit === "hearts" || card.suit === "diamonds" || (isJoker && card.rank === 2);
+
+	const rank = isJoker ? (card.rank === 2 ? "大" : "小") : rankToLabel[card.rank] || String(card.rank);
+	const suit = suitToEntity[card.suit] || "?";
 
 	return (
 		<button
-			className={`sj-card ${isRed ? "sj-card--red" : "sj-card--black"} ${className} ${active ? "selected" : ""}`.trim()}
+			className={`sj-card ${isRed ? "sj-card__red" : "sj-card__black"} ${className} ${active ? "selected" : ""}`.trim()}
 			aria-label={`${rank}${card.suit}`}
 			onClick={handleClick}
 		>
