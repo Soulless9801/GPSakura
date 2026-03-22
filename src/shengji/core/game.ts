@@ -10,6 +10,9 @@ type Deck = SJCore.Deck;
 type Hand = SJCore.Hand;
 type Play = SJCore.Play;
 
+type IPlay = SJComp.IPlay;
+type IHand = SJComp.IHand;
+
 export type GameState = {
     // deck: Deck
     round: number // current round number, starting from 1
@@ -44,7 +47,7 @@ export type GameState = {
 }
 
 function nullPlay(): Play {
-    return { cards: [], suit: null};
+    return { cards: [], suit: null };
 }
 
 function replacer(key: string, value: any) {
@@ -224,6 +227,14 @@ export class Game {
         return true;
     }
 
+    private setTrump(idx: number, num: number, suit: Suit) : boolean {
+        this.state.trump.suit = suit;
+        this.state.whodec = idx;
+        this.state.declare = num;
+        if (this.state.round === 1) this.state.zhuang = idx; // 当庄
+        return true;
+    }
+
     callTrump(player: string, trump: Trump) : boolean {
 
         if (this.state.over || (!this.state.draw && !this.state.dip) || !trump.suit) return false;
@@ -240,15 +251,13 @@ export class Game {
 
         if (!hand) return false; // should never happen
 
-        if (trump.suit === "jokers"){
+        if (trump.suit === "jokers"){ // joker declaration
             const joker_s : number = SJCore.getCardCount(hand, { suit: "jokers", rank: 1 });
             const joker_b : number = SJCore.getCardCount(hand, { suit: "jokers", rank: 2 });
 
-            if ((this.state.players.length === 4 && (joker_s + joker_b) >= 3) || 
-                ((joker_s + joker_b >= 4) || Math.max(joker_s, joker_b) >= 3)) { 
-                this.state.trump.suit = null;
-                if (this.state.round === 1) this.state.zhuang = idx;
-                return true;
+            if ((Math.max(joker_s, joker_b) === this.state.players.length / 2) || 
+                (joker_s >= this.state.players.length / 4 && joker_b >= this.state.players.length / 4)) {
+                return this.setTrump(idx, this.state.players.length / 2, "jokers");
             }
 
             return false;
@@ -258,13 +267,7 @@ export class Game {
 
         const cnt: number = SJCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
 
-        if (cnt > this.state.declare){
-            this.state.trump.suit = trump.suit; 
-            this.state.declare = cnt;
-            this.state.whodec = idx;
-            if (this.state.round === 1) this.state.zhuang = idx;
-            return true;
-        } 
+        if (cnt > this.state.declare) return this.setTrump(idx, cnt, trump.suit); // regular declaration
 
         return false;
     }
@@ -315,17 +318,14 @@ export class Game {
     tryPlay(player: string, play: Play) : boolean {
 
         if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
-
         if (this.state.players[this.state.turn] !== player) return false; // wait your turn lil bro
 
         const hand = this.hands.get(player);
-
         if (!hand) return false; // should never happen
 
         // console.log(hand);
 
         const idx : number = Game.find(this.state.players, player);
-
         if (idx === -1) return false; // should never happen
 
         // console.log(`Player index: ${idx}`); 
@@ -336,13 +336,63 @@ export class Game {
 
         // console.log("Validating Play");
 
-        if (!SJComp.isPlayValid(play, lead, hand, this.state.trump)) return false;
+        const iplay : IPlay = SJComp.playToInfo(play, this.state.trump);
+        const ilead : IPlay = SJComp.playToInfo(lead, this.state.trump);
+        const ihand : IHand = SJComp.handToInfo(hand, this.state.trump);
+
+        if (!SJComp.isPlayValid(iplay, ilead, ihand, this.state.trump)) return false;
 
         // console.log(`Player ${player} plays ${SJCore.playToString(play)}`);
 
         this.state.plays[idx] = play;
 
-        if (SJComp.isPlayBigger(play, lead, this.state.trump)) this.state.lead = idx;
+        if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) this.state.lead = idx;
+
+        for (const card of play.cards) {
+            SJCore.removeCardFromHand(card, hand);
+            this.state.points += SJCore.pointValue(card);
+        }
+
+        this.state.turn = (this.state.turn + 1) % this.state.players.length;
+
+        if (this.state.turn == this.state.chu) this.endTrick();
+
+        return true;
+    }
+
+    tryShuai(player: string, play: Play) : boolean {
+        
+        if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
+        if (this.state.players[this.state.turn] !== player) return false; // wait your turn lil bro
+
+        // console.log(hand);
+
+        const idx : number = Game.find(this.state.players, player);
+        if (idx === -1) return false; // should never happen
+
+        // console.log(`Player index: ${idx}`); 
+
+        if (this.state.plays[idx].cards.length > 0) this.state.plays = Array.from({ length: this.state.players.length }, () => (nullPlay())); // reset plays if player is replaying
+
+        const lead : Play = this.state.plays[this.state.lead];
+
+        const hands = Array.from(this.hands.values());
+
+        // console.log("Validating Play");
+
+        const iplay : IPlay = SJComp.playToInfo(play, this.state.trump);
+        const ilead : IPlay = SJComp.playToInfo(lead, this.state.trump);
+
+        // TODO: optimize by caching info
+        if (!SJComp.isShuaiValid(play, lead, idx, hands, this.state.trump)) return false;
+
+        this.state.plays[idx] = play;
+
+        const hand = this.hands.get(player);
+
+        if (!hand) return false; // should never happen
+
+        if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) this.state.lead = idx;
 
         for (const card of play.cards) {
             SJCore.removeCardFromHand(card, hand);

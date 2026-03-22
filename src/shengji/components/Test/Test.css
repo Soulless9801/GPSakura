@@ -1,3 +1,7 @@
 .sjTest {
     gap: 1rem;
 }
+.sjTestForm {
+    display: flex;
+    gap: 10px;
+}

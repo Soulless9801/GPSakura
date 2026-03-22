@@ -84,5 +84,5 @@ export function removeCardFromHand(card: Card, hand: Hand): void {
 
 export interface Play {
     cards: Card[];
-    suit: Suit | null;
+    suit: Suit | null; // optional suit for non-single plays
 }
