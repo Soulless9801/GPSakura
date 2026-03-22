@@ -165,11 +165,11 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                         </div>
                         <div className="sjg-info">
                             <p>Trump: <strong>{game.trump.rank}</strong></p>
-                            <p>Zhuang: <strong>{game.users[game.zhuang]}</strong></p>
+                            <p>Zhuang (庄):  <strong>{game.users[game.zhuang]}</strong></p>
                         </div>
                         <div className="sjg-info">
                             <p>Team: {(team === -1 ? "Spectator" : (game.atk === team) ? "Attack" : "Defense")}</p>
-                            <p>Points: <strong>{game.score}</strong></p>
+                            <p>Points (分): <strong>{game.score}</strong></p>
                         </div>
                         <div className="sjg-info">
                             <p>Lead: <strong>{game.users[game.lead]}</strong></p>
@@ -193,7 +193,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                         <div className="sjg-dipai">
                             {ably?.auth.clientId === game.players[game.zhuang] && (
                                 <>
-                                    <p>Dipai</p>
+                                    <p>Dipai (底牌)</p>
                                     <Hand ref={dipaiRef} cards={dipai || []} className="sjg-hand__wrapper"/>
                                     <div className="sjg-button__group">
                                         <button className="sjg-button__game" onClick={() => exchangeDipai()}>Exchange Dipai</button>
@@ -222,7 +222,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                                         <button className="sjg-button__game" onClick={() => playCards()}>Play Cards</button>
                                     )}
                                     {(phase === "dipai" || phase === "draw") && (
-                                        <button className="sjg-button__game" onClick={() => callTrump()}>Call Trump</button>
+                                        <button className="sjg-button__game" onClick={() => callTrump()}>Call Trump (亮)</button>
                                     )}
                                     <button className="sjg-button__game" onClick={() => getHand()}>Refresh Hand</button>
                                 </div>

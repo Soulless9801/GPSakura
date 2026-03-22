@@ -20,13 +20,15 @@ export default function Test() {
     const testCardRef = useRef<HandRef>(null);
 
     useEffect(() => {
-        setCards(SJConv.handToCards(testCase?.hand || SJCore.initializeHand(), testCase?.trump || null));
+        setCards(SJConv.handToCards(testCase?.ihand.hand || SJCore.initializeHand(), testCase?.trump || null));
     }, [testCase]);
 
     return (
         <div className="sjTest">
-            <button onClick={newTestCase}>Generate Testcase</button>
-            <button onClick={() => setTestCase(null)}>Clear Testcase</button>
+            <div className="sjTestForm">
+                <button onClick={newTestCase}>Generate Testcase</button>
+                <button onClick={() => setTestCase(null)}>Clear Testcase</button>
+            </div>
             {testCase && (
                 <div>
                     <hr />
@@ -36,23 +38,23 @@ export default function Test() {
                     </div>
                     <div>
                         <h3>Lead</h3>
-                        <pre>{SJConv.playToString(testCase.lead)}</pre>
+                        <pre>{SJConv.playToString(testCase.ilead.play)}</pre>
                     </div>
                     <div>
                         <h3>Play</h3>
-                        <pre>{SJConv.playToString(testCase.play)}</pre>
+                        <pre>{SJConv.playToString(testCase.iplay.play)}</pre>
                     </div>
                     <div>
                         <h3>Hand</h3>
-                        <pre>{SJConv.handToString(testCase.hand, testCase.trump)}</pre>
+                        <pre>{SJConv.handToString(testCase.ihand.hand, testCase.trump)}</pre>
                     </div>
                     <div>
                         <h3>AI Thinks</h3>
                         <div>
-                            <span>Valid? </span> <pre>{SJComp.isPlayValid(testCase.play, testCase.lead, testCase.hand, testCase.trump) ? "Yes" : "No"}</pre>
+                            <span>Valid? </span> <pre>{SJComp.isPlayValid(testCase.iplay, testCase.ilead, testCase.ihand, testCase.trump) ? "Yes" : "No"}</pre>
                         </div>
                         <div>
-                            <span>Bigger? </span> <pre>{SJComp.isPlayBigger(testCase.play, testCase.lead, testCase.trump) ? "Yes" : "No"}</pre>
+                            <span>Bigger? </span> <pre>{SJComp.isPlayBigger(testCase.iplay, testCase.ilead, testCase.trump) ? "Yes" : "No"}</pre>
                         </div>
                     </div>
                 </div>

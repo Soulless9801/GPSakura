@@ -19,7 +19,7 @@ export default function ShengJi(){
     return (
         <StrictMode>
             <Navbar />
-            <PageTitle title="Sheng Ji" description="Sheng Ji Testing Grounds"/>
+            <PageTitle title="升级" description="Tractor Testing Grounds"/>
             <ShengJiApp />
         </StrictMode>
     )

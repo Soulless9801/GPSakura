@@ -7,9 +7,9 @@ export default function ShengJiApp() {
 
     return (
         <div className="sjWrapper">
-            <Test />
-            <hr />
             <Join />
+            <hr />
+            <Test />
         </div>
     );
 }

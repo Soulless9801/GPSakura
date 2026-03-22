@@ -185,7 +185,7 @@ export async function handler(event) {
 
         if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
 
-            // return errorJSON("Speed draw is disabled", 403);
+            return errorJSON("Speed draw is disabled", 403);
 
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
@@ -288,6 +288,25 @@ export async function handler(event) {
             // console.log(`Client ${clientId} attempts to play: ${JSON.stringify(play)}`);
 
             if (!game.tryPlay(clientId, play)) return errorJSON("Invalid play");
+
+            const ser_game = game.serializeGame();
+            await saveGame(redis, roomId, ser_game);
+            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+
+            const hand = game.getHand(clientId);
+            return successJSON({ hand: SJGame.Game.serialize(hand) });
+        }
+
+        if (action === "shuai") { // ACTION: GAMBLE
+
+            if (!clientId) return errorJSON("Missing clientId");
+
+            const game = await getGame();
+            if (!game) return errorJSON("Game not found");
+            
+            const play = JSON.parse(payload && payload.play);
+
+            if (!game.tryShuai(clientId, play)) return errorJSON("Invalid shuai");
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);

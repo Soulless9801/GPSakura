@@ -31,19 +31,19 @@ export default function Join() {
     };
 
     return (
-        <div>
+        <div className="sjJoin">
             {!roomId || !username ? (   
                 <div>
-                    <div>
+                    <div className="sjJoinForm">
                         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
                         <input type="text" placeholder="Room ID" value={tempId} onChange={(e) => setTempId(e.target.value)} />
                         <button onClick={() => joinRoom()}>Join Room</button>
+                        {prevRoom && prevUser && (
+                            <button onClick={() => rejoinRoom()} className="sjRejoinCard">
+                                Rejoin Room <strong>{prevRoom}</strong> as <strong>{prevUser}</strong>
+                            </button>
+                        )}
                     </div>
-                    {prevRoom && prevUser && (
-                        <button onClick={() => rejoinRoom()}>
-                            Rejoin Room <strong>{prevRoom}</strong> as <strong>{prevUser}</strong>
-                        </button>
-                    )}
                 </div>
             ) : (
                 <div className="sjGame">

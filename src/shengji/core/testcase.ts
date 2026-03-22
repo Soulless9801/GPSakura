@@ -9,10 +9,15 @@ type Deck = SJCore.Deck;
 type Hand = SJCore.Hand;
 type Play = SJCore.Play;
 
+type IPlay = SJComp.IPlay;
+type IHand = SJComp.IHand;
+
+// TODO: buff testcase generation
+
 export interface TestCase {
-    hand: Hand;
-    lead: Play;
-    play: Play;
+    ihand: IHand;
+    ilead: IPlay;
+    iplay: IPlay;
     trump: Trump;
 }
 
@@ -106,8 +111,8 @@ function randomLeadTrick(rng: RNG, suit: Suit | null): Play {
 
     const play: Play = { cards: [card], suit: card.suit };
 
-    if (kindroll > 0.4) play.cards.push(card);    
-    if (kindroll > 0.7) play.cards.push(card);
+    if (kindroll > 0.2) play.cards.push(card);    
+    if (kindroll > 0.5) play.cards.push(card);
 
     return play;
 }
@@ -170,20 +175,22 @@ export function genTestCase(): TestCase {
 
     const lead : Play = randomLead(rng, trump);
 
-    const leadstruct : { len: number; count: number; list: Card[] } | null = SJComp.getPlayStruct(lead, trump);
+    const ilead = SJComp.playToInfo(lead, trump);
+
+    const leadstruct : { len: number; count: number; list: Card[] } | null = SJComp.getPlayStruct(lead, ilead.ihand, trump);
 
     if (leadstruct === null) return genTestCase(); // retry if leadstruct is null
 
-    const play : Play = { cards: [], suit: lead.suit };
+    const play : Play = { cards: [], suit: SJComp.isMainLine(lead.cards[0], trump) ? null : lead.suit };
     
     for (let i = 0; i < leadstruct.len; i++){
 
-        let trick : Play = randomLeadTrick(rng, lead.suit);
+        let trick : Play = randomLeadTrick(rng, lead.suit || null);
 
         let val : boolean = trick.cards.length <= leadstruct.count;
 
         while (!val) {
-            trick = randomLeadTrick(rng, lead.suit);
+            trick = randomLeadTrick(rng, lead.suit || null);
             val = trick.cards.length <= leadstruct.count;
         }
 
@@ -199,12 +206,13 @@ export function genTestCase(): TestCase {
         SJCore.addCardToHand(card, hand); // ensure the play cards are in hand
     }
 
-    SJComp.sortCards(play.cards, trump);
+    const iplay = SJComp.playToInfo(play, trump);
+    const ihand = SJComp.handToInfo(hand, trump);
 
     return {
-        hand: hand,
-        lead: lead,
-        play: play,
+        ihand: ihand,
+        ilead: ilead,
+        iplay: iplay,
         trump: trump
     }
 }
