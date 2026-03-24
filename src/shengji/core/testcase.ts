@@ -12,14 +12,15 @@ type Play = SJCore.Play;
 type IPlay = SJComp.IPlay;
 type IHand = SJComp.IHand;
 
-// TODO: buff testcase generation
-
+// OBJECT
 export interface TestCase {
     ihand: IHand;
     ilead: IPlay;
     iplay: IPlay;
     trump: Trump;
 }
+
+// RNG
 
 class RNG {
     private state: number;
@@ -51,9 +52,13 @@ class RNG {
     }
 }
 
+// TYPES
 const SUITS = ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[];
 const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] as Rank[];
 
+// CARD FUNCTIONS
+
+// get card from data, return null if invalid
 function getCardFromData(data: number[], suit: Suit, trump: Trump): Card | null {
     const card : Card = { suit: suit, rank: data[3] as Rank };
 
@@ -76,6 +81,15 @@ function getCardFromData(data: number[], suit: Suit, trump: Trump): Card | null 
     return null;
 }
 
+// get next card
+function getNextCard(card: Card | null, trump: Trump): Card | null {
+    if (!card) return null;
+    const data : number[] | null = SJComp.getNextCardData(card, trump);
+    if (!data) return null;
+    return getCardFromData(data, card.suit, trump);
+}
+
+// generate random valid card
 function genCard(rng: RNG) : Card {
 
     const card : Card = {
@@ -95,69 +109,11 @@ function genCard(rng: RNG) : Card {
     return card
 }
 
-function randomLeadTrick(rng: RNG, suit: Suit | null): Play {
 
-    const kindroll = rng.next();
+// GENERATION
 
-    let card : Card = genCard(rng);
-
-    let val : boolean = suit === null || card.suit === suit;
-
-    while (!val) {
-        card = genCard(rng);
-
-        val = card.suit === suit;
-    }   
-
-    const play: Play = { cards: [card], suit: card.suit };
-
-    if (kindroll > 0.2) play.cards.push(card);    
-    if (kindroll > 0.5) play.cards.push(card);
-
-    return play;
-}
-
-function randomLead(rng: RNG, trump: Trump): Play {
-
-    const trick : Play = randomLeadTrick(rng, null);
-
-    const trickCount : number = rng.int(1, 3);
-    if (trickCount === 1 || trick.cards.length === 1) return trick;
-    
-    const suit : Suit = trick.suit || "jokers"; // just in case, should never be null here
-
-    const play: Play = { cards: [], suit: trick.suit };
-
-    for (const card of trick.cards){
-        play.cards.push(card);
-        let nxt : Card | null = card;
-        for (let i = 1; i < trickCount; i++) {
-            const nxtdata : number[] | null = SJComp.getNextCardData(nxt, trump);
-            if (!nxtdata) break;
-            nxt = getCardFromData(nxtdata, suit, trump);
-            if (!nxt) break; // just in case
-            play.cards.push(nxt);
-        }
-    }
-
-    SJComp.sortCards(play.cards, trump);
-
-    return play;
-}
-
-export function genTestCase(): TestCase {
-
-    const deck : Deck = SJCore.initializeDeck(2);
-    const hand : Hand = SJCore.initializeHand();
-
-    const handSize : number = 8; // extra cards
-
-    for (let i = 0; i < handSize; i++) {
-        const card = SJCore.drawCard(deck);
-        if (card) SJCore.addCardToHand(card, hand);
-    }
-
-    const rng : RNG = new RNG(Date.now());
+// generate a random valid trump
+function randomTrump(rng: RNG): Trump {
 
     const trumpcard : Card = genCard(rng);
 
@@ -173,25 +129,115 @@ export function genTestCase(): TestCase {
         rank: trumpcard.rank
     };
 
-    const lead : Play = randomLead(rng, trump);
+    return trump;
+}
 
-    const ilead = SJComp.playToInfo(lead, trump);
+// generates a trick, any suit if suit is null, otherwise must be the specified suit
+function randomTrick(rng: RNG, suit: Suit | null): Play {
 
-    const leadstruct : { len: number; count: number; list: Card[] } | null = SJComp.getPlayStruct(lead, ilead.ihand, trump);
+    const kindroll = rng.next();
 
-    if (leadstruct === null) return genTestCase(); // retry if leadstruct is null
+    let card : Card = genCard(rng);
 
-    const play : Play = { cards: [], suit: SJComp.isMainLine(lead.cards[0], trump) ? null : lead.suit };
+    let val : boolean = suit === null || card.suit === suit;
+
+    while (!val) {
+        card = genCard(rng);
+        val = card.suit === suit;
+    }   
+
+    const play: Play = { cards: [card], suit: card.suit };
+
+    if (kindroll > 0.2) play.cards.push(card);    
+    if (kindroll > 0.5) play.cards.push(card);
+
+    return play;
+}
+
+// generate a random play
+function randomLeadPlay(rng: RNG, trump: Trump): Play {
+
+    const trick : Play = randomTrick(rng, null);
+
+    if (trick.cards.length === 1) return trick;
+
+    let trick_count : number = 1;
+    const trick_rng = rng.next();
+
+    if (trick_rng > 0.2) trick_count++;
+    if (trick_rng > 0.5) trick_count++;
+
+    if (trick_count === 1) return trick;
+
+    const play: Play = { cards: [], suit: trick.suit };
+
+    for (const card of trick.cards){
+        play.cards.push(card);
+        let nxt : Card | null = card;
+        for (let i = 1; i < trick_count; i++) {
+            nxt = getNextCard(nxt, trump); // just in case
+            if (!nxt) break;
+            play.cards.push(nxt);
+        }
+    }
+
+    return play;
+}
+
+// generates a random play and hand to "follow" a lead
+function randomFollowPlay(rng: RNG, ilead: IPlay, trump: Trump): { play: Play, hand: Hand } {
+
+    const deck : Deck = SJCore.initializeDeck(1);
+    const hand : Hand = SJCore.initializeHand();
+
+    const extra : number = 8; // extra cards
+
+    for (let i = 0; i < extra; i++) {
+        const card = SJCore.drawCard(deck);
+        const card_rng = rng.next();
+        if (card) {
+            SJCore.addCardToHand(card, hand);
+            if (card_rng > 0.5) SJCore.addCardToHand(card, hand);
+            if (card_rng > 0.8) SJCore.addCardToHand(card, hand);
+        }
+    }
+
+    const lead = ilead.play;
+    const lead_struct = ilead.struct;
+
+    // console.log(lead_struct);
+
+    const n : number = lead_struct.cards[0].length;
+    const m : number = lead_struct.count[0];
+
+    // console.log(ilead);
+
+    const play : Play = { cards: [], suit: lead.suit };
+
+    let nxt : Card | null = null;
     
-    for (let i = 0; i < leadstruct.len; i++){
+    for (let i = 0; i < n; i++){
 
-        let trick : Play = randomLeadTrick(rng, lead.suit || null);
+        const next_rng = rng.next();
+        nxt = getNextCard(nxt, trump);
 
-        let val : boolean = trick.cards.length <= leadstruct.count;
+        let trick : Play = { cards: [], suit: play.suit };
 
-        while (!val) {
-            trick = randomLeadTrick(rng, lead.suit || null);
-            val = trick.cards.length <= leadstruct.count;
+        if (nxt && next_rng > 0.2) { // make tractor
+            for (let j = 0; j < m; j++) {
+                trick.cards.push(nxt);
+            }
+        } else {
+            trick = randomTrick(rng, play.suit);
+
+            let val : boolean = trick.cards.length <= m;
+
+            while (!val) {
+                trick = randomTrick(rng, play.suit);
+                val = trick.cards.length <= m;
+            }
+
+            nxt = trick.cards[0];
         }
 
         for (const card of trick.cards) {
@@ -206,8 +252,25 @@ export function genTestCase(): TestCase {
         SJCore.addCardToHand(card, hand); // ensure the play cards are in hand
     }
 
-    const iplay = SJComp.playToInfo(play, trump);
-    const ihand = SJComp.handToInfo(hand, trump);
+    return { play, hand };
+}
+
+export function genTestCase(): TestCase {
+
+    const rng : RNG = new RNG(Date.now());
+
+    const trump : Trump = randomTrump(rng);
+
+    // console.log("Trump:", trump);
+
+    const lead : Play = randomLeadPlay(rng, trump);
+    // console.log("Lead:", lead);
+    const ilead = SJComp.playToInfo(lead, trump);
+
+    const play_hand : { play: Play, hand: Hand } = randomFollowPlay(rng, ilead, trump);
+
+    const iplay = SJComp.playToInfo(play_hand.play, trump);
+    const ihand = SJComp.handToInfo(play_hand.hand, trump);
 
     return {
         ihand: ihand,
@@ -215,4 +278,5 @@ export function genTestCase(): TestCase {
         iplay: iplay,
         trump: trump
     }
+
 }
