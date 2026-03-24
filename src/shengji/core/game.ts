@@ -13,6 +13,7 @@ type Play = SJCore.Play;
 type IPlay = SJComp.IPlay;
 type IHand = SJComp.IHand;
 
+// TODO: add PlayerInfo type to wrap variables like username, index, hand, play etc.
 export type GameState = {
     // deck: Deck
     round: number // current round number, starting from 1
@@ -125,7 +126,7 @@ export class Game {
     // this.state logic methods
 
     initializeGame(players: string[], users: string[]) {
-        if (players.length < Game.minPlayers || players.length % 2 == 1 || players.length > Game.maxPlayers) return null;
+        if (players.length < Game.minPlayers || players.length % 2 === 1 || players.length > Game.maxPlayers) return null;
     
         this.state = {
             // deck: SJCore.initializeDeck(players.length / 2),
@@ -201,15 +202,12 @@ export class Game {
     drawCard(player: string) : boolean {
 
         if (this.state.over || !this.state.draw) return false; // not drawing phase
-
         if (this.state.players[this.state.turn] !== player) return false; // wait your turn lil bro
         
         const card = SJCore.drawCard(this.deck);
-
         if (!card) return false; // deck is empty, should never happen
 
         const hand = this.hands.get(player);
-
         if (!hand) return false; // should never happen
 
         SJCore.addCardToHand(card, hand);
@@ -241,15 +239,13 @@ export class Game {
 
         // console.log(`Player ${player} calls trump ${SJCore.trumpToString(trump)}`);
 
-        const idx : number = Game.find(this.state.players, player);
-
-        if (idx === -1) return false; // should never happen
-
         // console.log(`Player index: ${idx}`);
 
         const hand = this.hands.get(player);
-
         if (!hand) return false; // should never happen
+
+        const idx : number = Game.find(this.state.players, player);
+        if (idx === -1) return false; // should never happen
 
         if (trump.suit === "jokers"){ // joker declaration
             const joker_s : number = SJCore.getCardCount(hand, { suit: "jokers", rank: 1 });
@@ -266,7 +262,6 @@ export class Game {
         if (this.state.trump.rank !== trump.rank) return false; // only call same rank
 
         const cnt: number = SJCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
-
         if (cnt > this.state.declare) return this.setTrump(idx, cnt, trump.suit); // regular declaration
 
         return false;
@@ -275,40 +270,35 @@ export class Game {
     exchangeDipai(player: string, give: Card[], receive: Card[]) : boolean {
         
         if (this.state.over || !this.state.dip) return false;
-
         if (this.state.players[this.state.zhuang] !== player) return false;
 
         if (give.length !== receive.length) return false; // must exchange same number of cards
 
-        console.log(give, receive); 
+        // console.log(give, receive); 
 
         const hand = this.hands.get(player);
-
         if (!hand) return false; // should never happen
 
-        const play_hand : Hand | null = SJComp.isPlaySubset({ cards: give } as Play, hand);
+        const igive = SJComp.playToInfo({ cards: give, suit: null }, this.state.trump);
+        const ihand = SJComp.handToInfo(hand, this.state.trump);
 
-        if (!play_hand) return false;
+        const ireceive = SJComp.playToInfo({ cards: receive, suit: null }, this.state.trump);
+        const idipai = SJComp.playToInfo({ cards: this.dipai, suit: null }, this.state.trump);
 
-        const dipai_hand : Hand = SJCore.initializeHand();
-
-        for (const card of this.dipai) SJCore.addCardToHand(card, dipai_hand);
-
-        const dip_hand : Hand | null = SJComp.isPlaySubset({ cards: receive } as Play, dipai_hand);
-
-        if (!dip_hand) return false;
+        if (!SJComp.isSubset(igive, ihand)) return false; // must give cards in hand
+        if (!SJComp.isSubset(ireceive, idipai.ihand)) return false; // must receive cards in dipai
 
         for (const card of give){
             SJCore.removeCardFromHand(card, hand);
-            SJCore.addCardToHand(card, dipai_hand);
+            SJCore.addCardToHand(card, idipai.ihand.hand);
         }
 
         for (const card of receive){
             SJCore.addCardToHand(card, hand);
-            SJCore.removeCardFromHand(card, dipai_hand);
+            SJCore.removeCardFromHand(card, idipai.ihand.hand);
         }
 
-        this.dipai = SJConv.handToCards(dipai_hand, null); // convert back to array
+        this.dipai = SJConv.handToCards(idipai.ihand.hand, null); // convert back to array
 
         this.state.dip = false; // time to play!
 
@@ -355,7 +345,7 @@ export class Game {
 
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
 
-        if (this.state.turn == this.state.chu) this.endTrick();
+        if (this.state.turn === this.state.chu) this.endTrick();
 
         return true;
     }
@@ -367,6 +357,9 @@ export class Game {
 
         // console.log(hand);
 
+        const hand = this.hands.get(player);
+        if (!hand) return false; // should never happen
+
         const idx : number = Game.find(this.state.players, player);
         if (idx === -1) return false; // should never happen
 
@@ -376,21 +369,23 @@ export class Game {
 
         const lead : Play = this.state.plays[this.state.lead];
 
-        const hands = Array.from(this.hands.values());
+        const hands : Hand[] = [];
+        
+        for (const [key, value] of this.hands){
+            if (key === player) continue;
+            hands.push(value);
+        }
 
         // console.log("Validating Play");
 
         const iplay : IPlay = SJComp.playToInfo(play, this.state.trump);
         const ilead : IPlay = SJComp.playToInfo(lead, this.state.trump);
+        const ihand : IHand = SJComp.handToInfo(hand, this.state.trump);
 
         // TODO: optimize by caching info
-        if (!SJComp.isShuaiValid(play, lead, idx, hands, this.state.trump)) return false;
+        if (!SJComp.isShuaiValid(iplay, ilead, ihand, hands, this.state.trump)) return false;
 
         this.state.plays[idx] = play;
-
-        const hand = this.hands.get(player);
-
-        if (!hand) return false; // should never happen
 
         if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) this.state.lead = idx;
 
@@ -401,7 +396,7 @@ export class Game {
 
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
 
-        if (this.state.turn == this.state.chu) this.endTrick();
+        if (this.state.turn === this.state.chu) this.endTrick();
 
         return true;
     }
