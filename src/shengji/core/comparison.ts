@@ -85,8 +85,15 @@ export function getPlayStruct(ihand: IHand, trump: Trump): { cards: Card[][], co
         if ((cnt === count) && (lst.length > 0 && isCardNext(card, lst[lst.length - 1], trump))) lst.push(card);
         else {
             if (lst.length > 0) {
-                ret_cards.push([...lst]);
-                ret_count.push(count);
+                if (count === 1){
+                    for (const card of lst){
+                        ret_cards.push([card]);
+                        ret_count.push(1);
+                    }
+                } else {
+                    ret_cards.push([...lst]);
+                    ret_count.push(count);
+                }
             }
             count = cnt;
             lst.length = 0; // clear array
@@ -95,8 +102,15 @@ export function getPlayStruct(ihand: IHand, trump: Trump): { cards: Card[][], co
     }
 
     if (lst.length > 0) {
-        ret_cards.push([...lst]);
-        ret_count.push(count);
+        if (count === 1){ // no tlj for trick size 1
+            for (const card of lst){
+                ret_cards.push([card]);
+                ret_count.push(1);
+            }
+        } else {
+            ret_cards.push([...lst]);
+            ret_count.push(count);
+        }
     }
 
     return { cards: ret_cards, count: ret_count };
@@ -183,6 +197,7 @@ function isTrumpSuit(card: Card, trump: Trump): boolean {
 }
 
 function isTrumpRank(card: Card, trump: Trump): boolean {
+    if (isJoker(card)) return false; // joker technically has no rank
     return card.rank === trump.rank;
 }
 
@@ -574,6 +589,8 @@ export function isPlayBigger(iplay_a: IPlay, iplay_b: IPlay, trump: Trump): bool
 // check if shuai can be beaten by some part of hand
 function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
 
+    // console.log("Hand Struct:", iplay.struct.cards);
+
     for (let i = 0; i < iplay.struct.cards.length; i++){
         const cards : Card[] = iplay.struct.cards[i];
         const count : number = iplay.struct.count[i];
@@ -583,25 +600,30 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
 
         const lead : Card = cards[n - 1];
 
+        // console.log("Lead Card:", lead);
+
         let cnt : number = 0;
         let lst : Card | null = null;
 
         for (let i = ihand.struct.cards.length - 1; i >= 0; i--) {
             const card : Card = ihand.struct.cards[i];
             const count : number = ihand.struct.count[i];
+            // console.log("Checking:", card);
             if (!checkInline(card, lead, trump)){
                 cnt = 0;
                 lst = null;
-            }
-            else if (count != m || (lst && !isCardNext(lst, card, trump))) {
+                // console.log("Unsame");
+            } else if (count != m || !lst || (lst && !isCardNext(lst, card, trump))) {
                 if (!isCardBigger(card, lead, trump)) break;
                 cnt = 1;
                 lst = card;
+                // console.log("New Sequence");
             } else {
                 cnt++;
                 lst = card;
-                if (cnt >= n) return true;
+                // console.log("Add Sequence");
             }
+            if (cnt >= n) return true;
         }
     }
 
@@ -652,7 +674,7 @@ export function isShuaiValid(iplay: IPlay, ilead: IPlay, ihand: IHand, hands: Ha
         for (let i = 0; i < hands.length; i++) {
             const iihand = handToInfo(hands[i], trump);
             if (isBeatable(iplay, iihand, trump)) {
-                console.log("Shuai is beatable by hand:", hands[i]);
+                // console.log("Shuai is beatable by hand:", hands[i]);
                 return false;
             }
         }
