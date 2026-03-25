@@ -88,10 +88,25 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
 
     async function playCards() {
         const cards = handRef.current?.getActiveCards() || [];
-        const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) };
+        const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
         const res = await clientRequest({
             roomId,
             action: "play",
+            clientId: ably?.auth.clientId,
+            payload: {
+                play: JSON.stringify(play),
+            }
+        });
+
+        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+    }
+
+    async function shuaiCards() {
+        const cards = handRef.current?.getActiveCards() || [];
+        const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
+        const res = await clientRequest({
+            roomId,
+            action: "shuai",
             clientId: ably?.auth.clientId,
             payload: {
                 play: JSON.stringify(play),
@@ -108,7 +123,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
             clientId: ably?.auth.clientId,
         });
 
-        if (res?.dipai) setDipai(JSON.parse(res.dipai) as SJCore.Card[]);
+        if (res?.dipai) setDipai(SJGame.Game.deserialize(res.dipai) as SJCore.Card[]);
     }
 
     async function exchangeDipai() {
@@ -161,29 +176,29 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                         <div className="sjg-trump">
                             <p>Trump</p>
                             <Card card={SJConv.trumpToCard(game.trump)} />
-                            <p>Declared <strong>{game.declare}</strong>x by <strong>{game.users[game.whodec]}</strong></p>
+                            <p>Declared <strong>{game.declare}</strong>x by <strong>{game.info.get(game.players[game.whodec])?.username}</strong></p>
                         </div>
                         <div className="sjg-info">
                             <p>Trump: <strong>{game.trump.rank}</strong></p>
-                            <p>Zhuang (庄):  <strong>{game.users[game.zhuang]}</strong></p>
+                            <p>Zhuang (庄):  <strong>{game.info.get(game.players[game.zhuang])?.username}</strong></p>
                         </div>
                         <div className="sjg-info">
                             <p>Team: {(team === -1 ? "Spectator" : (game.atk === team) ? "Attack" : "Defense")}</p>
                             <p>Points (分): <strong>{game.score}</strong></p>
                         </div>
                         <div className="sjg-info">
-                            <p>Lead: <strong>{game.users[game.lead]}</strong></p>
-                            <p>Turn: <strong>{game.users[game.turn]}</strong></p>
+                            <p>Lead: <strong>{game.info.get(game.players[game.lead])?.username}</strong></p>
+                            <p>Turn: <strong>{game.info.get(game.players[game.turn])?.username}</strong></p>
                         </div>
                     </div>
                     <hr />
                     {phase === "play" && (
                         <div className="sjg-play">
                             <div className="sjg-plays">
-                                {game.plays.map((play, i) => (
+                                {game.players.map((player, i) => (
                                     <div key={i} className={`sjg-play__player${i === game.turn ? ' active' : ''}${i === game.lead ? ' lead' : ''}`}>
-                                        <p>{game.users[i]}'s Play</p>
-                                        <Hand cards={play.cards} className="sjg-hand__wrapper"/>
+                                        <p>{game.info.get(player)?.username}'s Play</p>
+                                        <Hand cards={game.info.get(player)?.play?.cards || []} className="sjg-hand__wrapper"/>
                                     </div>
                                 ))}
                             </div>
@@ -201,7 +216,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                                     </div>
                                 </>
                             ) || (
-                                <p>Waiting for <strong>{game.users[game.zhuang]}</strong> to look at their dipai.</p>
+                                <p>Waiting for <strong>{game.info.get(game.players[game.zhuang])?.username}</strong> to look at their dipai.</p>
                             )}
                         </div>
                     )}
@@ -219,7 +234,10 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                                 <Hand ref={handRef} cards={hand ? SJConv.handToCards(hand, game.trump) : []} className="sjg-hand__wrapper"/>
                                 <div className="sjg-button__group">
                                     {phase === "play" && (
-                                        <button className="sjg-button__game" onClick={() => playCards()}>Play Cards</button>
+                                        <>
+                                            <button className="sjg-button__game" onClick={() => playCards()}>Play Cards</button>
+                                            <button className="sjg-button__game" onClick={() => shuaiCards()}>Shuai Cards</button>
+                                        </>
                                     )}
                                     {(phase === "dipai" || phase === "draw") && (
                                         <button className="sjg-button__game" onClick={() => callTrump()}>Call Trump (亮)</button>
@@ -291,7 +309,9 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             clientId: ably?.auth.clientId,
         });
 
-        if (res?.game) setGame(JSON.parse(res.game) as SJGame.GameState);
+        const state = SJGame.Game.deserialize(res.game);
+        console.log(state);
+        if (res?.game) setGame(state as SJGame.GameState);
     }
 
     async function changeUsername(user: string) {
@@ -386,7 +406,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
-                const state = JSON.parse(msg.data.game) as SJGame.GameState;
+                const state = SJGame.Game.deserialize(msg.data.game) as SJGame.GameState;
                 setGame(state);
                 // console.log("Updated:", state);
             });
@@ -410,8 +430,9 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     useEffect(() => {
         if (!game) return;
         // adjust team
-        const idx = SJGame.Game.find(game.players, ably?.auth.clientId || null);
-        if (idx === -1) setTeam(-1); // spectator
+        const idx = game.info.get(ably?.auth.clientId || "")?.index;
+        console.log(idx);
+        if (idx === undefined) setTeam(-1);
         else setTeam(idx % 2);
     }, [game]);
 

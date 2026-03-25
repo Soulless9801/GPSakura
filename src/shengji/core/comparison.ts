@@ -526,7 +526,7 @@ export function isPlayValidUnused(iplay: IPlay, ilead: IPlay, ihand: IHand, trum
 // COMPARISON
 
 // check if play_a and play_b have the same format
-function isFormatted(iplay_a: IPlay, iplay_b: IPlay, trump: Trump): boolean {
+function isFormatted(iplay_a: IPlay, iplay_b: IPlay): boolean {
     
     const struct_a = iplay_a.struct;
     const struct_b = iplay_b.struct;
@@ -561,7 +561,7 @@ export function isPlayBigger(iplay_a: IPlay, iplay_b: IPlay, trump: Trump): bool
 
     // console.log("Play A:", playToString(iplay_a.play));
     // console.log("Play B:", playToString(iplay_b.play));
-    if (!isFormatted(iplay_a, iplay_b, trump)) return false;
+    if (!isFormatted(iplay_a, iplay_b)) return false;
 
     for (let i = iplay_b.play.cards.length - 1; i >= 0; i--) if (!isCardBigger(iplay_a.play.cards[i], iplay_b.play.cards[i], trump)) return false;
     
@@ -639,6 +639,7 @@ function isBeatableUnused(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
     return false;
 }
 
+// FIXME: shuai checking is bugged
 // check if shuai is valid given lead or absence
 export function isShuaiValid(iplay: IPlay, ilead: IPlay, ihand: IHand, hands: Hand[], trump: Trump): boolean {
 
@@ -650,13 +651,15 @@ export function isShuaiValid(iplay: IPlay, ilead: IPlay, ihand: IHand, hands: Ha
 
         for (let i = 0; i < hands.length; i++) {
             const iihand = handToInfo(hands[i], trump);
-            if (isBeatable(iplay, iihand, trump)) return false;
+            if (isBeatable(iplay, iihand, trump)) {
+                console.log("Shuai is beatable by hand:", hands[i]);
+                return false;
+            }
         }
 
         return true;
 
     } else {
-        // TODO: check if non-lead shuai is valid
 
         const lead_struct = ilead.struct;
 
