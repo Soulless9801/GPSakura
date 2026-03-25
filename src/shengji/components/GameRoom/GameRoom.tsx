@@ -310,7 +310,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         });
 
         const state = SJGame.Game.deserialize(res.game);
-        console.log(state);
+        // console.log(state);
         if (res?.game) setGame(state as SJGame.GameState);
     }
 
@@ -431,7 +431,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         if (!game) return;
         // adjust team
         const idx = game.info.get(ably?.auth.clientId || "")?.index;
-        console.log(idx);
+        // console.log(idx);
         if (idx === undefined) setTeam(-1);
         else setTeam(idx % 2);
     }, [game]);
@@ -455,7 +455,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 </div>
             )}
             <GameInfo ably={ably} roomId={roomId} team={team} game={game} />
-            {/*<button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
+            <button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
         </div>
     );
 }

@@ -185,7 +185,7 @@ export async function handler(event) {
 
         if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
 
-            return errorJSON("Speed draw is disabled", 403);
+            // return errorJSON("Speed draw is disabled", 403);
 
             const game = await getGame();
             if (!game) return errorJSON("Game not found");
