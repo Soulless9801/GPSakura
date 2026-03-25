@@ -13,7 +13,7 @@ function errorJSON(message, code = 400) {
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ error: message }),
+        body: SJGame.Game.serialize({ error: message }),
     };
 }
 
@@ -23,7 +23,7 @@ function successJSON(payload = {ok: true}) {
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: SJGame.Game.serialize(payload),
     };
 }
 
@@ -105,7 +105,7 @@ export async function handler(event) {
         async function getGame() {
             const ser_game = await loadGame(redis, roomId);
             if (!ser_game) return null;
-            return SJGame.Game.deserializeGame(JSON.stringify(ser_game));
+            return SJGame.Game.deserializeGame(SJGame.Game.serialize(ser_game));
         }
 
         if (action === "start") { // ACTION: START GAME
@@ -141,7 +141,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             return successJSON({});
         }
@@ -161,7 +161,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             return successJSON({});
         }
@@ -177,7 +177,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
             return successJSON({ hand: SJGame.Game.serialize(hand) });
@@ -194,7 +194,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             return successJSON({});
         }
@@ -205,7 +205,7 @@ export async function handler(event) {
 
             if (!game) return errorJSON("Game not found");
 
-            return successJSON({ game: JSON.stringify(game.getState()) });
+            return successJSON({ game: SJGame.Game.serialize(game.getState()) });
         }
 
         if (action === "hand") { // ACTION: GET HAND
@@ -236,7 +236,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             return successJSON({});
         }
@@ -251,7 +251,7 @@ export async function handler(event) {
             const res = game.getDipai(clientId);
 
             if (!res) return errorJSON("Not the zhuang");
-            return successJSON({ dipai: JSON.stringify(res) });
+            return successJSON({ dipai: SJGame.Game.serialize(res) });
         }
 
         if (action === "exchange") {
@@ -264,13 +264,13 @@ export async function handler(event) {
             const give = JSON.parse(payload && payload.give);
             const receive = JSON.parse(payload && payload.receive);
 
-            // console.log(`Client ${clientId} wants to exchange dipai. Give: ${JSON.stringify(give)}, Receive: ${JSON.stringify(receive)}`);
+            // console.log(`Client ${clientId} wants to exchange dipai. Give: ${SJGame.Game.serialize(give)}, Receive: ${SJGame.Game.serialize(receive)}`);
 
             if (!game.exchangeDipai(clientId, give, receive)) return errorJSON("Failed to exchange Dipai");
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
             return successJSON({ hand: SJGame.Game.serialize(hand) });
@@ -285,13 +285,13 @@ export async function handler(event) {
 
             const play = JSON.parse(payload && payload.play);
 
-            // console.log(`Client ${clientId} attempts to play: ${JSON.stringify(play)}`);
+            // console.log(`Client ${clientId} attempts to play: ${SJGame.Game.serialize(play)}`);
 
             if (!game.tryPlay(clientId, play)) return errorJSON("Invalid play");
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
             return successJSON({ hand: SJGame.Game.serialize(hand) });
@@ -310,7 +310,7 @@ export async function handler(event) {
 
             const ser_game = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
-            await publish(channel, "state_change", { game: JSON.stringify(game.getState()) });
+            await publish(channel, "state_change", { game: SJGame.Game.serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
             return successJSON({ hand: SJGame.Game.serialize(hand) });
