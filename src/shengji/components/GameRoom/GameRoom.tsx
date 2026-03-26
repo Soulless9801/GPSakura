@@ -236,7 +236,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                                     {phase === "play" && (
                                         <>
                                             <button className="sjg-button__game" onClick={() => playCards()}>Play Cards</button>
-                                            <button className="sjg-button__game" onClick={() => shuaiCards()}>Shuai Cards</button>
+                                            <button className="sjg-button__game" onClick={() => shuaiCards()}>Gamble (甩)</button>
                                         </>
                                     )}
                                     {(phase === "dipai" || phase === "draw") && (
@@ -296,6 +296,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     // Game actions
 
     async function startGame() {
+        if (team < 0) return false;
         return clientRequest({
             roomId,
             action: "start",
@@ -328,6 +329,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     // UNUSED / ADMIN FUNCTIONS
 
     async function endGame() {
+        if (team < 0) return false;
         return clientRequest({
             roomId,
             action: "end",
@@ -455,7 +457,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 </div>
             )}
             <GameInfo ably={ably} roomId={roomId} team={team} game={game} />
-            <button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
+            {/*<button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
         </div>
     );
 }
