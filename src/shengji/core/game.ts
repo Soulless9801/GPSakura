@@ -44,40 +44,8 @@ export type GameState = {
 
     chu: number // index of player who started the current trick
 
+    shuai: boolean // if current trick is shuai or not
     lead: number // index of player with biggest play
-    count: number // number left for eahc player
-
-    over: boolean
-    dip: boolean // diapi exchanging or not
-}
-
-type GameStateUnused = {
-    // deck: Deck
-    round: number // current round number, starting from 1
-
-    players: string[]
-    users: string[]
-    // hands: Map<string, Hand> // index corresponds to players
-    atk: number // index of attacking team (0 or 1)
-
-    draw: boolean // currently drawing cards
-    declare: number // curr declare amount
-    whodec: number // index of player who declared trump
-    zhuang: number // index of start player
-
-    trump: Trump
-    alt : Rank; // trump rank of attacking team
-    // dipai: Card[] // cards on the table
-
-    turn: number
-
-    score: number
-    points: number
-
-    chu: number // index of player who started the current trick
-
-    lead: number // index of player with biggest play
-    plays: Play[]
     count: number // number left for eahc player
 
     over: boolean
@@ -190,6 +158,7 @@ export class Game {
 
             chu: 0,
 
+            shuai: false,
             lead: 0,
             count: 0,
 
@@ -219,6 +188,7 @@ export class Game {
         this.state.turn = this.state.zhuang;
         this.state.chu = this.state.zhuang;
         this.state.atk = 1 - (this.state.zhuang % 2);
+        this.state.shuai = false;
         this.state.lead = this.state.zhuang;
         this.state.declare = 0; // reset for next round
     }
@@ -344,6 +314,8 @@ export class Game {
 
     tryPlay(player: string, play: Play) : boolean {
 
+        if (this.state.shuai) return this.tryShuai(player, play); // if currently shuai, try shuai first
+
         if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
         const playerInfo = this.state.info.get(player);
         if (!playerInfo || playerInfo.index !== this.state.turn) return false;
@@ -353,7 +325,7 @@ export class Game {
 
         // console.log(hand);
 
-        if (playerInfo.play && playerInfo.play.cards.length > 0) {
+        if (this.state.turn === this.state.chu) { // start of a new trick, reset plays
             for (const player of this.state.players){
                 const pInfo = this.state.info.get(player);
                 if (pInfo) pInfo.play = null;
@@ -399,7 +371,7 @@ export class Game {
         const hand = this.hands.get(player);
         if (!hand) return false; // should never happen
 
-        if (playerInfo.play && playerInfo.play.cards.length > 0) {
+        if (this.state.turn === this.state.chu) {
             for (const player of this.state.players){
                 const pInfo = this.state.info.get(player);
                 if (pInfo) pInfo.play = null;
@@ -422,6 +394,8 @@ export class Game {
         const ihand : IHand = SJComp.handToInfo(hand, this.state.trump);
 
         if (!SJComp.isShuaiValid(iplay, ilead, ihand, hands, this.state.trump)) return false;
+
+        if (this.state.turn === this.state.chu) this.state.shuai = true;
 
         playerInfo.play = play;
 
@@ -457,6 +431,7 @@ export class Game {
 
         this.state.chu = this.state.lead; // winner of the trick starts the next trick
         this.state.turn = this.state.chu;
+        this.state.shuai = false; // reset shuai for next trick
     }
 
     private swapTeams() : void {

@@ -316,32 +316,6 @@ function getTrickCount(ihand: IHand, lead: Card, trump: Trump): { tricks: Card[]
 }
 
 // return counts of lengths of consecutive cards
-function findMaxConsecutiveUnused(cards: Card[], trump: Trump): number[] {
-
-    if (!cards) return [];
-    
-    sortCards(cards, trump);
-    // console.log("Finding max consecutive in:", cards);
-
-    let len : number = 1;
-
-    const seq : number[] = [];
-    for (let i = 0; i < cards.length - 1; i++) {
-        if (isCardNext(cards[i + 1], cards[i], trump)) len++;
-        else {
-            seq.push(len);
-            len = 1;
-        }
-    }
-
-    seq.sort((a, b) => {
-        return a > b ? 1 : -1;
-    });
-
-    return seq;
-}
-
-
 function findMaxConsecutive(cards: Card[], trump: Trump): number[] {
     
     sortCards(cards, trump);
@@ -406,8 +380,8 @@ function isTrickValid(lead: number[], play: Card[], hand: Card[], trump: Trump):
 
     // TODO: determine ordering or reverse
     for (let i = 0; i < lead.length; i++){
-        console.log("Play Max:", play_max);
-        console.log("Hand Max:", hand_max);
+        // console.log("Play Max:", play_max);
+        // console.log("Hand Max:", hand_max);
         while (lead[i] > 0){
             if (lead[i] === 0) break;
             while (hand_idx > 0 && hand_max[hand_idx] === 0) hand_idx--;
@@ -440,8 +414,8 @@ function isPlayPossible(lead: number[][], iplay: IPlay, ilead: IPlay, ihand: IHa
     const hand_tricks = getTrickCount(ihand, ilead.play.cards[0], trump);
     const play_tricks = getTrickCount(iplay.ihand, ilead.play.cards[0], trump);
 
-    console.log("Hand Tricks:", hand_tricks);
-    console.log("Play Tricks:", play_tricks);
+    // console.log("Hand Tricks:", hand_tricks);
+    // console.log("Play Tricks:", play_tricks);
 
     if (play_tricks.suit_count < Math.min(hand_tricks.suit_count, iplay.play.cards.length)) return false;
 
@@ -453,7 +427,7 @@ function isPlayPossible(lead: number[][], iplay: IPlay, ilead: IPlay, ihand: IHa
         // pop of zeroes (optional)
         while (pos.length > 0 && pos[pos.length - 1] === 0) pos.pop();
         if (pos.length === 0) continue;
-        console.log("Possible Lead:", pos);
+        // console.log("Possible Lead:", pos);
         if (!isTrickValid(pos, play_tricks.tricks[i] || [], hand_tricks.tricks[i] || [], trump)) return false;
     }
 
@@ -480,61 +454,6 @@ export function isPlayValid(iplay: IPlay, ilead: IPlay, ihand: IHand, trump: Tru
     lead[m].push(n);
 
     return isPlayPossible(lead, iplay, ilead, ihand, trump);
-}
-
-export function isPlayValidUnused(iplay: IPlay, ilead: IPlay, ihand: IHand, trump: Trump): boolean {
-
-    // check if play is subset of hand
-    if (!isSubset(iplay, ihand)) return false;
-
-    // get lead play struct
-    const lead_struct = ilead.struct;
-    const play_struct = iplay.struct;
-
-    if (!isPlayStructValid(lead_struct)) return isPlayStructValid(play_struct); // must be valid play struct
-    if (iplay.play.cards.length !== ilead.play.cards.length) return false; // must be same amount of cards
-
-    const n : number = lead_struct.cards[0].length;
-    const m : number = lead_struct.count[0];
-
-    const hand_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(ihand, ilead.play.cards[0], trump);
-    const play_tricks : { tricks: Card[][], suit_count: number } = getTrickCount(iplay.ihand, ilead.play.cards[0], trump);
-
-    if (play_tricks.suit_count < Math.min(hand_tricks.suit_count, iplay.play.cards.length)) return false; // must play all of same suit if have
-
-    let rem_tricks : number = n;
-
-    for (let tix = m; tix >= 2; tix--) {
-
-        const hand_trick : Card[] = hand_tricks.tricks[tix] || [];
-        const play_trick : Card[] = play_tricks.tricks[tix] || [];
-
-        const pos_max : number[] = findMaxConsecutiveUnused(hand_trick, trump);
-        const play_max : number[] = findMaxConsecutiveUnused(play_trick, trump);
-
-        for (let i = 0; i < pos_max.length; i++){
-
-            if (rem_tricks === 0 ) break; // no more tricks to match
-
-            if (play_max.length <= i) return false; // must have enough tricks to match
-
-            const pos : number = Math.min(rem_tricks, pos_max[i]);
-            if (play_max[i] < pos) return false; // if you have something better you must play it
-
-            rem_tricks -= pos;
-        }
-        
-        if (rem_tricks === 0) break;
-
-        // TODO: optimize
-        for (const card_a of hand_trick) {
-            let pres : boolean = false;
-            for (const card_b of play_trick) pres = pres || isCardEqual(card_a, card_b);
-            if (!pres) return false; // if remaining tricks, must play all of current trick type
-        }
-    }
-
-    return true;
 }
 
 
@@ -623,37 +542,6 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
                 lst = card;
                 // console.log("Add Sequence");
             }
-            if (cnt >= n) return true;
-        }
-    }
-
-    return false;
-}
-
-function isBeatableUnused(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
-
-    const lead : Card = iplay.play.cards[iplay.play.cards.length - 1];
-
-    const n : number = iplay.struct.cards[0].length;
-    const m : number = iplay.struct.count[0];
-
-    let cnt : number = 0;
-    let lst : Card | null = null;
-
-    for (let i = ihand.struct.cards.length - 1; i >= 0; i--) {
-        const card : Card = ihand.struct.cards[i];
-        const count : number = ihand.struct.count[i];
-        if (!checkInline(card, lead, trump)){
-            cnt = 0;
-            lst = null;
-        }
-        else if (count != m || (lst && !isCardNext(lst, card, trump))) {
-            if (!isCardBigger(card, lead, trump)) return false;
-            cnt = 1;
-            lst = card;
-        } else {
-            cnt++;
-            lst = card;
             if (cnt >= n) return true;
         }
     }
