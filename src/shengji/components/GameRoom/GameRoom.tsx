@@ -247,7 +247,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                             </div>
                         </div>
                     )}
-                </div>        
+                </div>
             )}
         </div>
     );
@@ -310,9 +310,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             clientId: ably?.auth.clientId,
         });
 
-        const state = SJGame.Game.deserialize(res.game);
-        // console.log(state);
-        if (res?.game) setGame(state as SJGame.GameState);
+        if (res?.game) setGame(SJGame.Game.deserialize(res.game) as SJGame.GameState);
     }
 
     async function changeUsername(user: string) {
@@ -372,6 +370,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         };
     }, [ably]);
 
+    const [ids, setIds] = useState<string[]>([]);
     const [players, setPlayers] = useState<string[]>([]);
     const [teams, setTeams] = useState<number[]>([]);
 
@@ -397,6 +396,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             channel.presence.subscribe((msg) => {
                 if (cancelled) return;
                 channel.presence.get().then(presence => {
+                    setIds(presence.map(p => p.clientId));
                     setPlayers(presence.map(p => p.data.username));
                     setTeams(presence.map(p => p.data.team));
                 });
@@ -437,6 +437,22 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         if (idx === undefined) setTeam(-1);
         else setTeam(idx % 2);
     }, [game]);
+
+    const [rec, setRec] = useState<boolean>(false);
+
+    useEffect(() => {
+
+        if (!game) return;
+
+        let cnt : number = 0;
+
+        for (let i = 0; i < ids.length; i++) if (game.info.get(ids[i])) cnt++;
+
+        // console.log("Players in game:", cnt, "/", game.players.length);
+
+        setRec(cnt !== game.players.length);
+
+    }, [game, ids]);
 
     return (
         <div className="sjg-room">
