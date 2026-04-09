@@ -485,6 +485,7 @@ export default function Fractal({
 
 		return () => {
 			window.removeEventListener("resize", handleResize);
+			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 		};
 
 	}, [type, drawSierpinski, drawKoch, drawFern, drawDragon, drawPythagoras, resizeCanvas]);

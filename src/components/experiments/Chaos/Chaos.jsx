@@ -144,7 +144,7 @@ export default function Chaos({
             dt = Math.min(dt, 0.001);
             lastChaosTimeRef.current = now;
             
-            console.log(pointRef.current);
+            // console.log(pointRef.current);
 
             let { x, y, z } = pointRef.current;
 
@@ -207,6 +207,7 @@ export default function Chaos({
 
 		return () => {
 			window.removeEventListener("resize", handleResize);
+			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 		};
 
 	}, [drawChaos, resizeCanvas]);
