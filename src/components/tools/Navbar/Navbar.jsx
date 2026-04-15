@@ -127,6 +127,7 @@ export default function Navbar() {
                                         { value: 'Cell', label: 'Cell Automata', to: '/cell' },
                                         { value: 'Fractal', label: 'Fractals', to: '/fractals' },
                                         { value: 'Chaos', label: 'Chaotic Attractors', to: '/chaos' },
+                                        { value: '3D', label: '3D Graphics', to: '/3d' },
                                     ]}
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
@@ -138,9 +139,9 @@ export default function Navbar() {
                                 <Select
                                     id="gamesMenu"
                                     options={[
+                                        { value: 'ShengJi', label: '升级', to: '/shengji' },
                                         { value: 'Color', label: 'Color Picker', to: '/color' },
                                         { value: 'Freq', label: 'Frequency Guesser', to: '/freq' },
-                                        { value: 'ShengJi', label: 'Sheng Ji', to: '/shengji' },
                                     ]}
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}
