@@ -22,6 +22,7 @@ A passion project manifested
 - [Bootstrap](https://github.com/twbs/bootstrap)
 - [Motion (formerly Framer Motion)](https://github.com/motiondivision/motion)
 - [Font Awesome Free](https://github.com/FortAwesome/Font-Awesome)
+- [Three.js](https://github.com/mrdoob/three.js)
 
 ### Utilities
 - [jQuery](https://jquery.com)
@@ -32,6 +33,11 @@ A passion project manifested
 
 - [Firebase](https://github.com/firebase/firebase-js-sdk)
 - [dotenv](https://github.com/motdotla/dotenv)
+
+### Services
+
+- [Ably](https://github.com/ably/ably-js)
+- [Upstash Redis](https://github.com/upstash/redis-js)
 
 ### Tools
 
