@@ -25,7 +25,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.6.3",
-    "react-shiki": "^0.9.1"
+    "react-shiki": "^0.9.1",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
