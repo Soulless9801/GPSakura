@@ -4,6 +4,7 @@ import { loadValue } from "/src/utils/storage.js";
 import ExperimentDemo from "/src/components/experiments/ExperimentDemo.jsx";
 
 import Chaos from "./Chaos.jsx";
+import { Chaos3D } from "/src/components/experiments/ThreeD/ThreeD.jsx";
 import Select from "/src/components/tools/Select/Select.jsx";
 import Slider from "/src/components/tools/Slider/Slider.jsx";
 
@@ -25,6 +26,7 @@ export default function ChaosDemo() {
             speedFactor: 5000,
             scaleFactor: 5,
             start: { x: 0.1, y: 0.1, z: 0.1 },
+            view: { x: -30, y: 30, z: 0 },
         },
 
         "aizawa": {
@@ -44,6 +46,7 @@ export default function ChaosDemo() {
             speedFactor: 1000,
             scaleFactor: 100,
             start: { x: 0.1, y: 0, z: 0 },
+            view: { x: 2, y: 2, z: 0 },
         },
 
         "halvorsen": {
@@ -58,6 +61,7 @@ export default function ChaosDemo() {
             speedFactor: 5000,
             scaleFactor: 15,
             start: { x: -6.4, y: 0, z: 0 },
+            view: { x: 20, y: 20, z: 0 },
         }
     };
 
@@ -71,33 +75,60 @@ export default function ChaosDemo() {
     const speedKey = 'chaosDemoSpeed';
     const pitchKey = 'chaosDemoPitch';
     const yawKey = 'chaosDemoYaw';
+    const dimKey = 'chaosDemoDim';
+    const depthKey = 'chaosDemoDepth';
 
     const [type, setType] = useState(() => loadValue(typeKey, 'lorenz'));
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 10));
     const [pitch, setPitch] = useState(() => loadValue(pitchKey, 0));
     const [yaw, setYaw] = useState(() => loadValue(yawKey, 0));
+    const [dim, setDim] = useState(() => loadValue(dimKey, 2));
+    const [depth, setDepth] = useState(() => loadValue(depthKey, 10000));
+
+    const [refresh, setRefresh] = useState(false);
 
     useEffect(() => localStorage.setItem(typeKey, JSON.stringify(type)), [type]);
     useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
     useEffect(() => localStorage.setItem(pitchKey, JSON.stringify(pitch)), [pitch]);
     useEffect(() => localStorage.setItem(yawKey, JSON.stringify(yaw)), [yaw]);
+    useEffect(() => localStorage.setItem(dimKey, JSON.stringify(dim)), [dim]);
+    useEffect(() => localStorage.setItem(depthKey, JSON.stringify(depth)), [depth]);
 
     const display = (
-        <Chaos
-            attractor={attractors[type]}
-            width={"100%"}
-            height={"100%"}
-            speed={speed}
-            pitch={pitch * (Math.PI / 180)}
-            yaw={yaw * (Math.PI / 180)}
-            //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
-        />
+        <>
+            {dim === 2 && (
+                <Chaos
+                    attractor={attractors[type]}
+                    width={"100%"}
+                    height={"100%"}
+                    speed={speed}
+                    pitch={pitch * (Math.PI / 180)}
+                    yaw={yaw * (Math.PI / 180)}
+                    refresh={refresh}
+                    //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
+                />
+            )}
+            {dim === 3 && (
+                <Chaos3D 
+                    attractor={attractors[type]} 
+                    width={"100%"}
+                    height={"100%"}
+                    speed={speed}
+                    refresh={refresh}
+                />
+            )}
+        </>
     );
 
     const controls = (
         <>
             <div className='row g-3'>
-                <div className='col-12'>
+                <div className='col-12 chaosDemoSelects'>
+                    {/* <button
+                        onClick={() => setRefresh(!refresh)}
+                    >
+                        Refresh
+                    </button> */}
                     <Select
                         options={chaosOptions}
                         defaultValue={type}
@@ -106,8 +137,22 @@ export default function ChaosDemo() {
                             setType(value);
                         }}
                         className="chaosDemoSelect"
-                        labelL={"Type"}
+                        labelL="Type"
                         id="chaosDemoSelect"
+                    />
+                    <Select
+                        options={[
+                            { value: 2, label: '2D' },
+                            { value: 3, label: '3D' },
+                        ]}
+                        defaultValue={dim}
+                        onChange={e => {
+                            const value = e.value;
+                            setDim(value);
+                        }}
+                        className="chaosDemoSelect"
+                        labelL="Dimensions"
+                        id="chaosDemoDimSelect"
                     />
                 </div>
                 <hr/>
@@ -122,24 +167,40 @@ export default function ChaosDemo() {
                         label="Speed"
                     />
                 </div>
-                <div className='col-12'>
-                    <Slider 
-                        min={-180} 
-                        max={180} 
-                        value={pitch}
-                        onChange={e => setPitch(e)} 
-                        label="Pitch"
-                    />
-                </div>
-                <div className='col-12'>
-                    <Slider 
-                        min={-180} 
-                        max={180} 
-                        value={yaw}
-                        onChange={e => setYaw(e)} 
-                        label="Yaw"
-                    />
-                </div>
+                {dim === 2 && (
+                    <>
+                        <div className='col-12'>
+                            <Slider 
+                                min={-180} 
+                                max={180} 
+                                value={pitch}
+                                onChange={e => setPitch(e)} 
+                                label="Pitch"
+                            />
+                        </div>
+                        <div className='col-12'>
+                            <Slider 
+                                min={-180} 
+                                max={180} 
+                                value={yaw}
+                                onChange={e => setYaw(e)} 
+                                label="Yaw"
+                            />
+                        </div>
+                    </>
+                )}
+                {dim === 3 && (
+                    <div className='col-12'>
+                        <Slider 
+                            min={1000} 
+                            max={50000} 
+                            value={depth}
+                            step={1000}
+                            onChange={e => setDepth(e)} 
+                            label="Max Points"
+                        />
+                    </div>
+                )}
             </div>
         </>
     );

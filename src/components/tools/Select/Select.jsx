@@ -41,7 +41,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     }, [open, hover]);
 
     return (
-        <>
+        <div className="customSelectWrapper">
             {labelL && <label className="customSelectLabelR">{labelL}</label>}
             <div className="customSelect">
                 <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => {setHover(false); setClosed(false);}}>
@@ -59,6 +59,6 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
                 </div>
             </div>
             {labelR && <label className="customSelectLabelL">{labelR}</label>}
-        </>
+        </div>
     );
 };

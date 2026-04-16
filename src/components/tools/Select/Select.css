@@ -1,9 +1,18 @@
+.customSelectWrapper {
+    display: inline-flex;
+    align-items: center;
+}
+
 .customSelect {
     position: relative;
     display: inline-block;
 }
 
 .customSelectSelected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em;
     text-align: left;
     transition: var(--transition-timers);
     cursor: pointer;
@@ -12,6 +21,7 @@
     border: var(--border-width) solid var(--primary-color);
     border-radius: var(--table-border-radius-secondary);
     user-select: none;
+    white-space: nowrap;
 }
 
 .customSelectSelected:hover {
@@ -19,8 +29,10 @@
 }
 
 .customSelectArrow {
-    float: right;
+    flex: 0 0 auto;
     margin-left: 0.5em;
+    display: inline-flex;
+    align-items: center;
 }
 
 .customSelectOptions {
@@ -54,6 +66,8 @@
 }
 
 .customSelectOption {
+    display: flex;
+    align-items: center;
     transition: var(--transition-timers);
     padding: var(--padding-dropdown);
     cursor: pointer;

@@ -17,7 +17,9 @@
 .chaosDemoLabel {
     margin-right: var(--sep-distance-secondary);
 }
-.chaosDemoSelect {
-    
+.chaosDemoSelects {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
 }
-
