@@ -2,59 +2,64 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
 import { useEffect, useRef } from 'react';
 
-export default function ThreeD({}) {
+export default function TriD() {
+    return (
+        <div>ThreeD</div>
+    );
+}
 
-    const attractor = {
-        dims: 3,
-        params: { sigma: 10, rho: 28, beta: 8 / 3 },
-        step: (x, y, z, p) => {
-            const dx = p.sigma * (y - x);
-            const dy = x * (p.rho - z) - y;
-            const dz = x * y - p.beta * z;
-            return [dx, dy, dz];
-        },
-        speedFactor: 5000,
-        scaleFactor: 5,
-        start: { x: 0.1, y: 0.1, z: 0.1 },
-    }
+export function Chaos3D({
+    attractor,
+    width,
+    height,
+    refresh,
+    speed = 0.001,
+    maxdepth = 10000,
+}) {
 
     const canvasRef = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
 
-        if (!canvas) return;
+        if (!canvas || !attractor) return;
 
         const scene = new THREE.Scene();
 
         const renderer = new THREE.WebGLRenderer({ canvas });
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
         scene.add(camera);
 
-        function handleResize() {
+        const renderer_size = new THREE.Vector2();
 
-            const width = Math.max(1, canvas.clientWidth);
-            const height = Math.max(1, canvas.clientHeight);
+        function syncRendererSize() {
+            const nextWidth = Math.max(1, Math.floor(canvas.clientWidth));
+            const nextHeight = Math.max(1, Math.floor(canvas.clientHeight));
 
-            renderer.setSize(width, height, false);
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
+            renderer.getSize(renderer_size);
+
+            if (renderer_size.x !== nextWidth || renderer_size.y !== nextHeight) {
+                renderer.setSize(nextWidth, nextHeight, false);
+                renderer.setViewport(0, 0, nextWidth, nextHeight);
+                camera.aspect = nextWidth / nextHeight;
+                camera.updateProjectionMatrix();
+            }
         }
 
-        handleResize();
-        window.addEventListener('resize', handleResize);
+        syncRendererSize();
+        window.addEventListener('resize', syncRendererSize);
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
 
         const state = { ...attractor.start };
-        const max_points = 500;
-        const positions = new Float32Array(max_points * 3);
+        const max_points = Math.min(50000, maxdepth);
+        const pos = new Float32Array(max_points * 3);
         const colors = new Float32Array(max_points * 3);
-        positions.set([state.x, state.y, state.z], 0);
+        pos.set([state.x, state.y, state.z], 0);
 
         const start_color = new THREE.Color(0x0000ff);
         const end_color = new THREE.Color(0xff0000);
@@ -62,73 +67,95 @@ export default function ThreeD({}) {
         current_color.copy(start_color);
         colors.set([current_color.r, current_color.g, current_color.b], 0);
 
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        geometry.setDrawRange(0, 1);
-        geometry.attributes.position.needsUpdate = true;
-        geometry.attributes.color.needsUpdate = true;
+        const position_attr = new THREE.BufferAttribute(pos, 3);
+        const color_attr = new THREE.BufferAttribute(colors, 3);
+
+        const geometry_a = new THREE.BufferGeometry();
+        geometry_a.setAttribute('position', position_attr);
+        geometry_a.setAttribute('color', color_attr);
+        geometry_a.setDrawRange(0, 1);
+
+        const geometry_b = new THREE.BufferGeometry();
+        geometry_b.setAttribute('position', position_attr);
+        geometry_b.setAttribute('color', color_attr);
+        geometry_b.setDrawRange(0, 0);
+
+        position_attr.needsUpdate = true;
+        color_attr.needsUpdate = true;
 
         const material = new THREE.LineBasicMaterial({ vertexColors: true });
-        const line = new THREE.Line(geometry, material);
-        scene.add(line);
+        const line_a = new THREE.Line(geometry_a, material);
+        const line_b = new THREE.Line(geometry_b, material);
+        scene.add(line_a);
+        scene.add(line_b);
 
-        camera.position.set(-50, 50, 50);
+        camera.position.set(attractor.view.x, attractor.view.y, attractor.view.z);
+        
         camera.lookAt(0, 0, 0);
 
         let frame;
         let count_points = 1;
         let total_points = 1;
+        let write_idx = 1 % max_points;
 
-        function advanceAttractorOnce() {
+        function drawA() {
+            const active = Math.min(count_points, max_points);
+            if (active <= 0) return;
+
+            if (active < max_points) {
+                geometry_a.setDrawRange(0, active);
+            } else {
+                const start_pos = write_idx;
+                const start_count = max_points - start_pos;
+                geometry_a.setDrawRange(start_pos, start_count);
+            }
+        }
+
+        function drawB() {
+            const active = Math.min(count_points, max_points);
+            if (active <= 0) return;
+
+            if (active < max_points) {
+                geometry_b.setDrawRange(0, 0);
+            } else {
+                geometry_b.setDrawRange(0, write_idx);
+            }
+        }
+
+        function advanceAttractor() {
             const { x, y, z } = state;
             const [dx, dy, dz] = attractor.step(x, y, z, attractor.params);
-            const step = 0.01;
 
-            state.x = x + dx * step;
-            state.y = y + dy * step;
-            state.z = z + dz * step;
+            state.x = x + dx * 0.001;
+            state.y = y + dy * 0.001;
+            state.z = z + dz * 0.001;
 
-            const idx = count_points * 3;
             const m = total_points % (2 * max_points);
             const colorT = m < max_points ? m / max_points : 1 - (m - max_points) / max_points;
             current_color.copy(start_color).lerp(end_color, colorT);
 
-            if (idx >= positions.length) {
-                positions.copyWithin(0, 3);
-                colors.copyWithin(0, 3);
-                positions.set(
-                    [state.x, state.y, state.z],
-                    positions.length - 3,
-                );
-                colors.set(
-                    [current_color.r, current_color.g, current_color.b],
-                    colors.length - 3,
-                );
-            } else {
-                positions.set(
-                    [state.x, state.y, state.z],
-                    idx,
-                );
-                colors.set(
-                    [current_color.r, current_color.g, current_color.b],
-                    idx,
-                );
-                count_points += 1;
-            }
+            const write_offset = write_idx * 3;
+            pos.set([state.x, state.y, state.z], write_offset);
+            colors.set([current_color.r, current_color.g, current_color.b], write_offset);
+
+            write_idx = (write_idx + 1) % max_points;
+            if (count_points < max_points) count_points += 1;
 
             total_points += 1;
-
-            geometry.setDrawRange(0, Math.min(count_points, max_points));
-            geometry.attributes.position.needsUpdate = true;
-            geometry.attributes.color.needsUpdate = true;
         }
 
         function animate() {
             frame = requestAnimationFrame(animate);
 
-            advanceAttractorOnce();
+            const steps_per_frame = Math.max(1, Math.floor(1000 * speed));
+            for (let i = 0; i < steps_per_frame; i += 1) advanceAttractor();
 
+            position_attr.needsUpdate = true;
+            color_attr.needsUpdate = true;
+            drawA();
+            drawB();
+            syncRendererSize();
+            
             controls.update();
             renderer.render(scene, camera);
         }
@@ -136,16 +163,17 @@ export default function ThreeD({}) {
         animate();
 
         return () => {
-            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', syncRendererSize);
             cancelAnimationFrame(frame);
             controls.dispose();
-            geometry.dispose();
+            geometry_a.dispose();
+            geometry_b.dispose();
             material.dispose();
             renderer.dispose();
         };
-    }, []);
+    }, [speed, width, height, refresh, attractor, maxdepth]);
 
     return (
-        <canvas ref={canvasRef}/>
+        <canvas ref={canvasRef} style={{ width, height }}/>
     );
 }
