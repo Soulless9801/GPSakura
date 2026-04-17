@@ -114,6 +114,7 @@ export default function ChaosDemo() {
                     width={"100%"}
                     height={"100%"}
                     speed={speed}
+                    maxdepth={depth}
                     refresh={refresh}
                 />
             )}
