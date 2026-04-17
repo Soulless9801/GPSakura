@@ -130,8 +130,8 @@ export function Chaos3D({
             state.y = y + dy * 0.001;
             state.z = z + dz * 0.001;
 
-            const m = total_points % (2 * max_points);
-            const colorT = m < max_points ? m / max_points : 1 - (m - max_points) / max_points;
+            total_points %= (2 * max_points);
+            const colorT = total_points < max_points ? total_points / max_points : 1 - (total_points - max_points) / max_points;
             current_color.copy(start_color).lerp(end_color, colorT);
 
             const write_offset = write_idx * 3;
