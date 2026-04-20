@@ -1,10 +1,97 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function TriD() {
+import ColorSelector from '/src/components/tools/ColorSelector/ColorSelector.jsx';
+
+export default function ThreeD() {
+
+    const canvasRef = useRef(null);
+    const materialRef = useRef(null);
+
+    const [color, setColor] = useState("#3b82f6");
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const scene = new THREE.Scene();
+        
+        const renderer = new THREE.WebGLRenderer({ canvas });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        scene.add(camera);
+
+        const renderer_size = new THREE.Vector2();
+
+        function syncRendererSize() {
+            const nextWidth = Math.max(1, Math.floor(canvas.clientWidth));
+            const nextHeight = Math.max(1, Math.floor(canvas.clientHeight));
+
+            renderer.getSize(renderer_size);
+
+            if (renderer_size.x !== nextWidth || renderer_size.y !== nextHeight) {
+                renderer.setSize(nextWidth, nextHeight, false);
+                renderer.setViewport(0, 0, nextWidth, nextHeight);
+                camera.aspect = nextWidth / nextHeight;
+                camera.updateProjectionMatrix();
+            }
+        }
+
+        syncRendererSize();
+        window.addEventListener('resize', syncRendererSize);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshBasicMaterial({ color });
+        materialRef.current = material;
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        camera.position.set(0, 0, 5);
+        
+        camera.lookAt(0, 0, 0);
+
+        let frame;
+
+        function animate() {
+            frame = requestAnimationFrame(animate);
+            syncRendererSize();
+
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        return () => {
+            window.removeEventListener('resize', syncRendererSize);
+            cancelAnimationFrame(frame);
+            controls.dispose();
+            geometry.dispose();
+            material.dispose();
+            renderer.dispose();
+            materialRef.current = null;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!materialRef.current) return;
+        materialRef.current.color.set(color);
+    }, [color]);
+
     return (
-        <div>ThreeD</div>
+        <div style={{ flex: 0, display: "flex", flexDirection: "row" }}>
+            <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+            <ColorSelector value={color} onChange={(newColor) => setColor(newColor.hex)} />
+        </div>
     );
 }
 
