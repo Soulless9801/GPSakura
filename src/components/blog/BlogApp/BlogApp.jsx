@@ -149,7 +149,7 @@ export default function BlogApp() {
     return (
         <div className="blogAppContainer container-fluid">
             <div className="text-center text-lg-start" style={{marginBottom: "var(--sep-distance-primary)"}}>
-                <Modal id="blogMenuModal" title="Blog Menu" description={blogMenu} buttonText="Blog Menu"/>
+                <Modal id="blogMenuModal" title="Blog Menu" description={blogMenu} buttonText="Blog Menu" modalStyle={{ width: '80%' }}/>
             </div>
             <AnimatePresence mode="wait">
                 <motion.div key={JSON.stringify(window.map(p => p.id))} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

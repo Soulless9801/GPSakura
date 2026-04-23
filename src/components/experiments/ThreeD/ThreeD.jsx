@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
 import { useState, useEffect, useRef } from 'react';
 
+import './ThreeD.css';
+
 import ColorSelector from '/src/components/tools/ColorSelector/ColorSelector.jsx';
 
 export default function ThreeD() {
@@ -88,8 +90,8 @@ export default function ThreeD() {
     }, [color]);
 
     return (
-        <div style={{ flex: 0, display: "flex", flexDirection: "row" }}>
-            <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+        <div className="threed-container d-flex flex-column flex-md-row align-items-center align-items-md-start gap-3">
+            <canvas ref={canvasRef} className="threed-canvas" />
             <ColorSelector value={color} onChange={(newColor) => setColor(newColor.hex)} />
         </div>
     );
@@ -261,6 +263,8 @@ export function Chaos3D({
     }, [speed, width, height, refresh, attractor, maxdepth]);
 
     return (
-        <canvas ref={canvasRef} style={{ width, height }}/>
+        <div style={{ width, height }}>
+            <canvas ref={canvasRef} className="threed-canvas" />
+        </div>
     );
 }
