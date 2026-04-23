@@ -19,7 +19,7 @@ function ModalContent({ open, onClose, onExited, children }) {
 
     useEffect(() => {
         if (!open) {
-            const timer = setTimeout(onExited, 250); // should match CSS transition duration
+            const timer = setTimeout(onExited, 300); // should match CSS transition duration
             return () => clearTimeout(timer);
         }
     }, [open, onExited]);
@@ -28,7 +28,7 @@ function ModalContent({ open, onClose, onExited, children }) {
         <section className={`modalRoot ${open ? "open" : ""}`} aria-hidden={!open}>
             <div className="modalBackdrop" onClick={onClose} />
 
-            <div className="modalPanel">
+            <div className="modalPanel" onClick={e => e.stopPropagation()}>
                 <button className="modalClose" onClick={onClose}>✕</button>
                 {children}
             </div>
@@ -54,6 +54,7 @@ export default function Modal({title, description, buttonText, buttonStyle={}, b
             <ModalContent
                 open={open}
                 onClose={closeModal}
+                onExited={closeModal}
             >
                 <h2 style={{textAlign: "start"}}>{title}</h2>
                 <br/>

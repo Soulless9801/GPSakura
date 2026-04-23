@@ -26,6 +26,13 @@ export function rgbToHex(rgb) {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+export function normalizeHex(value) {
+	if (typeof value !== "string") return null;
+	const parsed = value.trim().replace(/^#/, "").toLowerCase();
+	if (!/^[0-9a-f]{6}$/.test(parsed)) return null;
+	return `#${parsed}`;
+}
+
 export function rgbToCss(rgb) {
     const [r, g, b] = pruneRGB(rgb);
     return `rgb(${r}, ${g}, ${b})`;
