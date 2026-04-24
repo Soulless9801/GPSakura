@@ -35,6 +35,10 @@
     padding: 1.25rem;
     min-width: 300px;
     max-width: 90vw;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
 
     transition: transform 250ms ease, opacity 250ms ease;
 
