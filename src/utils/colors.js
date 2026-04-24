@@ -22,7 +22,7 @@ function pruneRGB(rgb) {
 
 export function rgbToHex(rgb) {
     const [r, g, b] = pruneRGB(rgb);
-    console.log("Pruned RGB:", `#${toHex(r)}${toHex(g)}${toHex(b)}`);
+    // console.log("Pruned RGB:", `#${toHex(r)}${toHex(g)}${toHex(b)}`);
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
