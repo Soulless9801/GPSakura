@@ -1,21 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./Form.css";
 
-export default function Form({ init, min, max, onChange, step = 1, places = 0, disabled = false, style={}, className="" }) {
+export default function Form({ init, min, max, onChange, step = 1, places = 0, disabled = false, style={}, className="", notifyOnInitChange = true }) {
 	const [value, setValue] = useState(init);
 	const [draft, setDraft] = useState(String(init));
 	const [focus, setFocus] = useState(false);
+	const skipNextOnChange = useRef(true);
 
 	const inputRef = useRef(null);
 
 	useEffect(() => {
 		if (init !== undefined) {
+			skipNextOnChange.current = !notifyOnInitChange;
 			setValue(updateValue(init));
 		}
-	}, [init]);
+	}, [init, notifyOnInitChange]);
 
 	useEffect(() => {
 		setDraft(String(value));
+		if (skipNextOnChange.current) {
+			skipNextOnChange.current = false;
+			return;
+		}
 		onChange?.(value);
 	}, [value]);
 
