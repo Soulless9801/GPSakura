@@ -92,7 +92,7 @@ export default function ThreeD() {
     return (
         <div className="threed-container d-flex flex-column flex-md-row align-items-center align-items-md-start gap-3">
             <canvas ref={canvasRef} className="threed-canvas" />
-            <ColorSelector value={color} onChange={(newColor) => setColor(newColor.hex)} />
+            <ColorSelector value={color} onChange={(newColor) => setColor(newColor)} />
         </div>
     );
 }

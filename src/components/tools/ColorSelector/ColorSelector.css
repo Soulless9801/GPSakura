@@ -221,14 +221,15 @@
 	padding-top: 0.25rem;
 }
 
-.colorSelectorHexField {
+.colorSelectorHexField, 
+.colorSelectorRGBField {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
-	font-size: 0.85rem;
 }
 
-.colorSelectorHexFieldRow {
+.colorSelectorHexFieldRow,
+.colorSelectorRGBFieldRow {
 	display: flex;
 	gap: 0.5rem;
 	align-items: center;
