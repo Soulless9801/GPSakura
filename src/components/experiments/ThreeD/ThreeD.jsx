@@ -104,9 +104,15 @@ export function Chaos3D({
     refresh,
     speed = 0.001,
     maxdepth = 10000,
+    startColor = "#0000ff",
+    endColor = "#ff0000",
 }) {
 
     const canvasRef = useRef(null);
+    const startColorRef = useRef(null);
+    const endColorRef = useRef(null);
+    const startColorValueRef = useRef(startColor);
+    const endColorValueRef = useRef(endColor);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -150,8 +156,10 @@ export function Chaos3D({
         const colors = new Float32Array(max_points * 3);
         pos.set([state.x, state.y, state.z], 0);
 
-        const start_color = new THREE.Color(0x0000ff);
-        const end_color = new THREE.Color(0xff0000);
+        const start_color = new THREE.Color(startColorValueRef.current);
+        const end_color = new THREE.Color(endColorValueRef.current);
+        startColorRef.current = start_color;
+        endColorRef.current = end_color;
         const current_color = new THREE.Color();
         current_color.copy(start_color);
         colors.set([current_color.r, current_color.g, current_color.b], 0);
@@ -259,8 +267,22 @@ export function Chaos3D({
             geometry_b.dispose();
             material.dispose();
             renderer.dispose();
+            startColorRef.current = null;
+            endColorRef.current = null;
         };
     }, [speed, width, height, refresh, attractor, maxdepth]);
+
+    useEffect(() => {
+        startColorValueRef.current = startColor;
+        if (!startColorRef.current) return;
+        startColorRef.current.set(startColor);
+    }, [startColor]);
+
+    useEffect(() => {
+        endColorValueRef.current = endColor;
+        if (!endColorRef.current) return;
+        endColorRef.current.set(endColor);
+    }, [endColor]);
 
     return (
         <div style={{ width, height }}>

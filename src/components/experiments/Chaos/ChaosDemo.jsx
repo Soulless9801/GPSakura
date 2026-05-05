@@ -8,6 +8,8 @@ import { Chaos3D } from "/src/components/experiments/ThreeD/ThreeD.jsx";
 import Select from "/src/components/tools/Select/Select.jsx";
 import Slider from "/src/components/tools/Slider/Slider.jsx";
 
+import ColorSelector from "/src/components/tools/ColorSelector/ColorSelector.jsx";
+
 import "./ChaosDemo.css";
 
 export default function ChaosDemo() {
@@ -78,12 +80,18 @@ export default function ChaosDemo() {
     const dimKey = 'chaosDemoDim';
     const depthKey = 'chaosDemoDepth';
 
+    const scKey = 'chaosDemoStartColor';
+    const ecKey = 'chaosDemoEndColor';
+
     const [type, setType] = useState(() => loadValue(typeKey, 'lorenz'));
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 10));
     const [pitch, setPitch] = useState(() => loadValue(pitchKey, 0));
     const [yaw, setYaw] = useState(() => loadValue(yawKey, 0));
     const [dim, setDim] = useState(() => loadValue(dimKey, 2));
     const [depth, setDepth] = useState(() => loadValue(depthKey, 10000));
+
+    const [sc, setSc] = useState(() => loadValue(scKey, "#0000ff"));
+    const [ec, setEc] = useState(() => loadValue(ecKey, "#ff0000"));
 
     const [refresh, setRefresh] = useState(false);
 
@@ -93,6 +101,9 @@ export default function ChaosDemo() {
     useEffect(() => localStorage.setItem(yawKey, JSON.stringify(yaw)), [yaw]);
     useEffect(() => localStorage.setItem(dimKey, JSON.stringify(dim)), [dim]);
     useEffect(() => localStorage.setItem(depthKey, JSON.stringify(depth)), [depth]);
+
+    useEffect(() => localStorage.setItem(scKey, JSON.stringify(sc)), [sc]);
+    useEffect(() => localStorage.setItem(ecKey, JSON.stringify(ec)), [ec]);
 
     const display = (
         <>
@@ -116,6 +127,8 @@ export default function ChaosDemo() {
                     speed={speed}
                     maxdepth={depth}
                     refresh={refresh}
+                    startColor={sc}
+                    endColor={ec}
                 />
             )}
         </>
@@ -200,6 +213,10 @@ export default function ChaosDemo() {
                             onChange={e => setDepth(e)} 
                             label="Max Points"
                         />
+                        <div className='chaosDemoColors'>
+                            <ColorSelector value={sc} onChange={(newColor) => setSc(newColor)} label="Gradient Start"/>
+                            <ColorSelector value={ec} onChange={(newColor) => setEc(newColor)} label="Gradient End"/>
+                        </div>
                     </div>
                 )}
             </div>
