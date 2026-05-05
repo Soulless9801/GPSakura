@@ -233,6 +233,8 @@
 	display: flex;
 	gap: 0.5rem;
 	align-items: center;
+	justify-content: space-between;
+	
 }
 
 .colorSelectorHexFieldRow input {
@@ -245,15 +247,4 @@
 	color: inherit;
 	font: inherit;
 	font-family: "Fira Code", monospace;
-}
-
-.colorSelectorHexFieldRow button {
-	border: 1px solid var(--secondary-color);
-	border-radius: 10px;
-	padding: 0.7rem 1rem;
-	background: var(--bg-color-secondary);
-	color: var(--primary-color);
-	font-weight: 700;
-	cursor: pointer;
-	flex: 0 0 auto;
 }
