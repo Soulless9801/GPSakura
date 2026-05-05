@@ -23,3 +23,10 @@
     align-items: flex-start;
     gap: 1rem;
 }
+.chaosDemoColors {
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
