@@ -154,7 +154,6 @@ function HexInput({ value, onSubmit, disabled = false }) {
 	return (
 		<div className="colorSelectorMenuSection colorSelectorMenuSectionCompact">
 			<label className="colorSelectorHexField">
-				<span>Hex</span>
 				<div className="colorSelectorHexFieldRow">
 					<input
 						type="text"
@@ -173,13 +172,11 @@ function HexInput({ value, onSubmit, disabled = false }) {
 	);
 }
 
-function RGBInput({ value, onSubmit, disabled = false }) {
-
+export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 	const [rgb, setRGB] = useState(() => hexToRGB(value) ?? [0, 0, 0]);
-	const emitRef = useRef({ timer: null, last: null });
 
 	useEffect(() => {
-		const next = hexToRGB(value);
+		const next = Array.isArray(value) ? value : hexToRGB(value);
 		if (next) setRGB(next);
 	}, [value]);
 
@@ -189,50 +186,32 @@ function RGBInput({ value, onSubmit, disabled = false }) {
 		{ label: "B", index: 2 },
 	];
 
-	useEffect(() => {
-		return () => {
-			if (emitRef.current.timer) {
-				clearTimeout(emitRef.current.timer);
-				emitRef.current.timer = null;
-			}
-		};
-	}, []);
-
-	const emitDebounced = (nextRGB) => {
-		emitRef.current.last = nextRGB;
-		if (emitRef.current.timer) clearTimeout(emitRef.current.timer);
-		emitRef.current.timer = setTimeout(() => {
-			const last = emitRef.current.last;
-			if (last) onSubmit?.(rgbToHex(last));
-			emitRef.current.timer = null;
-			emitRef.current.last = null;
-		}, 120);
-	};
-
 	const updateChannel = (index, rawValue) => {
 		const nextRGB = [...rgb];
 		nextRGB[index] = Math.min(255, Math.max(0, parseInt(rawValue, 10) || 0));
 		setRGB(nextRGB);
-		onSubmit?.(rgbToHex(nextRGB));
-		// emitDebounced(nextRGB);
+		if (onSubmit) onSubmit?.(rgbToHex(nextRGB));
+		if (onChange) onChange?.(index, nextRGB[index]);
 	};
 
 	return (
 		<div className="colorSelectorMenuSection colorSelectorMenuSectionCompact">
 			<label className="colorSelectorRGBField">
-				<span>RGB</span>
 				<div className="colorSelectorRGBFieldRow">
 					{channels.map(({ label, index }) => (
-						<Form
-							key={label}
-							init={rgb[index]}
-							min={0}
-							max={255}
-							step={1}
-							onChange={(val) => updateChannel(index, val)}
-							disabled={disabled}
-							notifyOnInitChange={false}
-						/>
+						<>
+							<label>{label}</label>
+							<Form
+								key={label}
+								init={rgb[index]}
+								min={0}
+								max={255}
+								step={1}
+								onChange={(val) => updateChannel(index, val)}
+								disabled={disabled}
+								notifyOnInitChange={false}
+							/>
+						</>
 					))}
 				</div>
 			</label>
@@ -290,40 +269,8 @@ export default function ColorSelector({
 
 	const hex_color = useMemo(() => hexState, [hexState]); 
 
-	const emitRef = useRef({ timer: null, last: null });
-
-	useEffect(() => {
-		return () => {
-			if (emitRef.current.timer) {
-				clearTimeout(emitRef.current.timer);
-				emitRef.current.timer = null;
-			}
-		};
-	}, []);
-
 	const emitImmediate = (next_hex) => {
-		if (emitRef.current.timer) {
-			clearTimeout(emitRef.current.timer);
-			emitRef.current.timer = null;
-		}
-		const nr = hexToRGB(next_hex);
 		onChange?.(next_hex);
-	};
-
-	const emitDebounced = (next_hex) => {
-		emitRef.current.last = next_hex;
-		if (emitRef.current.timer) clearTimeout(emitRef.current.timer);
-		emitRef.current.timer = setTimeout(() => {
-			const nh = emitRef.current.last;
-			onChange?.(nh);
-			emitRef.current.timer = null;
-			emitRef.current.last = null;
-		}, 120);
-	};
-
-	const updateHex = (next_hex) => {
-		setHexState(next_hex);
-		emitDebounced(next_hex);
 	};
 
 	const commitUpdateHex = (next_hex) => {

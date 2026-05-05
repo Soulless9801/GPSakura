@@ -1,10 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { convertToPixels } from '/src/utils/resize.js';
-import { readColor, rgbToCss } from '/src/utils/colors.js';
+import { readColor, rgbToCss, rgbToHex } from '/src/utils/colors.js';
 import { loadValue } from '/src/utils/storage.js';
 import { randomColor, defaultColor } from '/src/entities/color.js';
 
-import Form from '/src/components/tools/Form/Form.jsx';
+import { RGBInput } from '/src/components/tools/ColorSelector/ColorSelector.jsx';
 
 import ColorPicker from "./ColorPicker.jsx";
 import Modal from '/src/components/tools/Modal/Modal.jsx';
@@ -23,7 +22,7 @@ export default function ColorPickerDemo() {
     }, [guessColor]);
 
     const [rgbD, setRgbD] = useState([-1, -1, -1]);
-
+    
     const [guesses, setGuesses] = useState(0);
     const [win, setWin] = useState(false);
 
@@ -79,7 +78,7 @@ export default function ColorPickerDemo() {
         setGuessColor(cachedColor);
         if (chk()) setWin(true);
         else setWin(false);
-    }, [cachedColor, guesses, win]);
+    }, [cachedColor, chk, win]);
 
     useEffect(() => {
         if (win) {
@@ -151,18 +150,17 @@ export default function ColorPickerDemo() {
                                 <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
                             </div>    
                             <div className='row g-3 colorRow'>
-                                <div className='col-4 colorLabel'>
-                                    <span>R</span>
-                                    <Form init={guessColor[0]} min={0} max={255} onChange={e => setCachedColor(prev => [e, prev[1], prev[2]])} style={{ borderColor: colorFromDistance(rgbD[0]) }} />
-                                </div>
-                                <div className='col-4 colorLabel'>
-                                    <span>G</span>
-                                    <Form init={guessColor[1]} min={0} max={255} onChange={e => setCachedColor(prev => [prev[0], e, prev[2]])} style={{ borderColor: colorFromDistance(rgbD[1]) }} />
-                                </div>
-                                <div className='col-4 colorLabel'>
-                                    <span>B</span>
-                                    <Form init={guessColor[2]} min={0} max={255} onChange={e => setCachedColor(prev => [prev[0], prev[1], e])} style={{ borderColor: colorFromDistance(rgbD[2]) }} />
-                                </div>
+                                <RGBInput
+                                    value={rgbToHex(guessColor)}
+                                    onChange={(index, nextValue) => {
+                                        setCachedColor(prev => {
+                                            const nextColor = [...prev];
+                                            nextColor[index] = nextValue;
+                                            return nextColor;
+                                        });
+                                    }}
+                                    getFieldStyle={(index) => ({ borderColor: colorFromDistance(rgbD[index]) })}
+                                />
                             </div>
                             <div className='row g-3 colorRow'>
                                 <div className='col-6'>
