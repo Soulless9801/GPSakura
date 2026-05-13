@@ -204,20 +204,23 @@ export default function ChaosDemo() {
                     </>
                 )}
                 {dim === 3 && (
-                    <div className='col-12'>
-                        <Slider 
-                            min={1000} 
-                            max={50000} 
-                            value={depth}
-                            step={1000}
-                            onChange={e => setDepth(e)} 
-                            label="Max Points"
-                        />
-                        <div className='chaosDemoColors'>
+                    <>
+                        <hr />
+                        <div className='col-12'>
+                            <Slider 
+                                min={1000} 
+                                max={50000} 
+                                value={depth}
+                                step={1000}
+                                onChange={e => setDepth(e)} 
+                                label="Max Points"
+                            />
+                        </div>
+                        <div className='chaosDemoColors col-12'>
                             <ColorSelector value={sc} onChange={(newColor) => setSc(newColor)} label="Gradient Start"/>
                             <ColorSelector value={ec} onChange={(newColor) => setEc(newColor)} label="Gradient End"/>
                         </div>
-                    </div>
+                    </>
                 )}
             </div>
         </>
