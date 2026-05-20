@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { Fragment, useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { hexToRGB, rgbToHex, normalizeHex, hsvToRGB, hexToHsv } from "/src/utils/colors.js";
 
 import "./ColorSelector.css";
@@ -199,10 +199,9 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 			<label className="colorSelectorRGBField">
 				<div className="colorSelectorRGBFieldRow">
 					{channels.map(({ label, index }) => (
-						<>
+						<Fragment key={index}>
 							<label>{label}</label>
 							<Form
-								key={label}
 								init={rgb[index]}
 								min={0}
 								max={255}
@@ -211,7 +210,7 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 								disabled={disabled}
 								notifyOnInitChange={false}
 							/>
-						</>
+						</Fragment>
 					))}
 				</div>
 			</label>
