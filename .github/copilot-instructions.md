@@ -58,23 +58,23 @@
 
 - **NEVER push to remote** – this requires explicit human approval
 - **Commit locally first** after thorough testing and validation
-- **Do not merge to main** without explicit human approval and successful code review
+- **NEVER merge to the local main** without explicit human approval and successful code review
 - **Use preview branches** for review and testing before main merge
 
 ### Branch Strategy
 
 - **main**: Production-ready code
-- **preview**: `preview/<branchName>` – for code review and testing
+- **test**: `test` – for code review and testing
 - **Feature branches**: `feature/description` (e.g., `feature/navbar-mobile-menu`)
 - **Bug fixes**: `fix/description` (e.g., `fix/hero-image-loading`)
 - **Chores**: `chore/description` (e.g., `chore/update-dependencies`)
 
 ### Commit Workflow
 
-1. Make changes on a feature/fix/chore branch
+1. Make changes on an isolated feature/fix/chore branch or worktree, should be only one or two words branch names like `agents/usestate-error`
 2. Test thoroughly locally (`npm run lint`, `npm run build`)
 3. Commit with clear, descriptive messages
-4. Push to a preview branch for review
+4. Push to a preview/test branch for review
 5. Await human approval before merging to main
 
 ---
