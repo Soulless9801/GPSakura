@@ -5,12 +5,12 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
 
+// eslint-disable-next-line react-hooks/rules-of-hooks
 DataTable.use(DT);
 
 import Select from '/src/components/tools/Select/Select.jsx';
 
 import '/src/components/tables/DataTable.css'
-import { table } from 'motion/react-client';
 
 export default function CustomDataTable({title, rows, columns, options, html, id}) {
 
@@ -68,7 +68,6 @@ export default function CustomDataTable({title, rows, columns, options, html, id
                             placeholder="" 
                             onChange={e => {
                                 const table = $(`#${id}`).DataTable();
-                                console.log(String(e.target.value));
                                 table.search(String(e.target.value)).draw();
                             }}
                             className="table-search"

@@ -1,8 +1,9 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, memo } from "react";
 import { rgbToCss, readColor } from "/src/utils/colors.js";
+import { debounce } from "/src/utils/debounce.js";
 import { Particle } from "/src/entities/particle.js";
 
-export default function ParticleNetwork({
+export default memo(function ParticleNetwork({
     numParticles,
     connectionDistance,
     width,
@@ -110,6 +111,7 @@ export default function ParticleNetwork({
 
     // Listeners
 
+
     useEffect(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
@@ -120,6 +122,9 @@ export default function ParticleNetwork({
         canvas.setAttribute("role", "presentation");
 
         resizeCanvas();
+        
+        // Debounce resize handler to avoid excessive redraws
+        const debouncedResize = debounce(resizeCanvas, 150);
         
         const handlePointerMove = (ev) => {
         if (!interactive) return;
@@ -136,14 +141,15 @@ export default function ParticleNetwork({
         const handlePointerDown = () => pointerDown.current = true;
         const handlePointerUp = () => pointerDown.current = false;
 
-        window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("resize", debouncedResize);
         wrapper.addEventListener("pointermove", handlePointerMove);
         wrapper.addEventListener("pointerleave", handlePointerLeave);
         wrapper.addEventListener('pointerdown', handlePointerDown);
         wrapper.addEventListener('pointerup', handlePointerUp);
 
         return () => {
-            window.removeEventListener("resize", resizeCanvas);
+            debouncedResize.cancel();
+            window.removeEventListener("resize", debouncedResize);
             wrapper.removeEventListener("pointerdown", handlePointerDown);
             wrapper.removeEventListener("pointermove", handlePointerMove);
             wrapper.removeEventListener("pointerup", handlePointerUp);
@@ -224,23 +230,51 @@ export default function ParticleNetwork({
                 p.draw(ctx, fillCss);
             }
 
-            // Draw Edges
+            // Draw Edges - using spatial grid for optimization
+            
+            // Create spatial grid for faster lookups
+            const gridSize = Math.max(10, Math.ceil(connectionDistance * 1.5));
+            const gridCols = Math.ceil(w / gridSize);
+            const gridRows = Math.ceil(h / gridSize);
+            const grid = Array(gridCols * gridRows);
+            for (const p of localParticles.current) {
+                const gx = Math.min(gridCols - 1, Math.max(0, Math.floor(p.x / gridSize)));
+                const gy = Math.min(gridRows - 1, Math.max(0, Math.floor(p.y / gridSize)));
+                const idx = gy * gridCols + gx;
+                if (!grid[idx]) grid[idx] = [];
+                grid[idx].push(p);
+            }
 
+            // Check connections only within nearby grid cells
             for (let i = 0; i < localParticles.current.length; i++) {
-                for (let j = i + 1; j < localParticles.current.length; j++) {
-                    const a = localParticles.current[i];
-                    const b = localParticles.current[j];
-                    const dx = a.x - b.x;
-                    const dy = a.y - b.y;
-                    const dist = Math.hypot(dx, dy);
-                    if (dist < connectionDistance) {
-                        ctx.beginPath();
-                        ctx.moveTo(a.x, a.y);
-                        ctx.lineTo(b.x, b.y);
-                        const alpha = 1 - dist / connectionDistance;
-                        ctx.strokeStyle = `rgba(${strokeRgb}, ${alpha})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
+                const p = localParticles.current[i];
+                const gx = Math.min(gridCols - 1, Math.max(0, Math.floor(p.x / gridSize)));
+                const gy = Math.min(gridRows - 1, Math.max(0, Math.floor(p.y / gridSize)));
+                
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        const nx = gx + dx;
+                        const ny = gy + dy;
+                        if (nx >= 0 && nx < gridCols && ny >= 0 && ny < gridRows) {
+                            const cellIdx = ny * gridCols + nx;
+                            const cell = grid[cellIdx];
+                            if (!cell) continue;
+                            for (const other of cell) {
+                                if (p === other) continue;
+                                const dx2 = p.x - other.x;
+                                const dy2 = p.y - other.y;
+                                const dist = Math.hypot(dx2, dy2);
+                                if (dist < connectionDistance && dist > 0) {
+                                    ctx.beginPath();
+                                    ctx.moveTo(p.x, p.y);
+                                    ctx.lineTo(other.x, other.y);
+                                    const alpha = 1 - dist / connectionDistance;
+                                    ctx.strokeStyle = `rgba(${strokeRgb}, ${alpha})`;
+                                    ctx.lineWidth = 0.5;
+                                    ctx.stroke();
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -266,4 +300,4 @@ export default function ParticleNetwork({
             <canvas ref={canvasRef} style={{ display: "block" , width: "100%", height: "100%"}}  />
         </div>
     );
-}
+});
