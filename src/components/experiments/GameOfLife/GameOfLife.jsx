@@ -1,9 +1,10 @@
-import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from "react";
+import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle, memo } from "react";
 import { rgbToCss, readColor } from "/src/utils/colors.js";
+import { debounce } from "/src/utils/debounce.js";
 
 // Component
 
-export default forwardRef(function GameOfLife(
+export default memo(forwardRef(function GameOfLife(
 	{
 		width,
 		height,
@@ -122,7 +123,7 @@ export default forwardRef(function GameOfLife(
 
 	// Display + Grid
 
-	const MAX = 200; // lmao
+	const MAX = Math.max(100, Math.min(300, Math.floor(Math.max(calcWidth, calcHeight) / cellSize) + 20)); // Dynamic based on viewport
 
 	const [cols, setCols] = useState(Math.floor(calcWidth / cellSize));
 	const [rows, setRows] = useState(Math.floor(calcHeight / cellSize));
@@ -151,12 +152,43 @@ export default forwardRef(function GameOfLife(
 		setDisplay(newDisplay);
 	}, [grid, rows, cols]);
 
-	// Step Generation
+	// Step Generation - optimized to only compute relevant region
 
 	const stepGeneration = useCallback(() => {
 		const out = new Uint8Array(MAX * MAX);
-		for (let r = 0; r < MAX; r++) {
-			for (let c = 0; c < MAX; c++) {
+		
+		// Find bounding box of active cells
+		let minR = MAX, maxR = 0, minC = MAX, maxC = 0;
+		let hasLife = false;
+		for (let i = 0; i < grid.length; i++) {
+			if (grid[i]) {
+				hasLife = true;
+				const r = Math.floor(i / MAX);
+				const c = i % MAX;
+				minR = Math.min(minR, r);
+				maxR = Math.max(maxR, r);
+				minC = Math.min(minC, c);
+				maxC = Math.max(maxC, c);
+			}
+		}
+		
+		// If no active cells, check if any birth would occur in center
+		if (!hasLife) {
+			minR = Math.max(0, Math.floor(MAX / 2) - 2);
+			maxR = Math.min(MAX, Math.floor(MAX / 2) + 3);
+			minC = Math.max(0, Math.floor(MAX / 2) - 2);
+			maxC = Math.min(MAX, Math.floor(MAX / 2) + 3);
+		} else {
+			// Expand bounding box to account for births
+			minR = Math.max(0, minR - 1);
+			maxR = Math.min(MAX, maxR + 2);
+			minC = Math.max(0, minC - 1);
+			maxC = Math.min(MAX, maxC + 2);
+		}
+		
+		// Compute only cells in expanded region
+		for (let r = minR; r <= maxR; r++) {
+			for (let c = minC; c <= maxC; c++) {
 				let n = 0;
 				for (let dr = -1; dr <= 1; dr++) {
 					for (let dc = -1; dc <= 1; dc++) {
@@ -171,8 +203,9 @@ export default forwardRef(function GameOfLife(
 				out[r * MAX + c] = (alive && rules.survive.includes(n)) || (!alive && rules.birth.includes(n)) ? 1 : 0;
 			}
 		}
+		
 		return out;
-	}, [grid, rules]);
+	}, [grid, rules, MAX]);
 
 	// Draw Function
 
@@ -312,9 +345,12 @@ export default forwardRef(function GameOfLife(
 		[rows, cols, cellSize, interactive]
 	);
 
+
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
+
+		const debouncedResize = debounce(resizeCanvas, 150);
 
 		const handlePointerDown = (e) => {
 			pointerDownRef.current = true;
@@ -332,13 +368,14 @@ export default forwardRef(function GameOfLife(
 		canvas.addEventListener("pointerdown", handlePointerDown);
 		window.addEventListener("pointermove", handlePointerMove);
 		window.addEventListener("pointerup", handlePointerUp);
-		window.addEventListener("resize", resizeCanvas);
+		window.addEventListener("resize", debouncedResize);
 		
 		return () => {
+			debouncedResize.cancel();
 			canvas.removeEventListener("pointerdown", handlePointerDown);
 			window.removeEventListener("pointermove", handlePointerMove);
 			window.removeEventListener("pointerup", handlePointerUp);
-			window.removeEventListener("resize", resizeCanvas);
+			window.removeEventListener("resize", debouncedResize);
 		};
 	}, [toggleCellAt]);
 
@@ -401,4 +438,4 @@ export default forwardRef(function GameOfLife(
 			/>
 		</div>
 	);
-});
+}));
