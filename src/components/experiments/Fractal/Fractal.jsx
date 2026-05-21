@@ -1,7 +1,8 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, memo } from "react";
 import { rgbToCss, readColor } from "/src/utils/colors.js";
+import { debounce } from "/src/utils/debounce.js";
 
-export default function Fractal({
+export default memo(function Fractal({
 	type,
 	width,
 	height,
@@ -476,15 +477,16 @@ export default function Fractal({
 
 		cut();
 
-		const handleResize = () => {
+		const debouncedResize = debounce(() => {
 			resizeCanvas();
 			cut();
-		};
+		}, 150);
 
-		window.addEventListener("resize", handleResize);
+		window.addEventListener("resize", debouncedResize);
 
 		return () => {
-			window.removeEventListener("resize", handleResize);
+			debouncedResize.cancel();
+			window.removeEventListener("resize", debouncedResize);
 			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 		};
 
@@ -532,4 +534,4 @@ export default function Fractal({
 			<canvas ref={canvasRef} style={{ display: "block" , width: "100%", height: "100%"}}  />
 		</div>
 	);
-}
+});
