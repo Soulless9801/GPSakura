@@ -54,6 +54,12 @@ export default memo(forwardRef(function GameOfLife(
 		cssW = Math.floor(cssW / cellSize) * cellSize;
 		cssH = Math.floor(cssH / cellSize) * cellSize;
 
+		// Prevent showing more cells than the simulation grid supports
+		const intendedCols = Math.floor(cssW / cellSize);
+		const intendedRows = Math.floor(cssH / cellSize);
+		if (intendedCols > MAX) cssW = MAX * cellSize;
+		if (intendedRows > MAX) cssH = MAX * cellSize;
+
 		setCalcWidth(cssW);
 		setCalcHeight(cssH);
 
@@ -123,10 +129,10 @@ export default memo(forwardRef(function GameOfLife(
 
 	// Display + Grid
 
-	const MAX = Math.max(100, Math.min(300, Math.floor(Math.max(calcWidth, calcHeight) / cellSize) + 20)); // Dynamic based on viewport
+	const MAX = 200
 
-	const [cols, setCols] = useState(Math.floor(calcWidth / cellSize));
-	const [rows, setRows] = useState(Math.floor(calcHeight / cellSize));
+	const [cols, setCols] = useState(() => Math.min(Math.floor(calcWidth / cellSize), MAX));
+	const [rows, setRows] = useState(() => Math.min(Math.floor(calcHeight / cellSize), MAX));
 
 	const [grid, setGrid] = useState(
 		() => new Uint8Array(MAX * MAX)
@@ -142,8 +148,8 @@ export default memo(forwardRef(function GameOfLife(
 
 	useEffect(() => {
 		const newDisplay = new Uint8Array(rows * cols);
-		const xDiff = Math.floor((MAX - cols) / 2);
-		const yDiff = Math.floor((MAX - rows) / 2);
+		const xDiff = Math.max(0, Math.floor((MAX - cols) / 2));
+		const yDiff = Math.max(0, Math.floor((MAX - rows) / 2));
 		for (let i = 0; i < rows; i++) {
 			for (let j = 0; j < cols; j++) {
 				newDisplay[i * cols + j] = grid[(i + yDiff) * MAX + (j + xDiff)];
@@ -152,43 +158,13 @@ export default memo(forwardRef(function GameOfLife(
 		setDisplay(newDisplay);
 	}, [grid, rows, cols]);
 
-	// Step Generation - optimized to only compute relevant region
+	// Step Generation
 
 	const stepGeneration = useCallback(() => {
 		const out = new Uint8Array(MAX * MAX);
 		
-		// Find bounding box of active cells
-		let minR = MAX, maxR = 0, minC = MAX, maxC = 0;
-		let hasLife = false;
-		for (let i = 0; i < grid.length; i++) {
-			if (grid[i]) {
-				hasLife = true;
-				const r = Math.floor(i / MAX);
-				const c = i % MAX;
-				minR = Math.min(minR, r);
-				maxR = Math.max(maxR, r);
-				minC = Math.min(minC, c);
-				maxC = Math.max(maxC, c);
-			}
-		}
-		
-		// If no active cells, check if any birth would occur in center
-		if (!hasLife) {
-			minR = Math.max(0, Math.floor(MAX / 2) - 2);
-			maxR = Math.min(MAX, Math.floor(MAX / 2) + 3);
-			minC = Math.max(0, Math.floor(MAX / 2) - 2);
-			maxC = Math.min(MAX, Math.floor(MAX / 2) + 3);
-		} else {
-			// Expand bounding box to account for births
-			minR = Math.max(0, minR - 1);
-			maxR = Math.min(MAX, maxR + 2);
-			minC = Math.max(0, minC - 1);
-			maxC = Math.min(MAX, maxC + 2);
-		}
-		
-		// Compute only cells in expanded region
-		for (let r = minR; r <= maxR; r++) {
-			for (let c = minC; c <= maxC; c++) {
+		for (let r = 0; r < MAX; r++) {
+			for (let c = 0; c < MAX; c++) {
 				let n = 0;
 				for (let dr = -1; dr <= 1; dr++) {
 					for (let dc = -1; dc <= 1; dc++) {
@@ -332,8 +308,8 @@ export default memo(forwardRef(function GameOfLife(
 			const c = Math.floor(x / scaleX);
 			const r = Math.floor(y / scaleY);
 			if (r < 0 || r >= rows || c < 0 || c >= cols) return;
-			const xDiff = Math.floor((MAX - cols) / 2);
-			const yDiff = Math.floor((MAX - rows) / 2);
+			const xDiff = Math.max(0, Math.floor((MAX - cols) / 2));
+			const yDiff = Math.max(0, Math.floor((MAX - rows) / 2));
 			setGrid((prev) => {
 				const next = new Uint8Array(prev);
 				const coord = (r + yDiff) * MAX + (c + xDiff);
@@ -399,8 +375,8 @@ export default memo(forwardRef(function GameOfLife(
 	}, [zoom]);
 
 	useEffect(() => {
-		const newCols = Math.floor(calcWidth / cellSize);
-		const newRows = Math.floor(calcHeight / cellSize);
+		const newCols = Math.min(Math.floor(calcWidth / cellSize), MAX);
+		const newRows = Math.min(Math.floor(calcHeight / cellSize), MAX);
 
 		setCols(newCols);
 		setRows(newRows);
