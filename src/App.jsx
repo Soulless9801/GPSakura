@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import AppLayout from '/src/layouts/AppLayout.jsx';
 import PageLoader from '/src/components/tools/PageLoader/PageLoader.jsx';
 
+// Lazy load all page components for route-based code splitting
 const Home = lazy(() => import('/src/pages/Home.jsx'));
 const Codeforces = lazy(() => import('/src/pages/Coding/Codeforces.jsx'));
 const USACO = lazy(() => import('/src/pages/Coding/USACO.jsx'));
