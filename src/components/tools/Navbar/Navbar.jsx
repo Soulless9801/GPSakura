@@ -142,6 +142,7 @@ export default function Navbar() {
                                         { value: 'ShengJi', label: '升级', to: '/shengji' },
                                         { value: 'Color', label: 'Color Picker', to: '/color' },
                                         { value: 'Freq', label: 'Frequency Guesser', to: '/freq' },
+                                        { value: 'BlackJack', label: 'Black Jack', to: '/blackjack' },
                                     ]}
                                     onChange={e => navigate(e.to)}
                                     fixedSelect={true}

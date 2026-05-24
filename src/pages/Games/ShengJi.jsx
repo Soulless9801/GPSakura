@@ -4,7 +4,7 @@ import ShengJiApp from '/src/components/games/ShengJi/ShengJiApp.tsx';
 export default function ShengJi() {
     return (
         <>
-            <PageTitle title="ShengJi" description="Multiplayer card game"/>
+            <PageTitle title="升级" description="Tractor"/>
             <ShengJiApp />
         </>
     );
