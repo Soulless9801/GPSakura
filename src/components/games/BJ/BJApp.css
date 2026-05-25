@@ -3,5 +3,21 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    gap: 2rem;
+}
+
+.bjActions {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.bjLabels {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    align-items: center;
+    justify-content: center;
 }

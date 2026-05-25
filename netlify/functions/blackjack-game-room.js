@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { eq, and } from "drizzle-orm";
+
 import { neon } from "@neondatabase/serverless";
 
 import { drizzle } from "drizzle-orm/neon-http";
@@ -44,18 +46,26 @@ export async function handler(event) {
         console.log(`Received request: ${action} from clientId ${clientId}`);
 
         if (!action || !clientId) return errorJSON("Missing clientId or action");
+        const playerId = Number(clientId);
+        if (isNaN(playerId) || !Number.isInteger(playerId) || playerId <= 0) return errorJSON("Invalid clientId");
 
         // helper function to get game state
-        async function getGame() {
-            return null; // disable game for now
+        async function getGame(gameId, playerId) {
+
+            const game = await db
+                .select()
+                .from(games)
+                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)))
+                .limit(1);
+
+            return (game.length > 0) ? game[0] : null;
         }
 
         if (action === "start") { // ACTION: START GAME
 
-            const playerId = Number(clientId);
             const bet = Number(payload.bet_amount);
 
-            if (isNaN(playerId) || !Number.isInteger(playerId) || isNaN(bet) || bet <= 0) return errorJSON("Invalid clientId or bet amount");
+            if (isNaN(bet) || bet <= 0) return errorJSON("Invalid bet amount");
 
             // console.log('Starting game...');
             
@@ -67,7 +77,60 @@ export async function handler(event) {
                     player_cards: 0,
                     dealer_cards: 0,
                 })
-                .returning({id: games.id});
+                .returning({player_cards: games.player_cards, dealer_cards: games.dealer_cards, game_id: games.id});
+
+            // console.log(result);
+
+            return successJSON({ result });
+        }
+
+        
+        if (action === "hit") { // ACTION: HIT
+
+            // console.log('Hit action received for gameId:', payload.game_id);
+
+            const gameId = Number(payload.game_id);
+
+            if (isNaN(gameId) || !Number.isInteger(gameId) || gameId <= 0) return errorJSON("Invalid gameID");
+
+            // console.log('Checking for game with ID:', gameId);
+            
+            const game = await getGame(gameId, playerId);
+            if (!game) return errorJSON("Game not found");
+
+            // console.log('Game found:', game);
+
+            const result = await db
+                .update(games)
+                .set({
+                    player_cards: game.player_cards + 1, // TODO: replace with actual new player cards
+                })
+                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)))
+                .returning({player_cards: games.player_cards, dealer_cards: games.dealer_cards, game_id: games.id});
+
+            // console.log(result);
+
+            return successJSON({ result });
+        }
+
+        if (action === "stand") { // ACTION: STAND
+
+            const gameId = Number(payload.game_id);
+
+            if (isNaN(gameId) || !Number.isInteger(gameId) || gameId <= 0) return errorJSON("Invalid gameID");
+
+            // console.log('Starting game...');
+            
+            const game = await getGame(gameId, playerId);
+            if (!game) return errorJSON("Game not found");
+
+            const result = await db
+                .update(games)
+                .set({
+                    dealer_cards: game.dealer_cards + 1, // TODO: replace with actual new dealer cards
+                })
+                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)))
+                .returning({player_cards: games.player_cards, dealer_cards: games.dealer_cards, game_id: games.id});
 
             // console.log(result);
 
@@ -78,6 +141,7 @@ export async function handler(event) {
 
     } catch (error) {
         // catch and return any errors
+        console.log("Error in handler:", error);
         return errorJSON(error.message, 500);
     }
 }
