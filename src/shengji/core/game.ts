@@ -241,7 +241,7 @@ export class Game {
 
     callTrump(player: string, trump: Trump) : boolean {
 
-        if (this.state.over || (!this.state.draw && !this.state.dip) || !trump.suit) return false;
+        if (this.state.over || !this.state.draw || !trump.suit) return false;
 
         const playerInfo = this.state.info.get(player);
         if (!playerInfo) return false;
