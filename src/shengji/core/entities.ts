@@ -4,10 +4,9 @@ export type Suit = CardModule.Suit;
 export type Rank = CardModule.Rank;
 
 export type Card = CardModule.Card;
-export type Deck = CardModule.Deck;
 export type Hand = CardModule.Hand;
 
-export { validateCard, shuffleDeck, initializeDeck, drawCard, getCardCount, initializeHand, addCardToHand, removeCardFromHand } from '/src/entities/card';
+export { validateCard, getCardCount, initializeHand, addCardToHand, removeCardFromHand, Deck } from '/src/entities/card';
 
 export interface Trump {
     suit: Suit | null;

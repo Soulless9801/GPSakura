@@ -331,6 +331,7 @@ export async function handler(event) {
 
     } catch (error) {
         // catch and return any errors
+        console.error("Error handling request:", error);
         return errorJSON(error.message, 500);
     }
 }
