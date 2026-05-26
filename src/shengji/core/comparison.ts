@@ -292,6 +292,7 @@ function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
     return false;
 }
 
+
 // VALIDATION
 
 // get card count for cards that can be played in tricks responding the lead card
