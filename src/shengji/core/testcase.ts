@@ -1,6 +1,8 @@
 import * as SJCore from "/src/shengji/core/entities";
 import * as SJComp from "/src/shengji/core/comparison"
 
+import RNG from '/src/entities/rng';
+
 type Suit = SJCore.Suit;
 type Rank = SJCore.Rank;
 type Trump = SJCore.Trump;
@@ -20,37 +22,36 @@ export interface TestCase {
     trump: Trump;
 }
 
-// RNG
 
-class RNG {
-    private state: number;
+// class RNG {
+//     private state: number;
 
-    constructor(seed: number) {
-        this.state = seed;
-    }
+//     constructor(seed: number) {
+//         this.state = seed;
+//     }
 
-    next(): number {
-        // xorshift32
-        let x = this.state;
-        x ^= x << 13;
-        x ^= x >> 17;
-        x ^= x << 5;
-        this.state = x;
-        return (x >>> 0) / 2 ** 32;
-    }
+//     next(): number {
+//         // xorshift32
+//         let x = this.state;
+//         x ^= x << 13;
+//         x ^= x >> 17;
+//         x ^= x << 5;
+//         this.state = x;
+//         return (x >>> 0) / 2 ** 32;
+//     }
 
-    int(min: number, max: number): number {
-        return Math.floor(this.next() * (max - min + 1)) + min;
-    }
+//     int(min: number, max: number): number {
+//         return Math.floor(this.next() * (max - min + 1)) + min;
+//     }
 
-    pick<T>(arr: T[]): T {
-        return arr[this.int(0, arr.length - 1)];
-    }
+//     pick<T>(arr: T[]): T {
+//         return arr[this.int(0, arr.length - 1)];
+//     }
 
-    chance(p: number): boolean {
-        return this.next() < p;
-    }
-}
+//     chance(p: number): boolean {
+//         return this.next() < p;
+//     }
+// }
 
 // TYPES
 const SUITS = ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[];
@@ -257,7 +258,11 @@ function randomFollowPlay(rng: RNG, ilead: IPlay, trump: Trump): { play: Play, h
 
 export function genTestCase(): TestCase {
 
-    const rng : RNG = new RNG(Date.now());
+    const seed = Date.now();
+
+    // console.log("Seed:", seed); // feedback purposes
+
+    const rng : RNG = new RNG(seed);
 
     const trump : Trump = randomTrump(rng);
 
