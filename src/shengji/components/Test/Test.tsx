@@ -20,7 +20,7 @@ export default function Test() {
     const testCardRef = useRef<HandRef>(null);
 
     useEffect(() => {
-        setCards(SJConv.handToCards(testCase?.ihand.hand || SJCore.initializeHand(), testCase?.trump || null));
+        setCards(SJConv.handToCards(testCase?.ihand.hand || new SJCore.Hand(), testCase?.trump || null));
     }, [testCase]);
 
     return (

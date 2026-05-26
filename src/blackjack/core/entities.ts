@@ -1,13 +1,15 @@
 import * as CardModule from '/src/entities/card';
 
+import { Hand } from '/src/entities/card';
+
 export type Suit = CardModule.Suit;
 export type Rank = CardModule.Rank;
 
 export type Card = CardModule.Card;
-export type Deck = CardModule.Deck;
-export type Hand = CardModule.Hand;
+// export type Deck = CardModule.Deck;
+// export type Hand = CardModule.Hand;
 
-export { addCardToHand } from '/src/entities/card';
+export { Deck, Hand } from '/src/entities/card';
 
 export function validateCard(card: Card): boolean {
     return CardModule.validateCard(card) && card.suit !== "jokers"; // no jokers in blackjack
@@ -19,13 +21,13 @@ export function handValue(hand: Hand): number {
         for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
             const card : Card = { suit: suit, rank: rank as Rank };
             if (!validateCard(card)) continue;
-            value += pointValue(card) * CardModule.getCardCount(hand, card);
+            value += pointValue(card) * hand.countCard(card); // should be guaranteed valid
         }
     }
     let aceCount = 0;
     for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
         const card : Card = { suit: suit, rank: 1 as Rank };
-        aceCount += CardModule.getCardCount(hand, card); // should be guaranteed valid
+        aceCount += hand.countCard(card); // should be guaranteed valid
     }
     value += aceCount * 11;
     while (value > 21 && aceCount > 0) {
