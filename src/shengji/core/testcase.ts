@@ -188,13 +188,13 @@ function randomLeadPlay(rng: RNG, trump: Trump): Play {
 // generates a random play and hand to "follow" a lead
 function randomFollowPlay(rng: RNG, ilead: IPlay, trump: Trump): { play: Play, hand: Hand } {
 
-    const deck : Deck = SJCore.initializeDeck(1);
+    const deck : Deck = new SJCore.Deck(1);
     const hand : Hand = SJCore.initializeHand();
 
     const extra : number = 8; // extra cards
 
     for (let i = 0; i < extra; i++) {
-        const card = SJCore.drawCard(deck);
+        const card = deck.draw();
         const card_rng = rng.next();
         if (card) {
             SJCore.addCardToHand(card, hand);

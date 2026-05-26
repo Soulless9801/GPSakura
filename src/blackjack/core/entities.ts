@@ -7,7 +7,7 @@ export type Card = CardModule.Card;
 export type Deck = CardModule.Deck;
 export type Hand = CardModule.Hand;
 
-export { seedDeck, drawCard, addCardToHand } from '/src/entities/card';
+export { addCardToHand } from '/src/entities/card';
 
 export function validateCard(card: Card): boolean {
     return CardModule.validateCard(card) && card.suit !== "jokers"; // no jokers in blackjack

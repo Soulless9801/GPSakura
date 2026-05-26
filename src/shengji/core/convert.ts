@@ -5,7 +5,7 @@ type Suit = SJCore.Suit;
 type Rank = SJCore.Rank;
 type Trump = SJCore.Trump;
 type Card = SJCore.Card;
-type Deck = SJCore.Deck;
+// type Deck = SJCore.Deck;
 type Hand = SJCore.Hand;
 type Play = SJCore.Play;
 
@@ -58,63 +58,12 @@ export function cardsToString(cards: Card[]): string {
     return "[" + card_strings.join(', ') + "]";
 }
 
-// deck helper functions
-export function shuffleDeck(deck: Deck): void {
-    for (let i = deck.cards.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck.cards[i], deck.cards[j]] = [deck.cards[j], deck.cards[i]];
-    }
-}
-
-export function initializeDeck(decks: number): Deck {
-    const deck: Deck = { cards: [] };
-    for (let d = 0; d < decks; d++){
-        for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
-            for (let rank = 1; rank <= 14; rank++){
-                const card : Card = { suit: suit, rank: rank as Rank };
-                if (!validateCard(card)) continue;
-                deck.cards.push(card);
-            }
-        }
-    }
-    shuffleDeck(deck);
-    return deck;
-}
-
-export function drawCard(deck: Deck): Card | null {
-    if (deck.cards.length === 0) return null;
-    return deck.cards.pop() || null;
-}
-
-export function getCardCount(hand: Hand, card: Card): number {
-    const count : number | undefined = hand.cards.get(card.suit)?.get(card.rank);
-    return count || 0;
-}
-
-export function initializeHand(): Hand {
-    const hand : Hand = { cards : new Map<Suit, Map<Rank, number>>() };
-    for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
-        hand.cards.set(suit, new Map<Rank, number>());
-    }
-    return hand;
-}
-
-export function addCardToHand(card: Card, hand: Hand): void {
-    const prev : number = getCardCount(hand, card);
-    hand.cards.get(card.suit)?.set(card.rank, prev + 1);
-}
-
-export function removeCardFromHand(card: Card, hand: Hand): void {
-    const prev : number = getCardCount(hand, card);
-    hand.cards.get(card.suit)?.set(card.rank, Math.max(0, prev - 1));
-}
-
 export function handToCards(hand: Hand, trump: Trump | null): Card[] {
     let cards : Card[] = [];
     for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
         for (let rank = 1; rank <= 14; rank++){
             const card : Card = { suit : suit, rank : rank as Rank };
-            const num : number = getCardCount(hand, card);
+            const num : number = SJCore.getCardCount(hand, card);
             for (let i = 0; i < num; i++) cards.push(card);
         }
     }

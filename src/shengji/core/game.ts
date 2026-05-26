@@ -114,7 +114,7 @@ export class Game {
         return new Game(
             Game.deserialize(state) as GameState,
             Game.deserialize(hands) as Map<string, Hand>,
-            Game.deserialize(deck) as Deck,
+            SJCore.Deck.deserialize(Game.deserialize(deck) as { cards: Card[] }),
             Game.deserialize(dipai) as Card[]
         );
     }
@@ -167,7 +167,7 @@ export class Game {
         }
 
         this.hands = new Map(players.map(p => [p, SJCore.initializeHand()]));
-        this.deck = SJCore.initializeDeck(players.length / 2);
+        this.deck = new SJCore.Deck(players.length / 2);
         this.dipai = [];
         
         return this;
@@ -182,8 +182,7 @@ export class Game {
 
     finishDraw() {
         this.state.dip = true; // dipai exchange time
-        this.dipai = this.deck.cards;
-        this.deck.cards = [];
+        this.dipai = this.deck.unload(); // get dipai cards
         this.state.draw = false;
         this.state.turn = this.state.zhuang;
         this.state.chu = this.state.zhuang;
@@ -210,7 +209,7 @@ export class Game {
         const playerInfo = this.state.info.get(player);
         if (!playerInfo || playerInfo.index !== this.state.turn) return false; // wait your turn lil bro
 
-        const card = SJCore.drawCard(this.deck);
+        const card = this.deck.draw();
         if (!card) return false; // deck is empty, should never happen
 
         const hand = this.hands.get(player);
@@ -476,7 +475,7 @@ export class Game {
         
         this.state.count = 0;
 
-        this.deck = SJCore.initializeDeck(this.state.players.length / 2); // reset deck
+        this.deck = new SJCore.Deck(this.state.players.length / 2); // reset deck
 
         for (const player of this.state.players) this.hands.set(player, SJCore.initializeHand()); // reset hands
 
