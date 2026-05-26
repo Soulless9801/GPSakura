@@ -1,12 +1,14 @@
 import * as SJCore from "/src/shengji/core/entities";
 import * as SJComp from "/src/shengji/core/comparison";
 
+import { Deck, Hand } from "/src/shengji/core/entities";
+
 type Suit = SJCore.Suit;
 type Rank = SJCore.Rank;
 type Trump = SJCore.Trump;
 type Card = SJCore.Card;
-// type Deck = SJCore.Deck;
-type Hand = SJCore.Hand;
+// type Deck = Deck;
+// type Hand = Hand;
 type Play = SJCore.Play;
 
 export function trumpToString(trump: Trump): string {
@@ -63,7 +65,7 @@ export function handToCards(hand: Hand, trump: Trump | null): Card[] {
     for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
         for (let rank = 1; rank <= 14; rank++){
             const card : Card = { suit : suit, rank : rank as Rank };
-            const num : number = SJCore.getCardCount(hand, card);
+            const num : number = hand.countCard(card);
             for (let i = 0; i < num; i++) cards.push(card);
         }
     }

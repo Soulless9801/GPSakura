@@ -1,14 +1,16 @@
 import * as SJCore from "/src/shengji/core/entities";
 import * as SJComp from "/src/shengji/core/comparison"
 
+import { Deck, Hand } from "/src/shengji/core/entities";
+
 import RNG from '/src/entities/rng';
 
 type Suit = SJCore.Suit;
 type Rank = SJCore.Rank;
 type Trump = SJCore.Trump;
 type Card = SJCore.Card;
-type Deck = SJCore.Deck;
-type Hand = SJCore.Hand;
+// type Deck = Deck;
+// type Hand = Hand;
 type Play = SJCore.Play;
 
 type IPlay = SJComp.IPlay;
@@ -188,8 +190,8 @@ function randomLeadPlay(rng: RNG, trump: Trump): Play {
 // generates a random play and hand to "follow" a lead
 function randomFollowPlay(rng: RNG, ilead: IPlay, trump: Trump): { play: Play, hand: Hand } {
 
-    const deck : Deck = new SJCore.Deck(1);
-    const hand : Hand = SJCore.initializeHand();
+    const deck : Deck = new Deck(1);
+    const hand : Hand = new Hand();
 
     const extra : number = 8; // extra cards
 
@@ -197,9 +199,9 @@ function randomFollowPlay(rng: RNG, ilead: IPlay, trump: Trump): { play: Play, h
         const card = deck.draw();
         const card_rng = rng.next();
         if (card) {
-            SJCore.addCardToHand(card, hand);
-            if (card_rng > 0.5) SJCore.addCardToHand(card, hand);
-            if (card_rng > 0.8) SJCore.addCardToHand(card, hand);
+            hand.addCard(card);
+            if (card_rng > 0.5) hand.addCard(card);
+            if (card_rng > 0.8) hand.addCard(card);
         }
     }
 
@@ -243,14 +245,14 @@ function randomFollowPlay(rng: RNG, ilead: IPlay, trump: Trump): { play: Play, h
 
         for (const card of trick.cards) {
             play.cards.push(card);
-            SJCore.addCardToHand(card, hand); // ensure the play cards are in hand
+            hand.addCard(card); // ensure the play cards are in hand
         }
     }
 
     while (play.cards.length < lead.cards.length) {
         const card = genCard(rng);
         play.cards.push(card);
-        SJCore.addCardToHand(card, hand); // ensure the play cards are in hand
+        hand.addCard(card); // ensure the play cards are in hand
     }
 
     return { play, hand };

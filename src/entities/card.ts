@@ -41,7 +41,7 @@ export class Deck {
     }
 
     draw(): Card | null {
-        console.log(`Deck has ${this.cards.length} cards left.`);
+        // console.log(`Deck has ${this.cards.length} cards left.`);
         if (this.cards.length === 0) return null;
         return this.cards.pop() || null;
     }
@@ -59,27 +59,39 @@ export class Deck {
     }
 }
 
-export interface Hand {
-    cards: Map<Suit, Map<Rank, number>>;
+export class Hand {
+    
+    private cards: Map<Suit, Map<Rank, number>>;
+
+    constructor() {
+        this.cards = new Map<Suit, Map<Rank, number>>();
+        for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
+            this.cards.set(suit, new Map<Rank, number>());
+        }
+    }
+
+    countCard(card: Card): number {
+        return this.cards.get(card.suit)?.get(card.rank) || 0;
+    }
+
+    addCard(card: Card): void {
+        const suitMap = this.cards.get(card.suit);
+        if (!suitMap) return; // should never happen
+        const prev = suitMap.get(card.rank) || 0;
+        suitMap.set(card.rank, prev + 1);
+    }
+
+    removeCard(card: Card): void {
+        const suitMap = this.cards.get(card.suit);
+        if (!suitMap) return; // should never happen
+        const prev = suitMap.get(card.rank) || 0;
+        suitMap.set(card.rank, Math.max(0, prev - 1));
+    }
+
+    static deserialize(data: { cards: Map<Suit, Map<Rank, number>> }): Hand {
+        const hand = new Hand();
+        hand.cards = new Map(data.cards);
+        return hand;
+    }
 }
 
-export function getCardCount(hand: Hand, card: Card): number {
-    const count : number | undefined = hand.cards.get(card.suit)?.get(card.rank);
-    return count || 0;
-}
-
-export function initializeHand(): Hand {
-    const hand : Hand = { cards : new Map<Suit, Map<Rank, number>>() };
-    for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) hand.cards.set(suit, new Map<Rank, number>());
-    return hand;
-}
-
-export function addCardToHand(card: Card, hand: Hand): void {
-    const prev : number = getCardCount(hand, card);
-    hand.cards.get(card.suit)?.set(card.rank, prev + 1);
-}
-
-export function removeCardFromHand(card: Card, hand: Hand): void {
-    const prev : number = getCardCount(hand, card);
-    hand.cards.get(card.suit)?.set(card.rank, Math.max(0, prev - 1));
-}

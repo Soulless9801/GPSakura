@@ -49,6 +49,14 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
     const [dipai, setDipai] = useState<SJCore.Card[] | null>([]);
     const dipaiRef = useRef<HandRef>(null);
 
+    const parseRes = (res: any): void => {
+        if (res?.hand) {
+            const raw = SJGame.Game.deserialize(res.hand);
+            setHand(SJCore.Hand.deserialize(raw as { cards: Map<SJCore.Suit, Map<SJCore.Rank, number>> }));
+        }
+        if (res?.dipai) setDipai(SJGame.Game.deserialize(res.dipai) as SJCore.Card[]);
+    }
+
     async function drawCard() {
         const res = await clientRequest({
             roomId,
@@ -56,7 +64,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
             clientId: ably?.auth.clientId,
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function getHand() {
@@ -66,7 +74,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
             clientId: ably?.auth.clientId,
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function callTrump() {
@@ -98,7 +106,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
             }
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function shuaiCards() {
@@ -113,7 +121,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
             }
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function getDipai() {
@@ -123,7 +131,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
             clientId: ably?.auth.clientId,
         });
 
-        if (res?.dipai) setDipai(SJGame.Game.deserialize(res.dipai) as SJCore.Card[]);
+        parseRes(res);
     }
 
     async function exchangeDipai() {
@@ -139,7 +147,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
             }
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     const [phase, setPhase] = useState<string | null>(null);
