@@ -290,11 +290,13 @@ export class Game {
 
     tryPlay(player: string, play: Play) : boolean {
 
-        if (this.state.shuai) return this.tryShuai(player, play); // if currently shuai, try shuai first
-
         if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
         const playerInfo = this.state.info.get(player);
         if (!playerInfo || playerInfo.index !== this.state.turn) return false;
+
+        if (this.state.shuai) return this.tryShuai(player, play); // if currently shuai, try shuai first
+
+        if (play.cards.length === 0) return false; // must play at least one card
 
         const hand = this.hands.get(player);
         if (!hand) return false; // should never happen
@@ -343,6 +345,8 @@ export class Game {
         if (!playerInfo || playerInfo.index !== this.state.turn) return false;
 
         // console.log(hand);
+
+        if (play.cards.length === 0) return false; // must play at least one card
 
         const hand = this.hands.get(player);
         if (!hand) return false; // should never happen
