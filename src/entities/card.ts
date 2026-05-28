@@ -1,4 +1,4 @@
-import RNG from '/src/entities/rng';
+import RNG from "./rng";
 
 export type Suit = "spades" | "hearts" | "diamonds" | "clubs" | "jokers";
 export type Rank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
@@ -28,9 +28,11 @@ export class Deck {
             }
         }
         if (seed !== undefined) {
-            const rng = new RNG(seed); // set seed shuffle
+            const rng = new RNG(seed);
             this.cards = rng.shuffle(this.cards);
-        } else this.shuffle();
+        } else {
+            this.shuffle();
+        }
     }
 
     shuffle(): void {
@@ -94,4 +96,3 @@ export class Hand {
         return hand;
     }
 }
-

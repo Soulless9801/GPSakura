@@ -1,19 +1,20 @@
-// client request interface
-
-interface ClientRequest {
-    action: string;
-    roomId?: string;
-    clientId?: string;
+export interface ClientRequest {
     payload?: any;
+}
+
+export interface GameRequest extends ClientRequest {
+    action: string;
+    clientId: string;
+    roomId: string;
 }
 
 const timeout = 1000; // UX timeout in ms
 
 // UX throttling
 
-function disableButtons() {
+function disableButtons(className: string) {
 
-    const btns = document.querySelectorAll<HTMLButtonElement>(".bjg-button__game");
+    const btns = document.querySelectorAll<HTMLButtonElement>(`.${className}`);
 
     // console.log(`Disabling ${btns.length} buttons for ${timeout}ms`);
 
@@ -28,13 +29,11 @@ function disableButtons() {
     }, timeout);
 }
 
-// Generic client request
+export async function clientRequest(request: ClientRequest, className: string, functionName: string) {
 
-export async function clientRequest(request: ClientRequest) {
+    disableButtons(className);
 
-    disableButtons();
-
-    const res =  await fetch("/.netlify/functions/blackjack-game-room", {
+    const res =  await fetch(`/.netlify/functions/${functionName}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

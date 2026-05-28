@@ -4,6 +4,8 @@ import * as SJConv from '/src/shengji/core/convert';
 
 import { Deck, Hand } from "/src/shengji/core/entities";
 
+import { serialize, deserialize } from "/src/utils/serial";
+
 type Suit = SJCore.Suit;
 type Rank = SJCore.Rank;
 type Trump = SJCore.Trump;
@@ -21,7 +23,7 @@ type PlayerInfo = {
     play: Play | null;
 }
 
-export type GameState = {
+export interface GameState {
     // deck: Deck
     round: number // current round number, starting from 1
 
@@ -58,25 +60,6 @@ function nullPlay(): Play {
     return { cards: [], suit: null };
 }
 
-function replacer(key: string, value: any) {
-    if (value instanceof Map) {
-        return {
-            dataType: 'Map',
-            value: Array.from(value.entries()), // or with spread: value: [...value]
-        };
-    } else {
-        return value;
-    }
-}
-        
-function reviver(key: string, value: any) {
-    if (value && value.dataType === 'Map') {
-        return new Map(value.value);
-    } else {
-        return value;
-    }
-}
-
 export class Game {
 
     private state: GameState;
@@ -95,39 +78,31 @@ export class Game {
         this.dipai = dipai;
     }
 
-    private static find(arr: string[] | null, target: string | null): number {
-        if (!arr || !target) return -1;
-        for (let i = 0; i < arr.length; i++) {
-            if (arr[i] === target) return i;
-        }
-        return -1;
-    }
-
-    static serialize(obj: object): string {
-        return JSON.stringify(obj, replacer);
-    }
-
-    static deserialize(string: string): unknown {
-        return JSON.parse(string, reviver);
-    }
+    // private static find(arr: string[] | null, target: string | null): number {
+    //     if (!arr || !target) return -1;
+    //     for (let i = 0; i < arr.length; i++) {
+    //         if (arr[i] === target) return i;
+    //     }
+    //     return -1;
+    // }
 
     static deserializeGame(game: string): Game {
         const { state, hands, deck, dipai } = JSON.parse(game);
-        const rawHands = Game.deserialize(hands) as Map<string, { cards: Map<Suit, Map<Rank, number>> }>;
+        const rawHands = deserialize(hands) as Map<string, { cards: Map<Suit, Map<Rank, number>> }>;
         return new Game(
-            Game.deserialize(state) as GameState,
+            deserialize(state) as GameState,
             new Map(Array.from(rawHands.entries(), ([player, hand]) => [player, Hand.deserialize(hand)])),
-            Deck.deserialize(Game.deserialize(deck) as { cards: Card[] }),
-            Game.deserialize(dipai) as Card[]
+            Deck.deserialize(deserialize(deck) as { cards: Card[] }),
+            deserialize(dipai) as Card[]
         );
     }
 
     serializeGame(): string {
         return JSON.stringify({
-            state: Game.serialize(this.state),
-            hands: Game.serialize(this.hands),
-            deck: Game.serialize(this.deck),
-            dipai: Game.serialize(this.dipai)
+            state: serialize(this.state),
+            hands: serialize(this.hands),
+            deck: serialize(this.deck),
+            dipai: serialize(this.dipai)
         });
     }
 
