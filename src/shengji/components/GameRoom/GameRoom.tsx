@@ -108,6 +108,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
 
     async function playCards() {
         const cards = handRef.current?.getActiveCards() || [];
+        if (cards.length === 0) return; // must select cards to play
         const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
         const res = await SJRequest({
             roomId,
@@ -123,6 +124,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
 
     async function shuaiCards() {
         const cards = handRef.current?.getActiveCards() || [];
+        if (cards.length === 0) return; // must select cards to shuai
         const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
         const res = await SJRequest({
             roomId,
