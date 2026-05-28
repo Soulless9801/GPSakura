@@ -6,6 +6,7 @@ export const games = pgTable('games', {
   bet_amount: doublePrecision('bet_amount').notNull(),
   player_cards: integer('player_cards').notNull(),
   dealer_cards: integer('dealer_cards').notNull(),
+  deck_seed: integer('deck_seed').notNull(),
 })
 
 export const players = pgTable('players', {
