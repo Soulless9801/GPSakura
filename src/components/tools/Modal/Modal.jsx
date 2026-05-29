@@ -4,7 +4,7 @@ import TextParser from '/src/components/tools/TextParser/TextParser.jsx';
 
 import "./Modal.css";
 
-function ModalContent({ open, onClose, onExited, children }) {
+function ModalContent({ open, onClose, onExited, children, scrollable = true }) {
 
     useEffect(() => {
         document.body.style.overflow = open ? "hidden" : "";
@@ -28,7 +28,10 @@ function ModalContent({ open, onClose, onExited, children }) {
         <section className={`modalRoot ${open ? "open" : ""}`} aria-hidden={!open}>
             <div className="modalBackdrop" onClick={onClose} />
 
-            <div className="modalPanel" onClick={e => e.stopPropagation()}>
+            <div
+                className={`modalPanel ${scrollable ? "scrollable" : "nonScrollable"}`}
+                onClick={e => e.stopPropagation()}
+            >
                 <button className="modalClose" onClick={onClose}>✕</button>
                 {children}
             </div>
@@ -36,7 +39,7 @@ function ModalContent({ open, onClose, onExited, children }) {
     );
 }
 
-export default function Modal({title, description, buttonText, buttonStyle={}, buttonClassName=""}) {
+export default function Modal({title, description, buttonText, buttonStyle={}, buttonClassName="", scrollable = true}) {
     const [open, setOpen] = useState(false);
 
     const openModal = () => {
@@ -55,6 +58,7 @@ export default function Modal({title, description, buttonText, buttonStyle={}, b
                 open={open}
                 onClose={closeModal}
                 onExited={closeModal}
+                scrollable={scrollable}
             >
                 <h2 style={{textAlign: "start"}}>{title}</h2>
                 <br/>
