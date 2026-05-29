@@ -2,12 +2,16 @@ import * as SJCore from '/src/shengji/core/entities';
 import * as SJComp from '/src/shengji/core/comparison';
 import * as SJConv from '/src/shengji/core/convert';
 
+import { Deck, Hand } from "/src/shengji/core/entities";
+
+import { serialize, deserialize } from "/src/utils/serial";
+
 type Suit = SJCore.Suit;
 type Rank = SJCore.Rank;
 type Trump = SJCore.Trump;
 type Card = SJCore.Card;
-type Deck = SJCore.Deck;
-type Hand = SJCore.Hand;
+// type Deck = Deck;
+// type Hand = Hand;
 type Play = SJCore.Play;
 
 type IPlay = SJComp.IPlay;
@@ -19,7 +23,7 @@ type PlayerInfo = {
     play: Play | null;
 }
 
-export type GameState = {
+export interface GameState {
     // deck: Deck
     round: number // current round number, starting from 1
 
@@ -56,25 +60,6 @@ function nullPlay(): Play {
     return { cards: [], suit: null };
 }
 
-function replacer(key: string, value: any) {
-    if (value instanceof Map) {
-        return {
-            dataType: 'Map',
-            value: Array.from(value.entries()), // or with spread: value: [...value]
-        };
-    } else {
-        return value;
-    }
-}
-        
-function reviver(key: string, value: any) {
-    if (value && value.dataType === 'Map') {
-        return new Map(value.value);
-    } else {
-        return value;
-    }
-}
-
 export class Game {
 
     private state: GameState;
@@ -93,38 +78,31 @@ export class Game {
         this.dipai = dipai;
     }
 
-    private static find(arr: string[] | null, target: string | null): number {
-        if (!arr || !target) return -1;
-        for (let i = 0; i < arr.length; i++) {
-            if (arr[i] === target) return i;
-        }
-        return -1;
-    }
-
-    static serialize(obj: object): string {
-        return JSON.stringify(obj, replacer);
-    }
-
-    static deserialize(string: string): unknown {
-        return JSON.parse(string, reviver);
-    }
+    // private static find(arr: string[] | null, target: string | null): number {
+    //     if (!arr || !target) return -1;
+    //     for (let i = 0; i < arr.length; i++) {
+    //         if (arr[i] === target) return i;
+    //     }
+    //     return -1;
+    // }
 
     static deserializeGame(game: string): Game {
         const { state, hands, deck, dipai } = JSON.parse(game);
+        const rawHands = deserialize(hands) as Map<string, { cards: Map<Suit, Map<Rank, number>> }>;
         return new Game(
-            Game.deserialize(state) as GameState,
-            Game.deserialize(hands) as Map<string, Hand>,
-            Game.deserialize(deck) as Deck,
-            Game.deserialize(dipai) as Card[]
+            deserialize(state) as GameState,
+            new Map(Array.from(rawHands.entries(), ([player, hand]) => [player, Hand.deserialize(hand)])),
+            Deck.deserialize(deserialize(deck) as { cards: Card[] }),
+            deserialize(dipai) as Card[]
         );
     }
 
     serializeGame(): string {
         return JSON.stringify({
-            state: Game.serialize(this.state),
-            hands: Game.serialize(this.hands),
-            deck: Game.serialize(this.deck),
-            dipai: Game.serialize(this.dipai)
+            state: serialize(this.state),
+            hands: serialize(this.hands),
+            deck: serialize(this.deck),
+            dipai: serialize(this.dipai)
         });
     }
 
@@ -139,7 +117,6 @@ export class Game {
 
             players: players,
             info: new Map(players.map((p, i) => [p, { index: i, username: users[i], play: null }])),
-            // hands: new Map(players.map(p => [p, SJCore.initializeHand()])),
             atk: 0,
 
             draw: true, 
@@ -166,8 +143,8 @@ export class Game {
             dip: false,
         }
 
-        this.hands = new Map(players.map(p => [p, SJCore.initializeHand()]));
-        this.deck = SJCore.initializeDeck(players.length / 2);
+        this.hands = new Map(players.map(p => [p, new Hand()]));
+        this.deck = new Deck(players.length / 2);
         this.dipai = [];
         
         return this;
@@ -182,8 +159,7 @@ export class Game {
 
     finishDraw() {
         this.state.dip = true; // dipai exchange time
-        this.dipai = this.deck.cards;
-        this.deck.cards = [];
+        this.dipai = this.deck.unload(); // get dipai cards
         this.state.draw = false;
         this.state.turn = this.state.zhuang;
         this.state.chu = this.state.zhuang;
@@ -210,13 +186,13 @@ export class Game {
         const playerInfo = this.state.info.get(player);
         if (!playerInfo || playerInfo.index !== this.state.turn) return false; // wait your turn lil bro
 
-        const card = SJCore.drawCard(this.deck);
+        const card = this.deck.draw();
         if (!card) return false; // deck is empty, should never happen
 
         const hand = this.hands.get(player);
         if (!hand) return false; // should never happen
 
-        SJCore.addCardToHand(card, hand);
+        hand.addCard(card);
 
         if (this.state.turn === 0) this.state.count++;
 
@@ -254,8 +230,8 @@ export class Game {
         if (!hand) return false; // should never happen
 
         if (trump.suit === "jokers"){ // joker declaration
-            const joker_s : number = SJCore.getCardCount(hand, { suit: "jokers", rank: 1 });
-            const joker_b : number = SJCore.getCardCount(hand, { suit: "jokers", rank: 2 });
+            const joker_s : number = hand.countCard({ suit: "jokers", rank: 1 });
+            const joker_b : number = hand.countCard({ suit: "jokers", rank: 2 });
 
             if ((Math.max(joker_s, joker_b) === this.state.players.length / 2) || 
                 (joker_s >= this.state.players.length / 4 && joker_b >= this.state.players.length / 4)) {
@@ -267,7 +243,7 @@ export class Game {
         
         if (this.state.trump.rank !== trump.rank) return false; // only call same rank
 
-        const cnt: number = SJCore.getCardCount(hand, { suit: trump.suit, rank: trump.rank });
+        const cnt: number = hand.countCard({ suit: trump.suit, rank: trump.rank });
         if (cnt > this.state.declare) return this.setTrump(playerInfo.index, cnt, trump.suit); // regular declaration
 
         return false;
@@ -296,13 +272,13 @@ export class Game {
         if (!SJComp.isSubset(ireceive, idipai.ihand)) return false; // must receive cards in dipai
 
         for (const card of give){
-            SJCore.removeCardFromHand(card, hand);
-            SJCore.addCardToHand(card, idipai.ihand.hand);
+            hand.removeCard(card);
+            idipai.ihand.hand.addCard(card);
         }
 
         for (const card of receive){
-            SJCore.addCardToHand(card, hand);
-            SJCore.removeCardFromHand(card, idipai.ihand.hand);
+            hand.addCard(card);
+            idipai.ihand.hand.removeCard(card);
         }
 
         this.dipai = SJConv.handToCards(idipai.ihand.hand, null); // convert back to array
@@ -314,11 +290,13 @@ export class Game {
 
     tryPlay(player: string, play: Play) : boolean {
 
-        if (this.state.shuai) return this.tryShuai(player, play); // if currently shuai, try shuai first
-
         if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
         const playerInfo = this.state.info.get(player);
         if (!playerInfo || playerInfo.index !== this.state.turn) return false;
+
+        if (this.state.shuai) return this.tryShuai(player, play); // if currently shuai, try shuai first
+
+        if (play.cards.length === 0) return false; // must play at least one card
 
         const hand = this.hands.get(player);
         if (!hand) return false; // should never happen
@@ -349,7 +327,7 @@ export class Game {
         if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) this.state.lead = playerInfo.index;
 
         for (const card of play.cards) {
-            SJCore.removeCardFromHand(card, hand);
+            hand.removeCard(card);
             this.state.points += SJCore.pointValue(card);
         }
 
@@ -367,6 +345,8 @@ export class Game {
         if (!playerInfo || playerInfo.index !== this.state.turn) return false;
 
         // console.log(hand);
+
+        if (play.cards.length === 0) return false; // must play at least one card
 
         const hand = this.hands.get(player);
         if (!hand) return false; // should never happen
@@ -402,7 +382,7 @@ export class Game {
         if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) this.state.lead = playerInfo.index;
 
         for (const card of play.cards) {
-            SJCore.removeCardFromHand(card, hand);
+            hand.removeCard(card);
             this.state.points += SJCore.pointValue(card);
         }
 
@@ -476,9 +456,9 @@ export class Game {
         
         this.state.count = 0;
 
-        this.deck = SJCore.initializeDeck(this.state.players.length / 2); // reset deck
+        this.deck = new Deck(this.state.players.length / 2); // reset deck
 
-        for (const player of this.state.players) this.hands.set(player, SJCore.initializeHand()); // reset hands
+        for (const player of this.state.players) this.hands.set(player, new Hand()); // reset hands
 
         this.dipai = [];
 
