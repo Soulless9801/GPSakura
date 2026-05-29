@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 
+import { deserialize } from "/src/utils/serial";
+
 import { useAbly } from "/src/shengji/server/ably";
-import { clientRequest } from "/src/shengji/server/request";
+import { GameRequest, clientRequest } from "/src/utils/request";
 
 import * as SJGame from "/src/shengji/core/game";
 import * as SJCore from "/src/shengji/core/entities";
@@ -15,12 +17,18 @@ import Card from "/src/shengji/components/Card/Card";
 
 import './GameRoom.css';
 
+// Specific Request
+
+async function SJRequest(request: GameRequest) {
+    return clientRequest(request, "sjg-button__game", "shengji-game-room");
+}
+
 // Game components
 
 function PlayerList({ players, teams }: { players: string[], teams: number[] }) {
 
-    const a = players.filter((p, i) => teams[i] === 0);
-    const b = players.filter((p, i) => teams[i] === 1);
+    const a = players.filter((_, i) => teams[i] === 0);
+    const b = players.filter((_, i) => teams[i] === 1);
 
     return (
         <div className="sjg-player__wrapper">
@@ -41,6 +49,10 @@ function PlayerList({ players, teams }: { players: string[], teams: number[] }) 
     );
 }
 
+const getClientId = (ably: any) => { 
+    return ably?.auth?.clientId || "";
+};
+
 function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, team: number, game: SJGame.GameState | null }) {
     
     const [hand, setHand] = useState<SJCore.Hand | null>(null);
@@ -49,34 +61,42 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
     const [dipai, setDipai] = useState<SJCore.Card[] | null>([]);
     const dipaiRef = useRef<HandRef>(null);
 
+    const parseRes = (res: any): void => {
+        if (res?.hand) {
+            const raw = deserialize(res.hand);
+            setHand(SJCore.Hand.deserialize(raw as { cards: Map<SJCore.Suit, Map<SJCore.Rank, number>> }));
+        }
+        if (res?.dipai) setDipai(deserialize(res.dipai) as SJCore.Card[]);
+    }
+
     async function drawCard() {
-        const res = await clientRequest({
+        const res = await SJRequest({
             roomId,
             action: "draw",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function getHand() {
-        const res = await clientRequest({
+        const res = await SJRequest({
             roomId,
             action: "hand",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function callTrump() {
         const cards = handRef.current?.getActiveCards() || [];
         if (cards.length === 0) return; // must select cards to call trump
         if (!SJComp.isAllSame(cards) && !SJComp.isAllJokers(cards)) return; // must be all same card or jokers to call trump
-        return clientRequest({
+        return SJRequest({
             roomId,
             action: "trump",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
             payload: {
                 trump: JSON.stringify({
                     suit: cards[0].suit,
@@ -88,58 +108,60 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
 
     async function playCards() {
         const cards = handRef.current?.getActiveCards() || [];
+        if (cards.length === 0) return; // must select cards to play
         const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
-        const res = await clientRequest({
+        const res = await SJRequest({
             roomId,
             action: "play",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
             payload: {
                 play: JSON.stringify(play),
             }
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function shuaiCards() {
         const cards = handRef.current?.getActiveCards() || [];
+        if (cards.length === 0) return; // must select cards to shuai
         const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
-        const res = await clientRequest({
+        const res = await SJRequest({
             roomId,
             action: "shuai",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
             payload: {
                 play: JSON.stringify(play),
             }
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     async function getDipai() {
-        const res = await clientRequest({
+        const res = await SJRequest({
             roomId,
             action: "dipai",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
         });
 
-        if (res?.dipai) setDipai(SJGame.Game.deserialize(res.dipai) as SJCore.Card[]);
+        parseRes(res);
     }
 
     async function exchangeDipai() {
         const give = handRef.current?.getActiveCards() || [];
         const receive = dipaiRef.current?.getActiveCards() || [];
-        const res = await clientRequest({
+        const res = await SJRequest({
             roomId,
             action: "exchange",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
             payload: {
                 give: JSON.stringify(give),
                 receive: JSON.stringify(receive),
             }
         });
 
-        if (res?.hand) setHand(SJGame.Game.deserialize(res.hand) as SJCore.Hand);
+        parseRes(res);
     }
 
     const [phase, setPhase] = useState<string | null>(null);
@@ -155,7 +177,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
         else if (game.draw) setPhase("draw");
         else if (game.dip) {
             setPhase("dipai");
-            if (game.players[game.zhuang] !== ably?.auth.clientId) return;
+            if (game.players[game.zhuang] !== getClientId(ably)) return;
             getDipai();
         } else setPhase("play");
     }, [game]);
@@ -206,7 +228,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                     )}
                     {phase === "dipai" && (
                         <div className="sjg-dipai">
-                            {ably?.auth.clientId === game.players[game.zhuang] && (
+                            {getClientId(ably) === game.players[game.zhuang] && (
                                 <>
                                     <p>Dipai (底牌)</p>
                                     <Hand ref={dipaiRef} cards={dipai || []} className="sjg-hand__wrapper"/>
@@ -297,27 +319,28 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     async function startGame() {
         if (team < 0) return false;
-        return clientRequest({
+        return SJRequest({
             roomId,
             action: "start",
+            clientId: getClientId(ably),
         });
     }
 
     async function getState() {
-        const res = await clientRequest({
+        const res = await SJRequest({
             roomId,
             action: "state",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
         });
 
-        if (res?.game) setGame(SJGame.Game.deserialize(res.game) as SJGame.GameState);
+        if (res?.game) setGame(deserialize(res.game) as SJGame.GameState);
     }
 
     async function changeUsername(user: string) {
-        return clientRequest({
+        return SJRequest({
             roomId,
             action: "username",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
             payload: {
                 username: user,
             }
@@ -328,17 +351,18 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     async function endGame() {
         if (team < 0) return false;
-        return clientRequest({
+        return SJRequest({
             roomId,
             action: "end",
+            clientId: getClientId(ably),
         });
     }
 
     async function speedDraw() {
-        await clientRequest({
+        await SJRequest({
             roomId,
             action: "speed_draw",
-            clientId: ably?.auth.clientId,
+            clientId: getClientId(ably),
         });
     }
 
@@ -408,7 +432,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
-                const state = SJGame.Game.deserialize(msg.data.game) as SJGame.GameState;
+                const state = deserialize(msg.data.game) as SJGame.GameState;
                 setGame(state);
                 // console.log("Updated:", state);
             });
@@ -432,7 +456,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     useEffect(() => {
         if (!game) return;
         // adjust team
-        const idx = game.info.get(ably?.auth.clientId || "")?.index;
+        const idx = game.info.get(getClientId(ably) || "")?.index;
         // console.log(idx);
         if (idx === undefined) setTeam(-1);
         else setTeam(idx % 2);
@@ -459,7 +483,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             <div className="sjg-room__info">
                 <p>Room: <strong>{roomId}</strong></p>
                 <p>Username: <strong>{username}</strong></p>
-                <p>PlayerID: <strong>{ably?.auth.clientId}</strong></p>
+                <p>PlayerID: <strong>{getClientId(ably)}</strong></p>
                 <p>Connection: <strong>{connectionState}</strong></p>
             </div>
             <button className="sjg-button__game" onClick={() => endGame()}>End Game</button>

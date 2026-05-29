@@ -25,11 +25,11 @@ export default function Navbar() {
         if (theme === 'dark') {
             icon.classList.replace('fa-sun', 'fa-moon');
             setBrand(darkImage);
-            websiteIcon.to = darkImage;
+            if (websiteIcon) websiteIcon.href = darkImage;
         } else {
             icon.classList.replace('fa-moon', 'fa-sun');
             setBrand(lightImage);
-            websiteIcon.to = lightImage;
+            if (websiteIcon) websiteIcon.href = lightImage;
         }
     }, [theme]);
 

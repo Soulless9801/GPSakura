@@ -36,7 +36,7 @@
 }
 
 .customSelectOptions {
-    transition: var(--dropdown-timers);
+    transition: var(--dropdown-timers), var(--transition-timers) !important;
     opacity: 0;
     padding: 0px;
     transform: translateY(-10px);
@@ -68,7 +68,7 @@
 .customSelectOption {
     display: flex;
     align-items: center;
-    transition: var(--transition-timers);
+    transition: var(--transition-timers) !important;
     padding: var(--padding-dropdown);
     cursor: pointer;
     margin: 4px;

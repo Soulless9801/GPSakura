@@ -1,5 +1,6 @@
 import * as SJCore from "/src/shengji/core/entities";
 
+import { Hand } from "/src/shengji/core/entities";
 
 // TYPES
 
@@ -7,7 +8,7 @@ type Suit = SJCore.Suit;
 type Rank = SJCore.Rank;
 type Trump = SJCore.Trump;
 type Card = SJCore.Card;
-type Hand = SJCore.Hand;
+// type Hand = Hand;
 type Play = SJCore.Play;
 
 
@@ -54,7 +55,7 @@ function getHandStruct(hand: Hand, trump: Trump): { cards: Card[], count: number
     for (let rank = 1; rank <= 14; rank++) {
         for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
             const card: Card = { suit, rank: rank as Rank };
-            const cardCount: number = SJCore.getCardCount(hand, card);
+            const cardCount: number = hand.countCard(card);
             if (cardCount > 0) {
                 cards.push(card);
             }
@@ -62,7 +63,7 @@ function getHandStruct(hand: Hand, trump: Trump): { cards: Card[], count: number
     }
     sortCards(cards, trump);
     for (const card of cards) {
-        count.push(SJCore.getCardCount(hand, card));
+        count.push(hand.countCard(card));
     }
     return { cards, count };
 }
@@ -135,10 +136,8 @@ export function playToInfo(play: Play, trump: Trump): IPlay {
 
 // TODO: maybe move to sjconv?
 function playToHand(play: Play): Hand {
-    const hand: Hand = SJCore.initializeHand();
-    for (const card of play.cards) {
-        SJCore.addCardToHand(card, hand);
-    }
+    const hand: Hand = new Hand();
+    for (const card of play.cards) hand.addCard(card);
     return hand;
 }
 
@@ -348,9 +347,7 @@ export function isSubset(iplay: IPlay, ihand: IHand): boolean {
 
     const hand : Hand = ihand.hand;
 
-    for (const card of play.cards) {
-        if (SJCore.getCardCount(play_hand, card) > SJCore.getCardCount(hand, card)) return false;
-    }
+    for (const card of play.cards) if (play_hand.countCard(card) > hand.countCard(card)) return false;
 
     return true;
 }
@@ -408,7 +405,7 @@ function isTrickValid(lead: number[], play: Card[], hand: Card[], trump: Trump):
 // check if play is possible given hand
 function isPlayPossible(lead: number[][], iplay: IPlay, ilead: IPlay, ihand: IHand, trump: Trump): boolean {
 
-    console.log("Lead Decomposition:", lead);
+    // console.log("Lead Decomposition:", lead);
 
     const pos : number[] = [];
 
