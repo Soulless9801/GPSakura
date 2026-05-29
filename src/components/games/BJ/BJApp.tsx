@@ -14,6 +14,7 @@ async function BJRequest(request : GameRequest) {
     return clientRequest(request, "bj-button__game", "blackjack-game-room");
 }
 
+// TODO: replace
 // TEMPORARY
 
 function cardToString(card: Card): string {
@@ -21,16 +22,8 @@ function cardToString(card: Card): string {
 }
 
 function handToString(hand: Hand | null): string {
-    console.log(`Converting hand to string: ${hand ? "has cards" : "no cards"}`);
-    if (!hand) return "No cards";
-    const cards: Card[] = [];
-    for (const [suit, rankMap] of hand['cards']) {
-        for (const [rank, count] of rankMap) {
-            for (let i = 0; i < count; i++) {
-                cards.push({ suit, rank } as Card);
-            }
-        }
-    }
+    const cards = hand?.getCards() || [];
+    // console.log("Hand cards:", cards);
     return "[" + cards.map(cardToString).join(", ") + "]";
 }
 

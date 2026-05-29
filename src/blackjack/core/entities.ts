@@ -27,32 +27,31 @@ export class Deck extends CardModule.Deck {
     }
 }
 
-export class Hand extends CardModule.Hand {
+export class Hand {
+    
+    private cards: Card[];
 
     private card_count: number;
     private hand_value: number;
 
     private ace_count: number;
-    
+
     constructor() {
-        super();
+        this.cards = [];
         this.card_count = 0;
         this.hand_value = 0;
         this.ace_count = 0;
     }
 
     addCard(card: Card): void {
-        super.addCard(card);
+        this.cards.push(card);
         this.card_count++;
         this.hand_value += pointValue(card);
         if (card.rank === 14) this.ace_count++;
     }
 
-    removeCard(card: Card): void {
-        super.removeCard(card);
-        this.card_count--;
-        this.hand_value -= pointValue(card);
-        if (card.rank === 14) this.ace_count--;
+    getCards(): Card[] {
+        return this.cards;
     }
 
     getCardCount(): number {
@@ -69,14 +68,66 @@ export class Hand extends CardModule.Hand {
         return value;
     }
 
-    static deserialize(data: { cards: Map<Suit, Map<Rank, number>>,  card_count: number, hand_value: number, ace_count: number }): Hand {
-        const hand = super.deserialize({ cards: data.cards }) as Hand;
+    static deserialize(data: { cards: Card[], card_count: number, hand_value: number, ace_count: number }): Hand {
+        const hand = new Hand();
+        hand.cards = data.cards;
         hand.card_count = data.card_count;
         hand.hand_value = data.hand_value;
         hand.ace_count = data.ace_count;
         return hand;
     }
 }
+
+// export class UnorderedHand extends CardModule.Hand {
+
+//     private card_count: number;
+//     private hand_value: number;
+
+//     private ace_count: number;
+    
+//     constructor() {
+//         super();
+//         this.card_count = 0;
+//         this.hand_value = 0;
+//         this.ace_count = 0;
+//     }
+
+//     addCard(card: Card): void {
+//         super.addCard(card);
+//         this.card_count++;
+//         this.hand_value += pointValue(card);
+//         if (card.rank === 14) this.ace_count++;
+//     }
+
+//     removeCard(card: Card): void {
+//         super.removeCard(card);
+//         this.card_count--;
+//         this.hand_value -= pointValue(card);
+//         if (card.rank === 14) this.ace_count--;
+//     }
+
+//     getCardCount(): number {
+//         return this.card_count;
+//     }
+
+//     getHandValue(): number {
+//         let value = this.hand_value;
+//         let aces = this.ace_count;
+//         while (value > 21 && aces > 0) {
+//             value -= 10;
+//             aces--;
+//         }
+//         return value;
+//     }
+
+//     static deserialize(data: { cards: Map<Suit, Map<Rank, number>>,  card_count: number, hand_value: number, ace_count: number }): Hand {
+//         const hand = super.deserialize({ cards: data.cards }) as Hand;
+//         hand.card_count = data.card_count;
+//         hand.hand_value = data.hand_value;
+//         hand.ace_count = data.ace_count;
+//         return hand;
+//     }
+// }
 
 export function validateCard(card: Card): boolean {
     return CardModule.validateCard(card) && card.suit !== "jokers"; // no jokers in blackjack
