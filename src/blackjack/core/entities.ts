@@ -5,7 +5,6 @@ export type Rank = CardModule.Rank;
 
 export type Card = CardModule.Card;
 // export type Deck = CardModule.Deck;
-// export type Hand = CardModule.Hand;
 
 export class Deck extends CardModule.Deck {
 
@@ -78,6 +77,18 @@ export class Hand {
     }
 }
 
+export function validateCard(card: Card): boolean {
+    return CardModule.validateCard(card) && card.suit !== "jokers"; // no jokers in blackjack
+}
+
+export function pointValue(card: Card): number {
+    if (card.rank > 1 && card.rank < 11) return card.rank;
+    if (card.rank > 10 && card.rank < 14) return 10;
+    if (card.rank === 14) return 11;
+    return 0;
+}
+
+
 // export class UnorderedHand extends CardModule.Hand {
 
 //     private card_count: number;
@@ -129,35 +140,24 @@ export class Hand {
 //     }
 // }
 
-export function validateCard(card: Card): boolean {
-    return CardModule.validateCard(card) && card.suit !== "jokers"; // no jokers in blackjack
-}
-
-export function handValue(hand: CardModule.Hand): number {
-    let value = 0;
-    for (let rank = 1; rank <= 13; rank++){
-        for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
-            const card : Card = { suit: suit, rank: rank as Rank };
-            if (!validateCard(card)) continue;
-            value += pointValue(card) * hand.countCard(card); // should be guaranteed valid
-        }
-    }
-    let aceCount = 0;
-    for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
-        const card : Card = { suit: suit, rank: 1 as Rank };
-        aceCount += hand.countCard(card); // should be guaranteed valid
-    }
-    value += aceCount * 11;
-    while (value > 21 && aceCount > 0) {
-        value -= 10;
-        aceCount--;
-    }
-    return value;
-}
-
-export function pointValue(card: Card): number {
-    if (card.rank > 1 && card.rank < 11) return card.rank;
-    if (card.rank > 10 && card.rank < 14) return 10;
-    if (card.rank === 14) return 11;
-    return 0;
-}
+// export function handValue(hand: CardModule.Hand): number {
+//     let value = 0;
+//     for (let rank = 1; rank <= 13; rank++){
+//         for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
+//             const card : Card = { suit: suit, rank: rank as Rank };
+//             if (!validateCard(card)) continue;
+//             value += pointValue(card) * hand.countCard(card); // should be guaranteed valid
+//         }
+//     }
+//     let aceCount = 0;
+//     for (const suit of ["spades", "hearts", "diamonds", "clubs"] as Suit[]) {
+//         const card : Card = { suit: suit, rank: 1 as Rank };
+//         aceCount += hand.countCard(card); // should be guaranteed valid
+//     }
+//     value += aceCount * 11;
+//     while (value > 21 && aceCount > 0) {
+//         value -= 10;
+//         aceCount--;
+//     }
+//     return value;
+// }
