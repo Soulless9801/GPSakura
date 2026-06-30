@@ -72,10 +72,23 @@ export default function BlogApp() {
 
     useEffect(() => {
         async function fetchPosts() {
+            
+            const res = await fetch('/.netlify/functions/firebase-collection-query', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    payload: {
+                        col: "posts",
+                        loc: "firebaseBlogPosts",
+                    }
+                }),
+            });
 
-            const json = await fetch('/.netlify/functions/firebase-blog-posts');
+            // const res = await fetch('/.netlify/functions/firebase-blog-posts');
 
-            const blogPosts = JSON.parse(await json.text());
+            const blogPosts = JSON.parse(await res.text());
 
             setPosts(sortPosts(blogPosts, sortBy));
             
