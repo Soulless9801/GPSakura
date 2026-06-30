@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { motion } from 'framer-motion';
 
-import Card from '/src/shengji/components/Card/Card';
+import Card from '/src/components/tools/Card/Card';
 
 import './Hand.css';
 

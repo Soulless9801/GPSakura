@@ -5,7 +5,7 @@ export type Rank = CardModule.Rank;
 
 export type Card = CardModule.Card;
 
-export { validateCard, Deck, Hand } from '/src/entities/card';
+export { validateCard, Deck } from '/src/entities/card';
 
 export interface Trump {
     suit: Suit | null;
@@ -21,4 +21,40 @@ export function pointValue(card: Card): number {
 export interface Play {
     cards: Card[];
     suit: Suit | null; // optional suit for non-single, non-lead plays
+}
+
+export class Hand {
+    
+    private cards: Map<Suit, Map<Rank, number>>;
+
+    constructor() {
+        this.cards = new Map<Suit, Map<Rank, number>>();
+        for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
+            this.cards.set(suit, new Map<Rank, number>());
+        }
+    }
+
+    countCard(card: Card): number {
+        return this.cards.get(card.suit)?.get(card.rank) || 0;
+    }
+
+    addCard(card: Card): void {
+        const suitMap = this.cards.get(card.suit);
+        if (!suitMap) return; // should never happen
+        const prev = suitMap.get(card.rank) || 0;
+        suitMap.set(card.rank, prev + 1);
+    }
+
+    removeCard(card: Card): void {
+        const suitMap = this.cards.get(card.suit);
+        if (!suitMap) return; // should never happen
+        const prev = suitMap.get(card.rank) || 0;
+        suitMap.set(card.rank, Math.max(0, prev - 1));
+    }
+
+    static deserialize(data: { cards: Map<Suit, Map<Rank, number>> }): Hand {
+        const hand = new Hand();
+        hand.cards = new Map(data.cards);
+        return hand;
+    }
 }
