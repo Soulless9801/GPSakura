@@ -40,27 +40,39 @@ export default function USACOTable() {
     const columns = ['Division', 'Problem Name', 'Submission'];
 
     useEffect(() => {
-        fetch('/.netlify/functions/usaco-problems-data')
-        .then(res => res.text())
-        .then(json => {
+        //fetch('/.netlify/functions/usaco-problems-data')
+        fetch('/.netlify/functions/firebase-collection-query', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                payload: {
+                    col: "usaco",
+                    loc: "firebaseUSACOProblems",
+                }
+            }),
+        })
+            .then(res => res.text())
+            .then(json => {
 
-            let rows = [];
-            const data = JSON.parse(json);
+                let rows = [];
+                const data = JSON.parse(json);
 
-            for (let i = 0; i < data.length; i++) {
+                for (let i = 0; i < data.length; i++) {
 
-                let div = data[i].division;
+                    let div = data[i].division;
 
-                rows.push([
-                    div.charAt(0).toUpperCase() + div.slice(1),
-                    `<a href="${data[i].link}">${data[i].title}</a>`,
-                    `<button class="view-btn" data-id="${data[i].id}">View</button>`,
-                ]);
-            }
+                    rows.push([
+                        div.charAt(0).toUpperCase() + div.slice(1),
+                        `<a href="${data[i].link}">${data[i].title}</a>`,
+                        `<button class="view-btn" data-id="${data[i].id}">View</button>`,
+                    ]);
+                }
 
-            setRows(rows);
+                setRows(rows);
 
-        });
+            });
     }, []);
 
     useEffect(() => {
@@ -70,7 +82,22 @@ export default function USACOTable() {
 
             const id = btn.dataset.id;
 
-            const res = await fetch(`/.netlify/functions/cp-problem-data?id=${id}`)
+            // const res = await fetch(`/.netlify/functions/cp-problem-data?id=${id}`)
+
+            const res = await fetch('/.netlify/functions/firebase-collection-query', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    payload: {
+                        col: "problems",
+                        loc: "firebaseProblemData",
+                        id: id,
+                    }
+                }),
+            });
+
             const json = await res.json();
 
             // console.log(json);
