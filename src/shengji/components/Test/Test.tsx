@@ -4,7 +4,7 @@ import * as SJCore from '/src/shengji/core/entities';
 import * as SJComp from '/src/shengji/core/comparison';
 import * as SJConv from '/src/shengji/core/convert';
 
-import Hand, { HandRef } from "/src/shengji/components/Hand/Hand";
+import Hand, { HandRef } from "/src/components/tools/Hand/Hand";
 
 import "./Test.css";
 
@@ -22,6 +22,8 @@ export default function Test() {
     useEffect(() => {
         setCards(SJConv.handToCards(testCase?.ihand.hand || new SJCore.Hand(), testCase?.trump || null));
     }, [testCase]);
+
+    const checkSelected = () => testCardRef.current?.getActiveCards();
 
     return (
         <div className="sjTest">
@@ -62,6 +64,9 @@ export default function Test() {
             {testCase && (
                 <div><Hand ref={testCardRef} cards={cards} /></div>
             )}
+            {/* <div>
+                <button onClick={checkSelected}>Check</button>
+            </div> */}
         </div>
     );
 }

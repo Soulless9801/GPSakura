@@ -12,7 +12,7 @@ import * as SJConv from "/src/shengji/core/convert";
 
 import Ably from "ably";
 
-import Hand, { HandRef } from "/src/shengji/components/Hand/Hand";
+import Hand, { HandRef } from "/src/components/tools/Hand/Hand";
 import Card from "/src/components/tools/Card/Card";
 
 import './GameRoom.css';
