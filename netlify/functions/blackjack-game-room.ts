@@ -1,3 +1,4 @@
+// TODO: add winning/losing
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -7,7 +8,6 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { games, players } from "../../db/schema.ts";
 
-import { Hand } from "../../src/blackjack/core/entities.ts";
 import { GameData, Game } from "../../src/blackjack/core/game.ts";
 
 import { serialize } from '../../src/utils/serial.ts';
@@ -166,7 +166,8 @@ export async function handler(event: any) {
 
             const game = await getGame();
             if (!(game instanceof Game)) return game; 
-            if (!game.dealerPlay()) return errorJSON("Dealer play failed");
+            while (game.dealerPlay()) continue; // keep playing until dealer is done
+            // if (!game.dealerPlay()) return errorJSON("Dealer play failed");
 
             await db
                 .update(games)

@@ -28,6 +28,8 @@
 
     --border-width: 1px;
 
+	--border-highlight-color: #0077ff;
+
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -43,6 +45,8 @@
 	--bg-color-primary: #212529;
 	--bg-color-secondary: #343a40;
 	--bg-color-hover: #4f5357;
+
+	--border-highlight-color: #00ffff;
 }
 
 html {

@@ -19,9 +19,7 @@ import './GameRoom.css';
 
 // Specific Request
 
-async function SJRequest(request: GameRequest) {
-    return clientRequest(request, "sjg-button__game", "shengji-game-room");
-}
+const SJRequest = async (request: GameRequest) => clientRequest(request, "sjg-button__game", "shengji-game-room");
 
 // Game components
 
@@ -220,7 +218,7 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
                                 {game.players.map((player, i) => (
                                     <div key={i} className={`sjg-play__player${i === game.turn ? ' active' : ''}${i === game.lead ? ' lead' : ''}`}>
                                         <p>{game.info.get(player)?.username}'s Play</p>
-                                        <Hand cards={game.info.get(player)?.play?.cards || []} className="sjg-hand__wrapper"/>
+                                        <Hand cards={game.info.get(player)?.play?.cards || []}/>
                                     </div>
                                 ))}
                             </div>
