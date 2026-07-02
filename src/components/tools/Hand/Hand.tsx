@@ -48,7 +48,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
 
     const computeActiveCards = () => {
         if (bactive.length !== cards.length) return [];
-        console.log("Active: ", cards.filter((_, index) => bactive[index]));
+        // console.log("Active: ", cards.filter((_, index) => bactive[index]));
         return cards.filter((_, index) => bactive[index]);
     }
 
@@ -71,7 +71,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
     }, []);
 
     return (
-        <div className={`${className}`.trim()}>
+        <div className={`card-hand__wrapper${className}`.trim()}>
             <div className="card-hand">
                 {cards.map((card, index) => {
                     if (!layout || !layout[index]) return null;

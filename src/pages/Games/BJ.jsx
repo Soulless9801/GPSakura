@@ -1,5 +1,6 @@
-import PageTitle from '/src/components/tools/PageTitle/PageTitle.jsx';
-import BJApp from '/src/components/games/BJ/BJApp.jsx';
+import PageTitle from '/src/components/tools/PageTitle/PageTitle';
+
+import BJApp from '/src/components/games/BJ/BJApp';
 
 export default function BlackJack() {
     return (

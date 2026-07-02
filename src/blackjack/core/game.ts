@@ -16,7 +16,7 @@ export class Game {
     private purgatory: BJCore.Card; // hole card
 
     private playerFinished: boolean = true;
-    private dealerFinished: boolean = true;
+    private dealerFinished: boolean = false;
 
     constructor(data: GameData) {
 
@@ -53,7 +53,7 @@ export class Game {
     }
 
     playerHit(): boolean {
-        if (this.playerFinished) return false;
+        if (this.playerFinished || this.checkNotLoser()) return false;
         const card = this.deck.draw();
         if (!card) return false; // should never happen
         this.playerHand.addCard(card);
@@ -61,14 +61,14 @@ export class Game {
     }
 
     playerStand(): boolean {
-        if (this.playerFinished) return false;
+        if (this.playerFinished || this.checkNotLoser()) return false;
         this.playerFinished = true;
         this.dealerHand.addCard(this.purgatory);
         return true;
     }
 
     dealerPlay(): boolean {
-        if (!this.playerFinished || this.dealerFinished) return false;
+        if (!this.playerFinished || this.dealerFinished || this.checkNotLoser()) return false;
         if (this.dealerHand.getHandValue() < 17) {
             const card = this.deck.draw();
             if (!card) return false; // should never happen
@@ -77,11 +77,23 @@ export class Game {
         return true;
     }
 
-    gameOver(): boolean {
-        return this.playerFinished && this.dealerFinished;
-    }
+    // turnsOver(): boolean {
+    //     return this.playerFinished && this.dealerFinished;
+    // }
 
-    checkWinner(): "player" | "dealer" | "tie" | null {
+    checkNotLoser(): "player" | "dealer" | null {
+
+        const playerValue = this.playerHand.getHandValue();
+        const dealerValue = this.dealerHand.getHandValue();
+        
+        if (playerValue > 21) return "dealer";
+        if (dealerValue > 21) return "player";
+
+        return null;
+    } 
+
+    checkWinner(): "player" | "dealer" | "tie" {
+
         const playerValue = this.playerHand.getHandValue();
         const dealerValue = this.dealerHand.getHandValue();
 
@@ -90,6 +102,7 @@ export class Game {
 
         if (playerValue > dealerValue) return "player";
         if (dealerValue > playerValue) return "dealer";
+        
         return "tie";
     }
 
