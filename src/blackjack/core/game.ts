@@ -64,6 +64,7 @@ export class Game {
         if (this.playerFinished || this.checkNotLoser()) return false;
         this.playerFinished = true;
         this.dealerHand.addCard(this.purgatory);
+        while (this.dealerPlay()) continue; // continuous dealer play
         return true;
     }
 
@@ -90,7 +91,11 @@ export class Game {
         if (dealerValue > 21) return "player";
 
         return null;
-    } 
+    }
+
+    checkOver(): boolean {
+        return (this.checkNotLoser() ? true : false) || (this.playerFinished && this.dealerFinished);
+    }
 
     checkWinner(): "player" | "dealer" | "tie" {
 

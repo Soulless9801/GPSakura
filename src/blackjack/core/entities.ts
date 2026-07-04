@@ -6,6 +6,17 @@ export type Rank = CardModule.Rank;
 export type Card = CardModule.Card;
 // export type Deck = CardModule.Deck;
 
+function validateCard(card: Card): boolean {
+    return CardModule.validateCard(card) && card.suit !== "jokers"; // no jokers in blackjack
+}
+
+function pointValue(card: Card): number {
+    if (card.rank > 1 && card.rank < 11) return card.rank;
+    if (card.rank > 10 && card.rank < 14) return 10;
+    if (card.rank === 14) return 11;
+    return 0;
+}
+
 export class Deck extends CardModule.Deck {
 
     private seed: number;
@@ -17,6 +28,12 @@ export class Deck extends CardModule.Deck {
 
     getSeed(): number {
         return this.seed;
+    }
+
+    draw(): Card | null {
+        let card : Card | null = super.draw();
+        while (card && !validateCard(card)) card = super.draw(); // skip non-valid cards
+        return card;
     }
 
     static deserialize(data: { cards: Card[], seed: number }): Deck {
@@ -75,17 +92,6 @@ export class Hand {
         hand.ace_count = data.ace_count;
         return hand;
     }
-}
-
-export function validateCard(card: Card): boolean {
-    return CardModule.validateCard(card) && card.suit !== "jokers"; // no jokers in blackjack
-}
-
-export function pointValue(card: Card): number {
-    if (card.rank > 1 && card.rank < 11) return card.rank;
-    if (card.rank > 10 && card.rank < 14) return 10;
-    if (card.rank === 14) return 11;
-    return 0;
 }
 
 
