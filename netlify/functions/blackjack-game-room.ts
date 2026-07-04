@@ -89,10 +89,16 @@ export async function handler(event: any) {
         }
         
         function retJSON(game: Game) {
+
+            const over : boolean = game.checkOver();
+            const status : string = game.checkWinner();
+
             return successJSON({
                 game_id: gameId,
                 player_cards: serialize(game.getPlayerHand()),
                 dealer_cards: serialize(game.getDealerHand()),
+                over: over,
+                status: status,
             });
         }
 
@@ -162,22 +168,22 @@ export async function handler(event: any) {
             return retJSON(game);
         }
 
-        if (action === "dealer") { // ACTION: DEALER ACTION
+        // if (action === "dealer") { // ACTION: DEALER ACTION
 
-            const game = await getGame();
-            if (!(game instanceof Game)) return game; 
-            while (game.dealerPlay()) continue; // keep playing until dealer is done
-            // if (!game.dealerPlay()) return errorJSON("Dealer play failed");
+        //     const game = await getGame();
+        //     if (!(game instanceof Game)) return game; 
+        //     while (game.dealerPlay()) continue; // keep playing until dealer is done
+        //     // if (!game.dealerPlay()) return errorJSON("Dealer play failed");
 
-            await db
-                .update(games)
-                .set(game.getGameData())
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
+        //     await db
+        //         .update(games)
+        //         .set(game.getGameData())
+        //         .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
 
-            // console.log(result);
+        //     // console.log(result);
 
-            return retJSON(game);
-        }
+        //     return retJSON(game);
+        // }
 
         return errorJSON("Invalid action");
 

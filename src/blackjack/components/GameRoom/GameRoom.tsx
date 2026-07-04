@@ -32,6 +32,8 @@ export default function GameRoom() {
     const [playerCards, setPlayerCards] = useState<BJCore.Hand | null>(null);
     const [dealerCards, setDealerCards] = useState<BJCore.Hand | null>(null);
 
+    const [status, setStatus] = useState<string | null>(null);
+
     async function startGame() {
         const res = await BJRequest({
             action: "start",
@@ -74,6 +76,9 @@ export default function GameRoom() {
     }
 
     const setJson = useCallback((data: any) => {
+        if (!data) return;
+        if (data.over) setStatus(data.status);
+        else setStatus(null);
         setGameId(String(data.game_id || gameId));
         setPlayerCards(BJCore.Hand.deserialize(deserialize(data.player_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
         setDealerCards(BJCore.Hand.deserialize(deserialize(data.dealer_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
@@ -84,6 +89,7 @@ export default function GameRoom() {
             <div className="bjg-labels">
                 <p>PlayerID: {playerId}</p>
                 <p>GameID: {gameId}</p>
+                <p>Winner: {status || "None"}</p>
             </div>
             <div className="bjg-actions">
                 <button onClick={startGame} className="bjg-button">
