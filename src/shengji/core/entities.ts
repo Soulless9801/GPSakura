@@ -23,6 +23,10 @@ export interface Play {
     suit: Suit | null; // optional suit for non-single, non-lead plays
 }
 
+export interface HandData {
+    cards: Map<Suit, Map<Rank, number>>;
+}
+
 export class Hand {
     
     private cards: Map<Suit, Map<Rank, number>>;
@@ -52,7 +56,7 @@ export class Hand {
         suitMap.set(card.rank, Math.max(0, prev - 1));
     }
 
-    static deserialize(data: { cards: Map<Suit, Map<Rank, number>> }): Hand {
+    static deserialize(data: HandData): Hand {
         const hand = new Hand();
         hand.cards = new Map(data.cards);
         return hand;
