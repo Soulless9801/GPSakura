@@ -460,6 +460,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         else setTeam(idx % 2);
     }, [game]);
 
+    //TODO: add reconnecting
+
     const [rec, setRec] = useState<boolean>(false);
 
     useEffect(() => {
