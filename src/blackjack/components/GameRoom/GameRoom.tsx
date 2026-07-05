@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import { clientRequest, GameRequest } from "/src/utils/request";
 
@@ -26,8 +26,43 @@ const BJRequest = async (request: GameRequest) => clientRequest(request, "bjg-bu
 
 export default function GameRoom() {
 
-    const [gameId, setGameId] = useState("1");
-    const [playerId, setPlayerId] = useState("1"); // TODO: replace with actual player ID in production
+    const [gameId, setGameId] = useState<string>("");
+
+    const [playerId, setPlayerId] = useState<string>(""); // TODO: replace with actual player ID in production
+    const [signature, setSignature] = useState<string | null>(null);
+
+    // verify playerId
+    useEffect(() => {
+        const getIdentity = async () => {
+            let clientId = localStorage.getItem("bjClientId");
+            let nSig = localStorage.getItem("bjSignature");
+            //TODO: verify correct clientId vs. signature
+            if (!clientId || !signature) {
+                clientId = await fetch("/.netlify/functions/neon-create-user", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }).then(res => res.json()).then(data => data.player_id);
+                nSig =  await fetch("/.netlify/functions/create-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        clientId: clientId,
+                    }),
+                }).then(res => res.json()).then(data => data.signature);
+                localStorage.setItem("bjClientId", clientId || "");
+                localStorage.setItem("bjSignature", nSig || "");
+            }
+            setPlayerId(clientId || "");
+            setSignature(nSig ||  null);
+        }
+
+        getIdentity();
+
+    }, []);
 
     const [playerCards, setPlayerCards] = useState<BJCore.Hand | null>(null);
     const [dealerCards, setDealerCards] = useState<BJCore.Hand | null>(null);
