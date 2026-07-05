@@ -30,8 +30,11 @@ export function useAbly({ request }: { request: { clientId: string; signature: s
 
             const data = await res.text();
 
-            const ret = deserialize(data) as { 
-                valid: boolean 
+            const des_data = deserialize(data);
+            if (!des_data || typeof des_data !== "object") return false;
+
+            const ret = des_data as { 
+                valid: boolean
             };
 
             if (!ret || !ret.valid) return false;

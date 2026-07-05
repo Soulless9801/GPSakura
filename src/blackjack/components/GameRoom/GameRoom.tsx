@@ -50,9 +50,12 @@ export default function GameRoom() {
                 const data_id = await res_id.text();
                 if (!data_id) return;
 
-                console.log(data_id);
+                // console.log(data_id);
 
-                const ret_id = deserialize(data_id) as { player_id: string };
+                const des_id = deserialize(data_id);
+                if (!des_id || typeof des_id !== "object") return;
+
+                const ret_id = des_id as { player_id: string };
                 if (!ret_id || !ret_id.player_id) return;
 
                 clientId = ret_id.player_id;
@@ -71,8 +74,11 @@ export default function GameRoom() {
 
                 const data_sig = await res_sig.text();
                 if (!data_sig) return;
+
+                const des_sig = deserialize(data_sig);
+                if (!des_sig || typeof des_sig !== "object") return;
                 
-                const ret_sig = deserialize(data_sig) as { signature: string };
+                const ret_sig = des_sig as { signature: string };
                 if (!ret_sig || !ret_sig.signature) return;
 
                 nSig = ret_sig.signature;
@@ -139,13 +145,17 @@ export default function GameRoom() {
 
         if (!data) return;
 
-        const ret = deserialize(data) as { 
+        const des_data = deserialize(data);
+        if (!des_data || typeof des_data !== "object") return;
+
+        const ret = des_data as { 
             game_id?: number, 
             player_cards?: BJCore.HandData, 
             dealer_cards?: BJCore.HandData, 
             over?: boolean, 
             status?: string 
         };
+
         if (!ret) return;
 
         // console.log("GameRoom setJson:", ret);

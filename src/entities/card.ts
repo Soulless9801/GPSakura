@@ -14,6 +14,10 @@ export function validateCard(card: Card): boolean {
     return card.rank >= 1 && card.rank <= 2; // 1 = small joker, 2 = big joker
 }
 
+export interface DeckData {
+    cards: Card[];
+}
+
 export class Deck {
 
     private cards: Card[];
@@ -48,7 +52,7 @@ export class Deck {
         return this.cards.pop() || null;
     }
 
-    static deserialize(data: { cards: Card[] }): Deck {
+    static deserialize(data: DeckData): Deck {
         const deck = Object.create(Deck.prototype) as Deck;
         deck.cards = [...data.cards];
         return deck;
