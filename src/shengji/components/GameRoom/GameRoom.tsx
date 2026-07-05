@@ -61,7 +61,10 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
 
     const parseRes = (res: any): void => {
 
-        const data = deserialize(res) as { 
+        const des_data = deserialize(res);
+        if (!des_data || typeof des_data !== "object") return;
+
+        const data = des_data as { 
             hand?: SJCore.HandData, 
             dipai?: SJCore.Card[]
         };
@@ -312,7 +315,10 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 const data = await res.text();
                 if (!data) return;
 
-                const ret = deserialize(data) as { signature: string | null };
+                const des_data = deserialize(data);
+                if (!des_data || typeof des_data !== "object") return;
+
+                const ret = des_data as { signature: string | null };
                 signature = ret.signature;
                 localStorage.setItem("ablySignature", signature || "");
             }
@@ -348,7 +354,10 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
         if (!res) return;
 
-        const ret = deserialize(res) as { game?: SJGame.GameState };
+        const des_data = deserialize(res);
+        if (!des_data || typeof des_data !== "object") return;
+
+        const ret = des_data as { game?: SJGame.GameState };
 
         if (!ret || !ret.game) return;
 
@@ -451,7 +460,9 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
-                const state = deserialize(msg.data.game) as SJGame.GameState;
+                const des_data = deserialize(msg.data.game);
+                if (!des_data || typeof des_data !== "object") return;
+                const state = des_data as SJGame.GameState;
                 if (state) setGame(state);
                 // console.log("Updated:", state);
             });

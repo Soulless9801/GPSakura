@@ -43,8 +43,10 @@ async function rateLimit(redis: Redis, key: string, limit: number, windowSeconds
 const GAME_KEY_PREFIX = "game:";
 
 async function loadGame(redis: Redis, roomId: string) {
+    //TODO: figure out why this isn't returning as string
     const res = await redis.get(GAME_KEY_PREFIX + roomId);
-    return String(res);
+    if (res == null) return null;
+    return typeof res === "string" ? res : JSON.stringify(res);
 }
 
 async function saveGame(redis: Redis, roomId: string, ser_game: string) {
@@ -92,7 +94,7 @@ export const handler = async(event: any) => {
 
         // helper function to get game state
         async function getGame() {
-            const ser_game: string = await loadGame(redis, roomId);
+            const ser_game: string | null = await loadGame(redis, roomId);
             if (!ser_game) return null;
             return SJGame.Game.deserializeGame(ser_game);
         }

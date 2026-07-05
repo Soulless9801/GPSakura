@@ -88,17 +88,25 @@ export class Game {
 
     static deserializeGame(game: string): Game | null {
 
-        const { state, hands, deck, dipai } = deserialize(game) as { 
+        const des : any = deserialize(game);
+        if (!des || typeof des !== "object") return null;
+
+        const { state, hands, deck, dipai } = des as { 
             state: GameState, 
-            hands: Map<string, Hand>, 
-            deck: Deck, 
-            dipai: Card[] 
+            hands: Map<string, SJCore.HandData>,
+            deck: SJCore.DeckData,
+            dipai: Card[],
         };
+
+        // console.log(state, hands, deck, dipai);
 
         if (!state || !hands || !deck || !dipai) return null;
 
+        const hands_true = new Map<string, Hand>();
+        for (const [key, value] of hands.entries()) hands_true.set(key, SJCore.Hand.deserialize(value));
+
         // const rawHands = deserialize(hands) as Map<string, { cards: Map<Suit, Map<Rank, number>> }>;
-        return new Game(state, hands, deck, dipai);
+        return new Game(state, hands_true, SJCore.Deck.deserialize(deck), dipai);
         // return new Game(
         //     deserialize(state) as GameState,
         //     new Map(Array.from(rawHands.entries(), ([player, hand]) => [player, Hand.deserialize(hand)])),
