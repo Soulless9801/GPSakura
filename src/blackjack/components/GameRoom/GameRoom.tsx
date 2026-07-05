@@ -28,36 +28,61 @@ export default function GameRoom() {
 
     const [gameId, setGameId] = useState<string>("");
 
-    const [playerId, setPlayerId] = useState<string>(""); // TODO: replace with actual player ID in production
+    const [playerId, setPlayerId] = useState<string>("");
     const [signature, setSignature] = useState<string | null>(null);
 
-    // verify playerId
     useEffect(() => {
         const getIdentity = async () => {
             let clientId = localStorage.getItem("bjClientId");
             let nSig = localStorage.getItem("bjSignature");
             //TODO: verify correct clientId vs. signature
-            if (!clientId || !signature) {
-                clientId = await fetch("/.netlify/functions/neon-create-user", {
+            if (!clientId || !nSig) {
+
+                const res_id = await fetch("/.netlify/functions/neon-create-user", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                }).then(res => res.json()).then(data => data.player_id);
-                nSig =  await fetch("/.netlify/functions/create-session", {
+                });
+                // console.log("res_id:", res_id);
+                if (!res_id || !res_id.ok) return;
+
+                const data_id = await res_id.text();
+                if (!data_id) return;
+
+                console.log(data_id);
+
+                const ret_id = deserialize(data_id) as { player_id: string };
+                if (!ret_id || !ret_id.player_id) return;
+
+                clientId = ret_id.player_id;
+
+                const res_sig =  await fetch("/.netlify/functions/create-session", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
+                        action: "sign",
                         clientId: clientId,
                     }),
-                }).then(res => res.json()).then(data => data.signature);
-                localStorage.setItem("bjClientId", clientId || "");
-                localStorage.setItem("bjSignature", nSig || "");
+                });
+                if (!res_sig || !res_sig.ok) return;
+
+                const data_sig = await res_sig.text();
+                if (!data_sig) return;
+                
+                const ret_sig = deserialize(data_sig) as { signature: string };
+                if (!ret_sig || !ret_sig.signature) return;
+
+                nSig = ret_sig.signature;
+
+                localStorage.setItem("bjClientId", clientId);
+                localStorage.setItem("bjSignature", nSig);
             }
-            setPlayerId(clientId || "");
-            setSignature(nSig ||  null);
+
+            setPlayerId(clientId);
+            setSignature(nSig);
         }
 
         getIdentity();
@@ -81,7 +106,7 @@ export default function GameRoom() {
 
         // console.log("Started game:", res);
     
-        if (res) setJson(res);
+        setJson(res);
     }
 
     async function hit() {
@@ -94,7 +119,7 @@ export default function GameRoom() {
             }
         });
     
-        if (res) setJson(res);
+        setJson(res);
     }
 
     async function stand() {
@@ -107,16 +132,31 @@ export default function GameRoom() {
             }
         });
     
-        if (res) setJson(res);
+        setJson(res);
     }
 
     const setJson = useCallback((data: any) => {
+
         if (!data) return;
-        if (data.over) setStatus(data.status);
+
+        const ret = deserialize(data) as { 
+            game_id?: number, 
+            player_cards?: BJCore.HandData, 
+            dealer_cards?: BJCore.HandData, 
+            over?: boolean, 
+            status?: string 
+        };
+        if (!ret) return;
+
+        // console.log("GameRoom setJson:", ret);
+
+        if (ret.over) setStatus(ret.status || null);
         else setStatus(null);
-        setGameId(String(data.game_id || gameId));
-        setPlayerCards(BJCore.Hand.deserialize(deserialize(data.player_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
-        setDealerCards(BJCore.Hand.deserialize(deserialize(data.dealer_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
+        setGameId(String(ret.game_id || gameId));
+        if (ret.player_cards) setPlayerCards(BJCore.Hand.deserialize(ret.player_cards));
+        if (ret.dealer_cards) setDealerCards(BJCore.Hand.deserialize(ret.dealer_cards));
+        // setPlayerCards(BJCore.Hand.deserialize(deserialize(data.player_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
+        // setDealerCards(BJCore.Hand.deserialize(deserialize(data.dealer_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
     }, [gameId]);
 
     return (

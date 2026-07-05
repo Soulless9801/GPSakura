@@ -10,31 +10,11 @@ import { games, players } from "../../db/schema.ts";
 
 import { GameData, Game } from "../../src/blackjack/core/game.ts";
 
-import { serialize } from '../../src/utils/serial.ts';
+import { errorJSON, successJSON } from './json.ts';
 
 const sql = neon(process.env.NEON_DATABASE_URL!);
 
 const db = drizzle(sql);
-
-function errorJSON(message: string, code = 400) {
-    return {
-        statusCode: code,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ error: message }),
-    };
-}
-
-function successJSON(payload: any) {
-    return {
-        statusCode: 200,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-    };
-}
 
 function parseGameData(gameRow: any): GameData {
     return {
@@ -55,24 +35,28 @@ export async function handler(event: any) {
         // get action data
 
         const body = JSON.parse(event.body || '{}');
-        let { action, clientId, roomId, payload } = body;
 
-        console.log(`Received request: ${action} from clientId ${clientId}for gameId ${roomId}`);
+        const action : string = String(body.action || "").trim();
+        const clientId : number = Number(body.clientId || 0);
+        let roomId : number = Number(body.roomId || 0);
+        const payload : any = body.payload || {};
 
-        const playerId = Number(clientId || 0);
-        let gameId = Number(roomId || 0);
+        console.log(`Received request: ${action} from clientId ${clientId} for roomId ${roomId}`);
 
-        if (isNaN(playerId) || !Number.isInteger(playerId) || playerId <= 0) return errorJSON("Invalid clientId");
-        if (isNaN(gameId) || !Number.isInteger(gameId) || gameId <= 0) return errorJSON("Invalid gameId");
+        // const clientId = Number(clientId || 0);
+        // let roomId = Number(roomId || 0);
 
-        action = String(action || "").trim();
+        if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) return errorJSON("Invalid clientId");
 
         // helper function to get game state
-        async function getGameRow(gameId: number, playerId: number) {
+        async function getGameRow(roomId: number, clientId: number) {
+
+            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) return errorJSON("Invalid roomId");
+
             const row = await db
                 .select()
                 .from(games)
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)))
+                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)))
                 .limit(1);
 
             return (row.length > 0) ? row[0] : null;
@@ -80,7 +64,7 @@ export async function handler(event: any) {
 
         async function getGame() {
             
-            const gameRow = await getGameRow(gameId, playerId);
+            const gameRow = await getGameRow(roomId, clientId);
             if (!gameRow) return errorJSON("Game not found");
 
             const data : GameData = parseGameData(gameRow);
@@ -90,13 +74,15 @@ export async function handler(event: any) {
         
         function retJSON(game: Game) {
 
+            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) return errorJSON("Invalid roomId");
+
             const over : boolean = game.checkOver();
             const status : string = game.checkWinner();
 
             return successJSON({
-                game_id: gameId,
-                player_cards: serialize(game.getPlayerHand()),
-                dealer_cards: serialize(game.getDealerHand()),
+                game_id: roomId,
+                player_cards: game.getPlayerHand(),
+                dealer_cards: game.getDealerHand(),
                 over: over,
                 status: status,
             });
@@ -112,11 +98,11 @@ export async function handler(event: any) {
 
             const seed : number = genSeed();
             
-            // TODO: sanitize playerId and bet value
+            // TODO: sanitize clientId and bet value
             const result = await db
                 .insert(games)
                 .values({
-                    player_id: playerId,
+                    player_id: clientId,
                     bet_amount: bet,
                     player_cards: 2,
                     dealer_cards: 1,
@@ -132,7 +118,7 @@ export async function handler(event: any) {
             // console.log(result);
 
             const ret = result[0];
-            gameId = ret.game_id; // update gameId to the actual ID from the database
+            roomId = ret.game_id; // update roomId to the actual ID from the database
 
             const data : GameData = parseGameData(ret);
             const game : Game = new Game(data);
@@ -143,13 +129,13 @@ export async function handler(event: any) {
         if (action === "hit") { // ACTION: HIT
 
             const game = await getGame();
-            if (!(game instanceof Game)) return game; 
+            if (!(game instanceof Game)) return errorJSON("Game not found");
             if (!game.playerHit()) return errorJSON("Player hit failed");
 
             await db
                 .update(games)
                 .set(game.getGameData())
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
+                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
 
             return retJSON(game);
         }
@@ -157,13 +143,13 @@ export async function handler(event: any) {
         if (action === "stand") { // ACTION: STAND
 
             const game = await getGame();
-            if (!(game instanceof Game)) return game; 
+            if (!(game instanceof Game)) return errorJSON("Game not found");
             if (!game.playerStand()) return errorJSON("Player stand failed");
 
             await db
                 .update(games)
                 .set(game.getGameData())
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
+                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
 
             return retJSON(game);
         }
@@ -178,7 +164,7 @@ export async function handler(event: any) {
         //     await db
         //         .update(games)
         //         .set(game.getGameData())
-        //         .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
+        //         .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
 
         //     // console.log(result);
 
@@ -188,8 +174,7 @@ export async function handler(event: any) {
         return errorJSON("Invalid action");
 
     } catch (error: any) {
-        // catch and return any errors
-        console.log("Error in handler:", error);
+        // console.log("Error in handler:", error);
         return errorJSON(error.message, 500);
     }
 }

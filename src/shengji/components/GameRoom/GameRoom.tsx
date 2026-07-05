@@ -60,11 +60,16 @@ function GameInfo({ ably, roomId, team, game }: { ably: any, roomId: string, tea
     const dipaiRef = useRef<HandRef>(null);
 
     const parseRes = (res: any): void => {
-        if (res?.hand) {
-            const raw = deserialize(res.hand);
-            setHand(SJCore.Hand.deserialize(raw as { cards: Map<SJCore.Suit, Map<SJCore.Rank, number>> }));
-        }
-        if (res?.dipai) setDipai(deserialize(res.dipai) as SJCore.Card[]);
+
+        const data = deserialize(res) as { 
+            hand?: SJCore.HandData, 
+            dipai?: SJCore.Card[]
+        };
+
+        if (!data) return;
+
+        if (data.hand) setHand(SJCore.Hand.deserialize(data.hand));
+        if (data.dipai) setDipai(data.dipai || null);
     }
 
     async function drawCard() {
@@ -288,17 +293,27 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             let clientId = localStorage.getItem("ablyClientId");
             let signature = localStorage.getItem("ablySignature");
             if (!clientId || !signature) {
+
                 clientId = `player_${Math.random().toString(36).substring(2, 10)}`;
                 localStorage.setItem("ablyClientId", clientId);
-                signature =  await fetch("/.netlify/functions/create-session", {
+
+                const res = await fetch("/.netlify/functions/create-session", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
+                        action: "sign",
                         clientId: clientId,
                     }),
-                }).then(res => res.json()).then(data => data.signature);
+                });
+                if (!res || !res.ok) return;
+
+                const data = await res.text();
+                if (!data) return;
+
+                const ret = deserialize(data) as { signature: string | null };
+                signature = ret.signature;
                 localStorage.setItem("ablySignature", signature || "");
             }
 
@@ -331,7 +346,13 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             clientId: getClientId(ably),
         });
 
-        if (res?.game) setGame(deserialize(res.game) as SJGame.GameState);
+        if (!res) return;
+
+        const ret = deserialize(res) as { game?: SJGame.GameState };
+
+        if (!ret || !ret.game) return;
+
+        setGame(ret.game);
     }
 
     async function changeUsername(user: string) {
@@ -431,7 +452,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
                 const state = deserialize(msg.data.game) as SJGame.GameState;
-                setGame(state);
+                if (state) setGame(state);
                 // console.log("Updated:", state);
             });
 

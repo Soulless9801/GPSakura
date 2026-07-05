@@ -7,27 +7,8 @@ import { Redis } from '@upstash/redis';
 
 import * as SJGame from '../../src/shengji/core/game.ts';
 
+import { errorJSON, successJSON } from './json.ts';
 import { serialize } from '../../src/utils/serial.ts';
-
-function errorJSON(message, code = 400) {
-    return {
-        statusCode: code,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: serialize({ error: message }),
-    };
-}
-
-function successJSON(payload = {ok: true}) {
-    return {
-        statusCode: 200,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: serialize(payload),
-    };
-}
 
 function getAbly() {
     return new Ably.Rest({ 
@@ -35,11 +16,12 @@ function getAbly() {
     });
 }
 
-async function publish(channel, event, data) {
+async function publish(channel: any, event: string, data: any) {
+    //TODO: do something with timestamp
     await channel.publish(event, { timestamp: Date.now(), ...data });
 }
 
-let redisClient = null;
+let redisClient: Redis | null = null;
 
 function getRedis() {
     if (redisClient) return redisClient;
@@ -47,7 +29,7 @@ function getRedis() {
     return redisClient;
 }
 
-async function rateLimit(redis, key, limit, windowSeconds) {
+async function rateLimit(redis: Redis, key: string, limit: number, windowSeconds: number) {
     const count = await redis.incr(key);
     if (count === 1) {
         await redis.expire(key, windowSeconds);
@@ -60,20 +42,21 @@ async function rateLimit(redis, key, limit, windowSeconds) {
 
 const GAME_KEY_PREFIX = "game:";
 
-async function loadGame(redis, roomId) {
-    return await redis.get(GAME_KEY_PREFIX + roomId);
+async function loadGame(redis: Redis, roomId: string) {
+    const res = await redis.get(GAME_KEY_PREFIX + roomId);
+    return String(res);
 }
 
-async function saveGame(redis, roomId, ser_game) {
+async function saveGame(redis: Redis, roomId: string, ser_game: string) {
     // store as JSON string
     await redis.set(GAME_KEY_PREFIX + roomId, ser_game);
 }
 
-const RATE_LIMIT_RULES = { // TODO: fine-tune these rules based on actual usage patterns
+const RATE_LIMIT_RULES: Record<string, [number, number]> = { // TODO: fine-tune these rules based on actual usage patterns
     default: [1, 1],
 };
 
-export async function handler(event) {
+export const handler = async(event: any) => {
 
     const redis = getRedis();
 
@@ -84,17 +67,15 @@ export async function handler(event) {
         // get action data
 
         const body = JSON.parse(event.body || '{}');
-        let { roomId, action, clientId, payload } = body;
+        const roomId = String(body.roomId || '').trim();
+        const action = String(body.action || '').trim();
+        const clientId = String(body.clientId || '').trim();
+        const payload = body.payload;
 
         console.log(`Received request: ${action} from client ${clientId} for room_${roomId}`);
 
-        clientId = String(clientId || "").trim();
-        roomId = String(roomId || "").trim();
-
         if (clientId === "") return errorJSON("Invalid clientId");
         if (roomId === "") return errorJSON("Invalid roomId");
-
-        action = String(action || "").trim();
 
         const rule = RATE_LIMIT_RULES[action] || RATE_LIMIT_RULES.default;
         const [limit, windowSeconds] = rule;
@@ -111,9 +92,9 @@ export async function handler(event) {
 
         // helper function to get game state
         async function getGame() {
-            const ser_game = await loadGame(redis, roomId);
+            const ser_game: string = await loadGame(redis, roomId);
             if (!ser_game) return null;
-            return SJGame.Game.deserializeGame(serialize(ser_game));
+            return SJGame.Game.deserializeGame(ser_game);
         }
 
         if (action === "start") { // ACTION: START GAME
@@ -144,7 +125,7 @@ export async function handler(event) {
                 }
             }
 
-            const game = new SJGame.Game({});
+            const game = SJGame.baseGame();
             if (!game.initializeGame(players, users)) return errorJSON("Failed to initialize game");
 
             const ser_game = game.serializeGame();
@@ -188,7 +169,7 @@ export async function handler(event) {
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
-            return successJSON({ hand: serialize(hand) });
+            return successJSON({ hand: hand });
         }
 
         if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
@@ -213,7 +194,7 @@ export async function handler(event) {
 
             if (!game) return errorJSON("Game not found");
 
-            return successJSON({ game: serialize(game.getState()) });
+            return successJSON({ game: game.getState() });
         }
 
         if (action === "hand") { // ACTION: GET HAND
@@ -227,7 +208,7 @@ export async function handler(event) {
 
             if (!hand) return errorJSON("Failed to get hand");
 
-            return successJSON({ hand: serialize(hand) });
+            return successJSON({ hand: hand });
         }
 
         if (action === "trump") { // ACTION: CALL TRUMP
@@ -259,7 +240,7 @@ export async function handler(event) {
             const res = game.getDipai(clientId);
 
             if (!res) return errorJSON("Not the zhuang");
-            return successJSON({ dipai: serialize(res) });
+            return successJSON({ dipai: res });
         }
 
         if (action === "exchange") {
@@ -281,7 +262,7 @@ export async function handler(event) {
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
-            return successJSON({ hand: serialize(hand) });
+            return successJSON({ hand: hand });
         }
 
         if (action === "play") { // ACTION: PLAY CARDS
@@ -302,7 +283,7 @@ export async function handler(event) {
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
-            return successJSON({ hand: serialize(hand) });
+            return successJSON({ hand: hand });
         }
 
         if (action === "shuai") { // ACTION: GAMBLE
@@ -321,7 +302,7 @@ export async function handler(event) {
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
             const hand = game.getHand(clientId);
-            return successJSON({ hand: serialize(hand) });
+            return successJSON({ hand: hand });
         }
 
         if (action === "end") { // ACTION: END GAME
@@ -337,7 +318,7 @@ export async function handler(event) {
 
         return errorJSON("Invalid action");
 
-    } catch (error) {
+    } catch (error: any) {
         // catch and return any errors
         console.error("Error handling request:", error);
         return errorJSON(error.message, 500);

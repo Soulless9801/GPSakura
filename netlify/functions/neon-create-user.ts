@@ -7,6 +7,8 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { players } from "../../db/schema.ts";
 
+import { errorJSON, successJSON } from './json.ts';
+
 const sql = neon(process.env.NEON_DATABASE_URL!);
 
 const db = drizzle(sql);
@@ -16,9 +18,11 @@ const db = drizzle(sql);
 export async function handler(event: any) {
 
     try {
+
         const result = await db
             .insert(players)
             .values({
+                //TODO: implement neon username
                 username: 'anonymous',
                 money: 1000,
             })
@@ -31,25 +35,13 @@ export async function handler(event: any) {
 
         const ret = result[0];
 
-        return {
-            statusCode: 200,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                player_id: ret.player_id,
-                money: ret.money,
-            }),
-        };
+        return successJSON({
+            player_id: ret.player_id,
+            money: ret.money,
+        });
         
     } catch (error) {
         // console.error("Error creating player:", error);
-        return {
-            statusCode: 500,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ error: "Failed to create player" }),
-        };
+        return errorJSON("Internal server error", 500);
     }
 }

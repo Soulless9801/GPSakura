@@ -43,6 +43,13 @@ export class Deck extends CardModule.Deck {
     }
 }
 
+export interface HandData {
+    cards: Card[];
+    card_count: number;
+    hand_value: number;
+    ace_count: number;
+}
+
 export class Hand {
     
     private cards: Card[];
@@ -84,7 +91,7 @@ export class Hand {
         return value;
     }
 
-    static deserialize(data: { cards: Card[], card_count: number, hand_value: number, ace_count: number }): Hand {
+    static deserialize(data: HandData): Hand {
         const hand = new Hand();
         hand.cards = data.cards;
         hand.card_count = data.card_count;

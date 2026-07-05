@@ -86,29 +86,40 @@ export class Game {
     //     return -1;
     // }
 
-    static deserializeGame(game: string): Game {
-        const { state, hands, deck, dipai } = JSON.parse(game);
-        const rawHands = deserialize(hands) as Map<string, { cards: Map<Suit, Map<Rank, number>> }>;
-        return new Game(
-            deserialize(state) as GameState,
-            new Map(Array.from(rawHands.entries(), ([player, hand]) => [player, Hand.deserialize(hand)])),
-            Deck.deserialize(deserialize(deck) as { cards: Card[] }),
-            deserialize(dipai) as Card[]
-        );
+    static deserializeGame(game: string): Game | null {
+
+        const { state, hands, deck, dipai } = deserialize(game) as { 
+            state: GameState, 
+            hands: Map<string, Hand>, 
+            deck: Deck, 
+            dipai: Card[] 
+        };
+
+        if (!state || !hands || !deck || !dipai) return null;
+
+        // const rawHands = deserialize(hands) as Map<string, { cards: Map<Suit, Map<Rank, number>> }>;
+        return new Game(state, hands, deck, dipai);
+        // return new Game(
+        //     deserialize(state) as GameState,
+        //     new Map(Array.from(rawHands.entries(), ([player, hand]) => [player, Hand.deserialize(hand)])),
+        //     Deck.deserialize(deserialize(deck) as { cards: Card[] }),
+        //     deserialize(dipai) as Card[]
+        // );
     }
 
     serializeGame(): string {
-        return JSON.stringify({
-            state: serialize(this.state),
-            hands: serialize(this.hands),
-            deck: serialize(this.deck),
-            dipai: serialize(this.dipai)
+        return serialize({
+            state: this.state,
+            hands: this.hands,
+            deck: this.deck,
+            dipai: this.dipai
         });
     }
 
     // this.state logic methods
 
     initializeGame(players: string[], users: string[]) {
+
         if (players.length < Game.minPlayers || players.length % 2 === 1 || players.length > Game.maxPlayers) return null;
     
         this.state = {
@@ -493,4 +504,30 @@ export class Game {
         if (this.state.players[this.state.zhuang] !== player) return null; // not allowed to view cards
         return this.dipai;
     }
+}
+
+export function baseGame(): Game {
+    const state: GameState = {
+        round: 1,
+        players: [],
+        info: new Map(),
+        atk: 0,
+        draw: true,
+        declare: 0,
+        whodec: 0,
+        zhuang: 0,
+        trump: { suit: null, rank: 2 },
+        alt : 2,
+        turn: 0,
+        score: 0,
+        points: 0,
+        chu: 0,
+        shuai: false,
+        lead: 0,
+        count: 0,
+        over: false,
+        dip: false
+    };
+
+    return new Game(state, new Map(), new Deck(1), []);
 }
