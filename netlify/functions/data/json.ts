@@ -1,4 +1,4 @@
-import { serialize } from '../../src/utils/serial.ts';
+import { serialize } from '../../../src/utils/serial.ts';
 
 export function errorJSON(message: string, code = 400) {
     return {

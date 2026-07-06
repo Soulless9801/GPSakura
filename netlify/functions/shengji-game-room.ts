@@ -5,9 +5,13 @@ dotenv.config();
 import Ably from 'ably';
 import { Redis } from '@upstash/redis';
 
-import * as SJGame from '../../src/shengji/core/game.ts';
+import { verify } from "./create-session";
+import { Identity } from "../../src/utils/verify";
 
-import { errorJSON, successJSON } from './json.ts';
+import * as SJGame from '../../src/shengji/core/game.ts';
+import * as SJCore from '../../src/shengji/core/entities.ts';
+
+import { errorJSON, successJSON } from './data/json.ts';
 import { serialize } from '../../src/utils/serial.ts';
 
 function getAbly() {
@@ -69,28 +73,35 @@ export const handler = async(event: any) => {
         // get action data
 
         const body = JSON.parse(event.body || '{}');
-        const roomId = String(body.roomId || '').trim();
-        const action = String(body.action || '').trim();
-        const clientId = String(body.clientId || '').trim();
-        const payload = body.payload;
 
-        console.log(`Received request: ${action} from client ${clientId} for room_${roomId}`);
+        const identity : Identity | null = body.identity || null;
+        if (!identity) return errorJSON("Missing identity", 400);
+        const clientId : string = String(identity.clientId || '').trim();
+        const signature : string = String(identity.signature || '').trim();
 
-        if (clientId === "") return errorJSON("Invalid clientId");
-        if (roomId === "") return errorJSON("Invalid roomId");
+        const roomId : string = String(body.roomId || '').trim();
+        const action : string = String(body.action || '').trim();
+        const payload : any = body.payload;
 
-        const rule = RATE_LIMIT_RULES[action] || RATE_LIMIT_RULES.default;
+        console.log(`shengji-game-room: Received action ${action} from client ${clientId} for room_${roomId}`);
+
+        if (!clientId) return errorJSON("Invalid clientId");
+        if (!roomId) return errorJSON("Invalid roomId");
+
+        const rule : [number, number] = RATE_LIMIT_RULES[action] || RATE_LIMIT_RULES.default;
         const [limit, windowSeconds] = rule;
 
         // rate limit check
-        const rlClientId = clientId || "unknown";
-        const key = `rl:${roomId}:${rlClientId}:${action}`;
-        const isAllowed = await rateLimit(redis, key, limit, windowSeconds);
+        const rlClientId : string = clientId || "unknown";
+        const key : string = `rl:${roomId}:${rlClientId}:${action}`;
+        const isAllowed : boolean = await rateLimit(redis, key, limit, windowSeconds);
         if (!isAllowed) return errorJSON("Rate limit exceeded", 429);
+
+        if (!signature || !verify(clientId, signature)) return errorJSON("Invalid signature");
 
         // get room live object
 
-        const channel = ably.channels.get(`room_${roomId}`);
+        const channel : any = ably.channels.get(`room_${roomId}`);
 
         // helper function to get game state
         async function getGame() {
@@ -103,18 +114,18 @@ export const handler = async(event: any) => {
             
             const exist = await getGame();
 
-            if (exist && !exist.getState().over) return errorJSON("Game already in progress");
+            if ((exist instanceof SJGame.Game) && !exist.getState().over) return errorJSON("Game already in progress");
             // console.log("Initializing game...");
 
             const presence = await channel.presence.get();
-            const items = presence.items;
-            const a = items.filter(p => p.data.team === 0);
-            const b = items.filter(p => p.data.team === 1);
+            const items : any[] = presence.items;
+            const a = items.filter((p: any) => p.data.team === 0);
+            const b = items.filter((p: any) => p.data.team === 1);
 
             if (a.length !== b.length) return errorJSON("Teams must be balanced");
 
-            const players = [];
-            const users = [];
+            const players : string[] = [];
+            const users : string[] = [];
 
             for (let i = 0; i < Math.max(a.length, b.length); i++) {
                 if (i < a.length) {
@@ -127,10 +138,10 @@ export const handler = async(event: any) => {
                 }
             }
 
-            const game = SJGame.baseGame();
+            const game : SJGame.Game = SJGame.baseGame();
             if (!game.initializeGame(players, users)) return errorJSON("Failed to initialize game");
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
@@ -141,16 +152,16 @@ export const handler = async(event: any) => {
 
             if (!clientId) return errorJSON("Missing clientId");
 
-            const username = payload && payload.username;
+            const username : string = String(payload && payload.username) || "";
             if (!username) return errorJSON("Missing username");
 
             const game = await getGame();
 
-            if (!game || !game.changeUsername(clientId, username)) return errorJSON("No game found");
+            if (!(game instanceof SJGame.Game) || !game.changeUsername(clientId, username)) return errorJSON("No game found");
 
             // console.log(`Client ${clientId} changes username to ${username}`);
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
@@ -162,15 +173,15 @@ export const handler = async(event: any) => {
             if (!clientId) return errorJSON("Missing clientId");
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
             
             if (!game.drawCard(clientId)) return errorJSON("Failed to draw card");
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
-            const hand = game.getHand(clientId);
+            const hand : SJCore.Hand = game.getHand(clientId);
             return successJSON({ hand: hand });
         }
 
@@ -179,11 +190,11 @@ export const handler = async(event: any) => {
             // return errorJSON("Speed draw is disabled", 403);
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
             
             if (!game.speedDraw()) return errorJSON("Failed to speed draw");
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
@@ -194,7 +205,7 @@ export const handler = async(event: any) => {
 
             const game = await getGame();
 
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
 
             return successJSON({ game: game.getState() });
         }
@@ -204,9 +215,9 @@ export const handler = async(event: any) => {
             if (!clientId) return errorJSON("Missing clientId");
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
 
-            const hand = game.getHand(clientId);
+            const hand : SJCore.Hand = game.getHand(clientId);
 
             if (!hand) return errorJSON("Failed to get hand");
 
@@ -218,14 +229,14 @@ export const handler = async(event: any) => {
             if (!clientId) return errorJSON("Missing clientId");
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
 
             // console.log("Payload for trump call:", payload);
-            const trump = JSON.parse(payload && payload.trump);
+            const trump : SJCore.Trump = JSON.parse(payload && payload.trump);
             // console.log("Received Trump:", trump);
             if (!game.callTrump(clientId, trump)) return errorJSON("Invalid trump call");
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
@@ -237,9 +248,9 @@ export const handler = async(event: any) => {
             if (!clientId) return errorJSON("Missing clientId");
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
 
-            const res = game.getDipai(clientId);
+            const res : SJCore.Card[] | null = game.getDipai(clientId);
 
             if (!res) return errorJSON("Not the zhuang");
             return successJSON({ dipai: res });
@@ -250,20 +261,20 @@ export const handler = async(event: any) => {
             if (!clientId) return errorJSON("Missing clientId");
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
 
-            const give = JSON.parse(payload && payload.give);
-            const receive = JSON.parse(payload && payload.receive);
+            const give : SJCore.Card[] = JSON.parse(payload && payload.give);
+            const receive : SJCore.Card[] = JSON.parse(payload && payload.receive);
 
             // console.log(`Client ${clientId} wants to exchange dipai. Give: ${serialize(give)}, Receive: ${serialize(receive)}`);
 
             if (!game.exchangeDipai(clientId, give, receive)) return errorJSON("Failed to exchange Dipai");
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
-            const hand = game.getHand(clientId);
+            const hand : SJCore.Hand = game.getHand(clientId);
             return successJSON({ hand: hand });
         }
 
@@ -272,19 +283,19 @@ export const handler = async(event: any) => {
             if (!clientId) return errorJSON("Missing clientId");
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
 
-            const play = JSON.parse(payload && payload.play);
+            const play : SJCore.Play = JSON.parse(payload && payload.play);
 
             // console.log(`Client ${clientId} attempts to play: ${serialize(play)}`);
 
             if (!game.tryPlay(clientId, play)) return errorJSON("Invalid play");
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
-            const hand = game.getHand(clientId);
+            const hand : SJCore.Hand = game.getHand(clientId);
             return successJSON({ hand: hand });
         }
 
@@ -293,23 +304,25 @@ export const handler = async(event: any) => {
             if (!clientId) return errorJSON("Missing clientId");
 
             const game = await getGame();
-            if (!game) return errorJSON("Game not found");
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
             
-            const play = JSON.parse(payload && payload.play);
+            const play : SJCore.Play = JSON.parse(payload && payload.play);
 
             if (!game.tryShuai(clientId, play)) return errorJSON("Invalid shuai");
 
-            const ser_game = game.serializeGame();
+            const ser_game : string = game.serializeGame();
             await saveGame(redis, roomId, ser_game);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
 
-            const hand = game.getHand(clientId);
+            const hand : SJCore.Hand = game.getHand(clientId);
             return successJSON({ hand: hand });
         }
 
         if (action === "end") { // ACTION: END GAME
 
             // return errorJSON("Ending game is disabled", 403);
+
+            //TODO: relocate game ending privileges to admin only
 
             await redis.del(GAME_KEY_PREFIX + roomId);
 

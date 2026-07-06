@@ -18,6 +18,10 @@ export class Game {
     private playerFinished: boolean = true;
     private dealerFinished: boolean = false;
 
+    static dealerCondition(hand: BJCore.Hand): boolean {
+        return hand.getHandValue() < 17;
+    }
+
     constructor(data: GameData) {
 
         this.deck = new BJCore.Deck(1, data.deck_seed);
@@ -50,6 +54,8 @@ export class Game {
                 rem_dealer--;
             }
         }
+
+        if (!Game.dealerCondition(this.dealerHand)) this.dealerFinished = true;
     }
 
     playerHit(): boolean {
@@ -70,7 +76,7 @@ export class Game {
 
     dealerPlay(): boolean {
         if (!this.playerFinished || this.dealerFinished || this.checkNotLoser()) return false;
-        if (this.dealerHand.getHandValue() < 17) {
+        if (Game.dealerCondition(this.dealerHand)) {
             const card = this.deck.draw();
             if (!card) return false; // should never happen
             this.dealerHand.addCard(card);
