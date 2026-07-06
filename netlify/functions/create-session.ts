@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 dotenv.config();
 
-import { errorJSON, successJSON } from './json.ts';
+import { errorJSON, successJSON } from './data/json.ts';
 
 const { SESSION_SECRET } = process.env;
 
@@ -14,7 +14,8 @@ function sign(clientId: string) {
         .digest('hex');
 }
 
-function verify(clientId: string, signature: string) {
+export function verify(clientId: string, signature: string) {
+    if (!clientId || !signature) return false;
     const expected = sign(clientId);
     return expected === signature;
 }
@@ -29,7 +30,7 @@ export const handler = async (event: any) => {
         const clientId = String(body.clientId || "").trim();
         const signature = String(body.signature || "").trim();
 
-        console.log(`Action ${action} for clientId: ${clientId}`);
+        console.log(`create-session: Received action ${action} for clientId: ${clientId}`);
 
         const clientVal: string = String(clientId || "").trim();
 

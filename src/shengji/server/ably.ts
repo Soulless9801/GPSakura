@@ -1,50 +1,20 @@
 import { useState, useEffect } from "react";
 import Ably from "ably";
-import { deserialize } from "/src/utils/serial";
 
-export function useAbly({ request }: { request: { clientId: string; signature: string | null } }): Ably.Realtime | null {
+import { Identity } from "/src/utils/verify";
+
+export function useAbly({ request }: { request: Identity | null }): Ably.Realtime | null {
+    
     const [ably, setAbly] = useState<Ably.Realtime | null>(null);
 
     useEffect(() => {
 
-        const clientId: string = String(request.clientId || "").trim();
-        const signature: string = String(request.signature || "").trim();
+        const clientId: string = String(request?.clientId || "").trim();
+        const signature: string = String(request?.signature || "").trim();
 
-        const verify = async () => {
+        let client: Ably.Realtime | null = null;
 
-            if (!clientId || !clientId.startsWith("player_") || !signature) return false;
-
-            const res = await fetch('/.netlify/functions/create-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'verify',
-                    clientId,
-                    signature
-                }),
-            });
-
-            if (!res || !res.ok) return false;
-
-            const data = await res.text();
-
-            const des_data = deserialize(data);
-            if (!des_data || typeof des_data !== "object") return false;
-
-            const ret = des_data as { 
-                valid: boolean
-            };
-
-            if (!ret || !ret.valid) return false;
-
-            return true;
-        }
-
-        verify();
-
-        const client = new Ably.Realtime({
+        client = new Ably.Realtime({
             authUrl: "/.netlify/functions/ably-auth",
             authParams: { clientId, signature },
         });
@@ -52,10 +22,10 @@ export function useAbly({ request }: { request: { clientId: string; signature: s
         setAbly(client);
 
         return () => {
-            client.close();
+            client?.close();
         };
         
-    }, [request.clientId, request.signature]);
+    }, [request?.clientId, request?.signature]);
 
     return ably;
 }

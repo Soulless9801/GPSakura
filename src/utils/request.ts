@@ -1,10 +1,12 @@
+import { Identity } from "/src/utils/verify";
+
 export interface ClientRequest {
     payload?: any;
 }
 
 export interface GameRequest extends ClientRequest {
     action: string;
-    clientId: string;
+    identity: Identity | null;
     roomId: string;
 }
 

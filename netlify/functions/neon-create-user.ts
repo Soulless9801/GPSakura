@@ -1,4 +1,3 @@
-// TODO: add winning/losing
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -7,7 +6,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { players } from "../../db/schema.ts";
 
-import { errorJSON, successJSON } from './json.ts';
+import { errorJSON, successJSON } from './data/json.ts';
 
 const sql = neon(process.env.NEON_DATABASE_URL!);
 
