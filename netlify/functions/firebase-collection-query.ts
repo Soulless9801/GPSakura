@@ -30,7 +30,7 @@ export const firebaseConfig = {
 dotenv.config();
 
 export async function handler(event: any) {
-    
+
     let firebaseApp;
 
     if (!firebase.getApps().length) firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -38,14 +38,18 @@ export async function handler(event: any) {
 
     const body = JSON.parse(event.body || '{}');
 
+    console.log(body);
+
     const col : string = String(body.col || "").trim();
     const loc : string = String(body.loc || "").trim();
-
     const id : string = String(body.id || "").trim();
+
+    console.log(`firebase-collection-query: Received query for collection: ${col} with document id: ${id} with local fallback: ${loc}.json`);
 
     let collection;
 
     try {
+
         const db = fireStore.getFirestore(firebaseApp);
 
         const q = fireStore.query(fireStore.collection(db, col));
@@ -65,23 +69,21 @@ export async function handler(event: any) {
             });
         });
 
-        collection = JSON.stringify(collection);
-
     } catch (error) {
         const filePath = path.resolve(`./netlify/functions/data/${loc}.json`);
         collection = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         // Timestamps should already be in ISO format
     }
 
-    if (id !== ""){ // requesting specific id
+    if (id){ // requesting specific id
         return {
             statusCode: 200,
-            body: collection.find((doc: any) => doc.id === id),
+            body: JSON.stringify(collection.find((doc: any) => doc.id === id)),
         }
     }
 
     return {
         statusCode: 200,
-        body: collection,
+        body: JSON.stringify(collection),
     };
 };
