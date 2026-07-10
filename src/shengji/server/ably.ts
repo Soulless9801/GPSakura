@@ -1,26 +1,31 @@
 import { useState, useEffect } from "react";
 import Ably from "ably";
 
-export function useAbly({ request }: { request: { clientId: string; signature: string | null } }): Ably.Realtime | null {
+import { Identity } from "/src/utils/verify";
+
+export function useAbly({ request }: { request: Identity | null }): Ably.Realtime | null {
+    
     const [ably, setAbly] = useState<Ably.Realtime | null>(null);
 
     useEffect(() => {
 
-        if (request.clientId.trim() === "" || !request.clientId.startsWith("player_")) return;
-        if (!request.signature || request.signature.trim() === "") return;
+        const clientId: string = String(request?.clientId || "").trim();
+        const signature: string = String(request?.signature || "").trim();
 
-        const client = new Ably.Realtime({
+        let client: Ably.Realtime | null = null;
+
+        client = new Ably.Realtime({
             authUrl: "/.netlify/functions/ably-auth",
-            authParams: { clientId: request.clientId, signature: request.signature },
+            authParams: { clientId, signature },
         });
 
         setAbly(client);
 
         return () => {
-            client.close();
+            client?.close();
         };
         
-    }, [request.clientId, request.signature]);
+    }, [request?.clientId, request?.signature]);
 
     return ably;
 }

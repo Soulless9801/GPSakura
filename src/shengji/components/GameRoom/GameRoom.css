@@ -66,13 +66,6 @@
     font-weight: 500;
 }
 
-.sjg-hand__wrapper {
-    display: flex;
-    padding: 1rem;
-    overflow-x: auto;
-    width: 100%;
-}
-
 .sjg-lobby {
     display: flex;
     flex-direction: column;

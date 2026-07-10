@@ -1,10 +1,12 @@
+import { Identity } from "/src/utils/verify";
+
 export interface ClientRequest {
     payload?: any;
 }
 
 export interface GameRequest extends ClientRequest {
     action: string;
-    clientId: string;
+    identity: Identity | null;
     roomId: string;
 }
 
@@ -41,17 +43,9 @@ export async function clientRequest(request: ClientRequest, className: string, f
         body: JSON.stringify(request),
     });
 
-    if (!res) {
-        console.error("Request failed");
-        return null;
-    }
+    if (!res || !res.ok) return null;
 
-    const data = await res.json();
-
-    if (!res.ok) {
-        // console.log("Error: ", data.error); --- IGNORE ---
-        return null;
-    }
+    const data = await res.text();
 
     return data;
 }

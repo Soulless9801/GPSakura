@@ -1,12 +1,11 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { motion } from 'framer-motion';
 
-import Card from '/src/shengji/components/Card/Card';
+import Card from '/src/components/tools/Card/Card';
 
 import './Hand.css';
 
-import * as SJCore from "/src/shengji/core/entities";
-import * as SJComp from "/src/shengji/core/comparison";
+import * as CardCore from "/src/entities/card";
 
 interface CardLayout {
     x: number;
@@ -16,61 +15,64 @@ interface CardLayout {
     z: number;
 }
 
-function computeLayout(cards: SJCore.Card[]): CardLayout[] | null {
+function computeLayout(cards: CardCore.Card[]): CardLayout[] | null {
 
     if (!cards || cards.length === 0) return null;
 
     const overlap = 24;
 
-    return cards.map((card, i) => ({
+    return cards.map((_, i) => ({
         x: i * overlap,
         y: 0,
         rotation: 0,
         scale: 1,
         z: i
     }));
+
 }
 
 interface HandProps {
-    cards: SJCore.Card[];
+    cards: CardCore.Card[];
     className?: string;
 }
 
 export interface HandRef {
-    getActiveCards: () => SJCore.Card[];
+    getActiveCards: () => CardCore.Card[];
 }
 
 const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "" }, ref) {
 
     const [layout, setLayout] = useState<CardLayout[] | null>(null);
 
-    const [active, setActive] = useState<SJCore.Card[]>([]);
+    const [bactive, setBactive] = useState<boolean[]>([]);
+
+    const computeActiveCards = () => {
+        if (bactive.length !== cards.length) return [];
+        // console.log("Active: ", cards.filter((_, index) => bactive[index]));
+        return cards.filter((_, index) => bactive[index]);
+    }
 
     useImperativeHandle(ref, () => ({
-        getActiveCards: () => active
+        getActiveCards: () => computeActiveCards()
     }));
 
     useEffect(() => {
         setLayout(computeLayout(cards));
-        setActive([]);
+        setBactive(new Array(cards?.length || 0).fill(false));
         // console.log("Cards received by Hand: ", cards);
     }, [cards]);
 
-    const handleClick = (card: SJCore.Card, isActive: boolean) => {
-        setActive(prev => {
-            if (isActive) return [...prev, card];
-            else {
-                const idx = prev.findIndex(c => SJComp.isCardEqual(c, card));
-                if (idx === -1) return prev;
-                prev.splice(idx, 1);
-                return [...prev];
-            };
+    const handleClick = useCallback((index: number, active: boolean) => {
+        setBactive(prev => {
+            if (index < 0 || index >= prev.length) return prev;
+            prev[index] = active;
+            return [...prev];
         });
-    };
+    }, []);
 
-	return (
-        <div className={`${className}`.trim()}>
-            <div className="sj-hand">
+    return (
+        <div className={`card-hand__wrapper${className}`.trim()}>
+            <div className="card-hand">
                 {cards.map((card, index) => {
                     if (!layout || !layout[index]) return null;
                     return (
@@ -89,14 +91,14 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
                             
                         >
                             {/* @ts-ignore - Card is JSX without proper types */}
-                            <Card card={card} onClick={handleClick}/>
+                            <Card card={card} pos={index} onClick={handleClick}/>
 
                         </motion.div>
                     )
                 })}
             </div>
         </div>
-	);
+    );
 });
 
 export default Hand;
