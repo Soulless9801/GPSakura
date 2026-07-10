@@ -48,7 +48,7 @@ function PlayerList({ players, teams }: { players: string[], teams: number[] }) 
     );
 }
 
-function GameInfo({ identity, roomId, team, game }: { identity: Identity | null, roomId: string, team: number, game: SJGame.GameState | null }) {
+function GameInfo({ identity, roomId, team, game, missing }: { identity: Identity | null, roomId: string, team: number, game: SJGame.GameState | null, missing: string[] | null }) {
     
     const [hand, setHand] = useState<SJCore.Hand | null>(null);
     const handRef = useRef<HandRef>(null);
@@ -76,7 +76,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
         const res = await SJRequest({
             roomId,
             action: "draw",
-            identity: identity,
+            identity,
         });
 
         parseRes(res);
@@ -86,7 +86,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
         const res = await SJRequest({
             roomId,
             action: "hand",
-            identity: identity,
+            identity,
         });
 
         parseRes(res);
@@ -99,7 +99,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
         return SJRequest({
             roomId,
             action: "trump",
-            identity: identity,
+            identity,
             payload: {
                 trump: JSON.stringify({
                     suit: cards[0].suit,
@@ -116,7 +116,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
         const res = await SJRequest({
             roomId,
             action: "play",
-            identity: identity,
+            identity,
             payload: {
                 play: JSON.stringify(play),
             }
@@ -132,7 +132,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
         const res = await SJRequest({
             roomId,
             action: "shuai",
-            identity: identity,
+            identity,
             payload: {
                 play: JSON.stringify(play),
             }
@@ -145,7 +145,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
         const res = await SJRequest({
             roomId,
             action: "dipai",
-            identity: identity,
+            identity,
         });
 
         parseRes(res);
@@ -157,7 +157,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
         const res = await SJRequest({
             roomId,
             action: "exchange",
-            identity: identity,
+            identity,
             payload: {
                 give: JSON.stringify(give),
                 receive: JSON.stringify(receive),
@@ -193,10 +193,20 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
 
     if (!game) return null;
 
+    const actionDisabled = Boolean(game.paused);
+
     return (
         <div className="sjg-phase">
             {phase !== "over" && (
                 <div>
+                    {game.paused && missing && missing.length > 0 && (
+                        <div className="sjg-status__banner" role="status" aria-live="polite">
+                            <span style={{ fontWeight: 'bold', padding: '0 5px 0 0' }}>Awaiting Reconnection:</span>
+                            {missing.map((p, i) => (
+                                <span key={i} style={{ padding: '0 3px 0 0' }}>{`${p}`}{i < missing.length - 1 ? "," : ""}</span>
+                            ))}
+                        </div>
+                    )}
                     <div className="sjg-info__area">
                         <div className="sjg-trump">
                             <p>Trump</p>
@@ -236,8 +246,8 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
                                     <p>Dipai (底牌)</p>
                                     <Hand ref={dipaiRef} cards={dipai || []} className="sjg-hand__wrapper"/>
                                     <div className="sjg-button__group">
-                                        <button className="sjg-button__game" onClick={() => exchangeDipai()}>Exchange Dipai</button>
-                                        <button className="sjg-button__game" onClick={() => getDipai()}>Get Dipai</button>
+                                        <button className="sjg-button__game" onClick={() => exchangeDipai()} disabled={actionDisabled}>Exchange Dipai</button>
+                                        <button className="sjg-button__game" onClick={() => getDipai()} disabled={actionDisabled}>Get Dipai</button>
                                     </div>
                                 </>
                             ) || (
@@ -250,7 +260,7 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
                             {phase === "draw" && (
                                 <div className="sjg-draw">
                                     <div className="sjg-button__group">
-                                        <button className="sjg-button__game" onClick={() => drawCard()}>Draw Card</button>
+                                        <button className="sjg-button__game" onClick={() => drawCard()} disabled={actionDisabled}>Draw Card</button>
                                     </div>
                                 </div>
                             )}
@@ -260,12 +270,12 @@ function GameInfo({ identity, roomId, team, game }: { identity: Identity | null,
                                 <div className="sjg-button__group">
                                     {phase === "play" && (
                                         <>
-                                            <button className="sjg-button__game" onClick={() => playCards()}>Play Cards</button>
-                                            <button className="sjg-button__game" onClick={() => shuaiCards()}>Gamble (甩)</button>
+                                            <button className="sjg-button__game" onClick={() => playCards()} disabled={actionDisabled}>Play Cards</button>
+                                            <button className="sjg-button__game" onClick={() => shuaiCards()} disabled={actionDisabled}>Gamble (甩)</button>
                                         </>
                                     )}
                                     {(phase === "dipai" || phase === "draw") && (
-                                        <button className="sjg-button__game" onClick={() => callTrump()}>Call Trump (亮)</button>
+                                        <button className="sjg-button__game" onClick={() => callTrump()} disabled={actionDisabled}>Call Trump (亮)</button>
                                     )}
                                     <button className="sjg-button__game" onClick={() => getHand()}>Refresh Hand</button>
                                 </div>
@@ -342,6 +352,15 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     const [game, setGame] = useState<SJGame.GameState | null>(null);
 
+    //TODO: REVIEW
+    async function connectionUpdate() {
+        await SJRequest({
+            roomId,
+            action: "connection",
+            identity,
+        });
+    }
+
     // Game actions
 
     async function startGame() {
@@ -349,34 +368,35 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         return SJRequest({
             roomId,
             action: "start",
-            identity: identity,
+            identity,
         });
     }
 
-    async function getState() {
-        const res = await SJRequest({
-            roomId,
-            action: "state",
-            identity: identity,
-        });
+    // async function getState() { // UNUSED
 
-        if (!res) return;
+    //     const res = await SJRequest({
+    //         roomId,
+    //         action: "state",
+    //         identity,
+    //     });
 
-        const des_data = deserialize(res);
-        if (!des_data || typeof des_data !== "object") return;
+    //     if (!res) return;
 
-        const ret = des_data as { game?: SJGame.GameState };
+    //     const des_data = deserialize(res);
+    //     if (!des_data || typeof des_data !== "object") return;
 
-        if (!ret || !ret.game) return;
+    //     const data = des_data as { game?: SJGame.GameState };
 
-        setGame(ret.game);
-    }
+    //     if (!data) return;
+
+    //     if (data.game) setGame(data.game);
+    // }
 
     async function changeUsername(user: string) {
         return SJRequest({
             roomId,
             action: "username",
-            identity: identity,
+            identity,
             payload: {
                 username: user,
             }
@@ -387,10 +407,11 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     async function endGame() {
         if (team < 0) return false;
+        if (!window.confirm("Are you sure you want to end the current game?")) return false;
         return SJRequest({
             roomId,
             action: "end",
-            identity: identity,
+            identity,
         });
     }
 
@@ -398,7 +419,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         await SJRequest({
             roomId,
             action: "speed_draw",
-            identity: identity,
+            identity,
         });
     }
 
@@ -469,13 +490,14 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) return;
                 const des_data = deserialize(msg.data.game);
-                if (!des_data || typeof des_data !== "object") return;
+                if (!des_data || typeof des_data !== "object") { setGame(null); return; } // corrupted game state
                 const state = des_data as SJGame.GameState;
                 if (state) setGame(state);
                 // console.log("Updated:", state);
             });
 
-            await getState();
+            await connectionUpdate(); // update presence
+            // await getState();
         }
 
         connect();
@@ -491,6 +513,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     // respond to game state changes
 
+    const [missing, setMissing] = useState<string[] | null>(null);
+
     useEffect(() => {
         if (!game) return;
         // adjust team
@@ -498,23 +522,27 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         // console.log(idx);
         if (idx === undefined) setTeam(-1);
         else setTeam(idx % 2);
+
     }, [game]);
 
     //TODO: add reconnecting
-
-    const [rec, setRec] = useState<boolean>(false);
 
     useEffect(() => {
 
         if (!game) return;
 
-        let cnt : number = 0;
+        const miss : string[] = [];
 
-        for (let i = 0; i < ids.length; i++) if (game.info.get(ids[i])) cnt++;
+        for (let i = 0; i < game.players.length; i++) if (!ids.find(id => id === game.players[i])) miss.push(game.info.get(game.players[i])?.username || game.players[i]);
+
+        const connection = async () => await connectionUpdate();
+
+        if (miss.length > 0) {
+            connection();
+            setMissing(miss);
+        } else setMissing(null);
 
         // console.log("Players in game:", cnt, "/", game.players.length);
-
-        setRec(cnt !== game.players.length);
 
     }, [game, ids]);
 
@@ -536,7 +564,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                     </div>
                 </div>
             )}
-            <GameInfo identity={identity} roomId={roomId} team={team} game={game} />
+            <GameInfo identity={identity} roomId={roomId} team={team} game={game} missing={missing} />
             {/*<button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
         </div>
     );
