@@ -47,10 +47,8 @@ export default function USACOTable() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                payload: {
-                    col: "usaco",
-                    loc: "firebaseUSACOProblems",
-                }
+                col: "usaco",
+                loc: "firebaseUSACOProblems",
             }),
         })
             .then(res => res.text())
@@ -90,11 +88,9 @@ export default function USACOTable() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    payload: {
-                        col: "problems",
-                        loc: "firebaseProblemData",
-                        id: id,
-                    }
+                    col: "problems",
+                    loc: "firebaseProblemData",
+                    id: id,
                 }),
             });
 

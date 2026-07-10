@@ -79,10 +79,8 @@ export default function BlogApp() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    payload: {
-                        col: "posts",
-                        loc: "firebaseBlogPosts",
-                    }
+                    col: "posts",
+                    loc: "firebaseBlogPosts",
                 }),
             });
 
