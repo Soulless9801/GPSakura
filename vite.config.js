@@ -8,10 +8,28 @@ export default defineConfig({
     minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks: {
-          'three': ['three'],
-          'firebase': ['firebase/app', 'firebase/auth', 'firebase/database'],
-          'vendor': ['react', 'react-dom', 'react-router-dom'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined
+          }
+
+          if (id.includes('/three/')) {
+            return 'three'
+          }
+
+          if (id.includes('/firebase/')) {
+            return 'firebase'
+          }
+
+          if (
+            id.includes('/react/') ||
+            id.includes('/react-dom/') ||
+            id.includes('/react-router-dom/')
+          ) {
+            return 'vendor'
+          }
+
+          return undefined
         },
         chunkFileNames: 'chunks/[name].[hash].js',
         entryFileNames: '[name].[hash].js',
