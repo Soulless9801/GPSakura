@@ -41,7 +41,9 @@ export async function handler(event: any) {
 
         const identity : Identity | null = body.identity || null;
         if (!identity) return errorJSON("Missing identity", 400);
-        const clientId : number = Number(identity.clientId || 0);
+        const identityClientId : string = String(identity.clientId || "").trim();
+        if (!identityClientId) return errorJSON("Missing clientId", 400);
+        const clientId : number = Number(identityClientId);
         const signature : string = String(identity.signature || "").trim();
 
         const action : string = String(body.action || "").trim();
@@ -50,12 +52,8 @@ export async function handler(event: any) {
 
         console.log(`blackjack-game-room: Received action ${action} from clientId ${clientId} for roomId ${roomId}`);
 
-        // const clientId = Number(clientId || 0);
-        // let roomId = Number(roomId || 0);
-
         if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) return errorJSON("Invalid clientId");
-        if (!signature || !verify(identity.clientId, signature)) return errorJSON("Invalid signature");
-
+        if (!signature || !verify(identityClientId, signature)) return errorJSON("Invalid signature");
 
         // helper function to get game state
         async function getGame() {

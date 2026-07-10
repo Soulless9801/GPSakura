@@ -54,6 +54,7 @@ export interface GameState {
 
     over: boolean
     dip: boolean // diapi exchanging or not
+    paused: boolean
 }
 
 function nullPlay(): Play {
@@ -160,6 +161,7 @@ export class Game {
 
             over: false,
             dip: false,
+            paused: false,
         }
 
         this.hands = new Map(players.map(p => [p, new Hand()]));
@@ -494,6 +496,10 @@ export class Game {
         this.state.over = true;
     }
 
+    setPaused(paused: boolean) : void {
+        this.state.paused = paused;
+    }
+
     getState() : GameState {
         return this.state;
     }
@@ -534,7 +540,8 @@ export function baseGame(): Game {
         lead: 0,
         count: 0,
         over: false,
-        dip: false
+        dip: false,
+        paused: false,
     };
 
     return new Game(state, new Map(), new Deck(1), []);
