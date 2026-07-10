@@ -21,11 +21,12 @@ const rankToLabel: Record<number, string> = {
 
 interface CardProps {
 	card: CardType | null;
+	pos?: number;
 	className?: string;
-	onClick?: ((card: CardType, active: boolean) => void) | null;
+	onClick?: ((index: number, active: boolean) => void) | null;
 }
 
-export default function Card({ card, className = "", onClick = null }: CardProps) {
+export default function Card({ card, pos = -1, className = "", onClick = null }: CardProps) {
 
 	const [active, setActive] = useState(false);
 
@@ -36,7 +37,7 @@ export default function Card({ card, className = "", onClick = null }: CardProps
 	const handleClick = useCallback(() => {
 		const nactive = !active;
 		setActive(nactive);
-		if (onClick && card) onClick(card, nactive);
+		if (onClick && card) onClick(pos, nactive);
 	}, [active, onClick, card]);
 
 	if (!card) return null;

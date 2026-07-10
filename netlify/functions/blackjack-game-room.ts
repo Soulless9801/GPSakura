@@ -2,41 +2,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { verify } from "./create-session";
+import { Identity } from "../../src/utils/verify";
+
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { games, players } from "../../db/schema.ts";
+//TODO: add money and betting
+import { games, players } from "../../db/schema";
 
-import { Hand } from "../../src/blackjack/core/entities.ts";
-import { GameData, Game } from "../../src/blackjack/core/game.ts";
+import * as BJGame from "../../src/blackjack/core/game";
 
-import { serialize } from '../../src/utils/serial.ts';
+import { errorJSON, successJSON } from './data/json.ts';
 
 const sql = neon(process.env.NEON_DATABASE_URL!);
 
 const db = drizzle(sql);
 
-function errorJSON(message: string, code = 400) {
-    return {
-        statusCode: code,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ error: message }),
-    };
-}
-
-function successJSON(payload: any) {
-    return {
-        statusCode: 200,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-    };
-}
-
-function parseGameData(gameRow: any): GameData {
+function parseBJGameData(gameRow: any): BJGame.GameData {
     return {
         player_cards: gameRow.player_cards,
         dealer_cards: gameRow.dealer_cards,
@@ -55,44 +38,74 @@ export async function handler(event: any) {
         // get action data
 
         const body = JSON.parse(event.body || '{}');
-        let { action, clientId, roomId, payload } = body;
 
-        console.log(`Received request: ${action} from clientId ${clientId}for gameId ${roomId}`);
+        const identity : Identity | null = body.identity || null;
+        if (!identity) return errorJSON("Missing identity", 400);
+        const clientId : number = Number(identity.clientId || 0);
+        const signature : string = String(identity.signature || "").trim();
 
-        const playerId = Number(clientId || 0);
-        let gameId = Number(roomId || 0);
+        const action : string = String(body.action || "").trim();
+        let roomId : number = Number(body.roomId || 0);
+        const payload : any = body.payload || {};
 
-        if (isNaN(playerId) || !Number.isInteger(playerId) || playerId <= 0) return errorJSON("Invalid clientId");
-        if (isNaN(gameId) || !Number.isInteger(gameId) || gameId <= 0) return errorJSON("Invalid gameId");
+        console.log(`blackjack-game-room: Received action ${action} from clientId ${clientId} for roomId ${roomId}`);
 
-        action = String(action || "").trim();
+        // const clientId = Number(clientId || 0);
+        // let roomId = Number(roomId || 0);
+
+        if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) return errorJSON("Invalid clientId");
+        if (!signature || !verify(identity.clientId, signature)) return errorJSON("Invalid signature");
+
 
         // helper function to get game state
-        async function getGameRow(gameId: number, playerId: number) {
+        async function getGame() {
+
+            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) return null;
+
             const row = await db
                 .select()
                 .from(games)
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)))
+                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)))
                 .limit(1);
-
-            return (row.length > 0) ? row[0] : null;
-        }
-
-        async function getGame() {
             
-            const gameRow = await getGameRow(gameId, playerId);
-            if (!gameRow) return errorJSON("Game not found");
+            const gameRow = (row.length > 0) ? row[0] : null;
+            if (!gameRow) return null;
 
-            const data : GameData = parseGameData(gameRow);
+            const data : BJGame.GameData = parseBJGameData(gameRow);
 
-            return new Game(data);
+            return new BJGame.Game(data);
         }
+
+        async function getGames() {
+
+            const rows = await db
+                .select()
+                .from(games)
+                .where(eq(games.player_id, clientId));
+            
+            if (rows.length < 1) return null;
+
+            return rows.map(row => ({
+                game_id: row.id,
+                player_cards: row.player_cards,
+                dealer_cards: row.dealer_cards,
+                deck_seed: row.deck_seed,
+            }));
+        }  
         
-        function retJSON(game: Game) {
+        function retJSON(game: BJGame.Game) {
+
+            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) return errorJSON("Invalid roomId");
+
+            const over : boolean = game.checkOver();
+            const status : string = game.checkWinner();
+
             return successJSON({
-                game_id: gameId,
-                player_cards: serialize(game.getPlayerHand()),
-                dealer_cards: serialize(game.getDealerHand()),
+                game_id: roomId,
+                player_cards: game.getPlayerHand(),
+                dealer_cards: game.getDealerHand(),
+                over: over,
+                status: status,
             });
         }
 
@@ -106,11 +119,10 @@ export async function handler(event: any) {
 
             const seed : number = genSeed();
             
-            // TODO: sanitize playerId and bet value
             const result = await db
                 .insert(games)
                 .values({
-                    player_id: playerId,
+                    player_id: clientId,
                     bet_amount: bet,
                     player_cards: 2,
                     dealer_cards: 1,
@@ -126,24 +138,40 @@ export async function handler(event: any) {
             // console.log(result);
 
             const ret = result[0];
-            gameId = ret.game_id; // update gameId to the actual ID from the database
+            roomId = ret.game_id; // update roomId to the actual ID from the database
 
-            const data : GameData = parseGameData(ret);
-            const game : Game = new Game(data);
+            const data : BJGame.GameData = parseBJGameData(ret);
+            const game : BJGame.Game = new BJGame.Game(data);
 
             return retJSON(game);
         }
+
+        if (action === "load") { // ACTION: LOAD GAME
+            
+            const games = await getGames();
+            if (!games) return errorJSON("No games found for this player");
+
+            const game_row = games.reduce((prev, curr) => (curr.game_id > prev.game_id ? curr : prev), games[0]);
+            if (!game_row) return errorJSON("No games found for this player");
+            
+            roomId = game_row.game_id; // update roomId to the actual ID from the database
+
+            const data : BJGame.GameData = parseBJGameData(game_row);
+            const game : BJGame.Game = new BJGame.Game(data);
+
+            return retJSON(game);
+        }    
         
         if (action === "hit") { // ACTION: HIT
 
             const game = await getGame();
-            if (!(game instanceof Game)) return game; 
+            if (!(game instanceof BJGame.Game)) return errorJSON("Game not found");
             if (!game.playerHit()) return errorJSON("Player hit failed");
 
             await db
                 .update(games)
                 .set(game.getGameData())
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
+                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
 
             return retJSON(game);
         }
@@ -151,38 +179,38 @@ export async function handler(event: any) {
         if (action === "stand") { // ACTION: STAND
 
             const game = await getGame();
-            if (!(game instanceof Game)) return game; 
+            if (!(game instanceof BJGame.Game)) return errorJSON("Game not found");
             if (!game.playerStand()) return errorJSON("Player stand failed");
 
             await db
                 .update(games)
                 .set(game.getGameData())
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
+                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
 
             return retJSON(game);
         }
 
-        if (action === "dealer") { // ACTION: DEALER ACTION
+        // if (action === "dealer") { // ACTION: DEALER ACTION
 
-            const game = await getGame();
-            if (!(game instanceof Game)) return game; 
-            if (!game.dealerPlay()) return errorJSON("Dealer play failed");
+        //     const game = await getGame();
+        //     if (!(game instanceof Game)) return game; 
+        //     while (game.dealerPlay()) continue; // keep playing until dealer is done
+        //     // if (!game.dealerPlay()) return errorJSON("Dealer play failed");
 
-            await db
-                .update(games)
-                .set(game.getGameData())
-                .where(and(eq(games.id, gameId), eq(games.player_id, playerId)));
+        //     await db
+        //         .update(games)
+        //         .set(game.getBJGame.GameData())
+        //         .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
 
-            // console.log(result);
+        //     // console.log(result);
 
-            return retJSON(game);
-        }
+        //     return retJSON(game);
+        // }
 
         return errorJSON("Invalid action");
 
     } catch (error: any) {
-        // catch and return any errors
-        console.log("Error in handler:", error);
+        // console.log("Error in handler:", error);
         return errorJSON(error.message, 500);
     }
 }

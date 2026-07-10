@@ -1,10 +1,17 @@
-.sj-hand {
+.card-hand__wrapper {
+    display: flex;
+    padding: 1rem;
+    overflow-x: auto;
+    width: 100%;  
+}
+
+.card-hand {
     position: relative;
     width: 100%;
     height: 140px; /* Exact height of card */
     display: flex;
 }
 
-.sj-hand > * {
+.card-hand > * {
     position: absolute;
 }
