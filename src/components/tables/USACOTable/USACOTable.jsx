@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import $ from 'jquery';
 
 import { formatDate } from '/src/utils/time.js';
+import { deserialize } from '/src/utils/serial';
 
 import CustomDataTable from '/src/components/tables/DataTable.jsx';
 
@@ -55,7 +56,7 @@ export default function USACOTable() {
             .then(json => {
 
                 let rows = [];
-                const data = JSON.parse(json);
+                const data = deserialize(json);
 
                 for (let i = 0; i < data.length; i++) {
 
@@ -94,11 +95,12 @@ export default function USACOTable() {
                 }),
             });
 
-            const json = await res.json();
+            const json = await res.text();
+            const data = deserialize(json);
 
-            // console.log(json);
+            // console.log(data);
 
-            setData(json);
+            setData(data);
         };
 
         document.addEventListener("click", handler);

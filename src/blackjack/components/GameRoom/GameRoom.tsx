@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 
-import { clientRequest, GameRequest } from "/src/utils/request";
+import { clientRequest, GameRequest } from "/src/services/request";
 
 import { deserialize } from "/src/utils/serial";
 

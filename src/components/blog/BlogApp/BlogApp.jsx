@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { loadValue } from '/src/utils/storage.js';
+import { deserialize } from '/src/utils/serial';
 
 import BlogPost from '/src/components/blog/BlogPost/BlogPost.jsx';
 import Select from '/src/components/tools/Select/Select.jsx';
@@ -86,7 +88,7 @@ export default function BlogApp() {
 
             // const res = await fetch('/.netlify/functions/firebase-blog-posts');
 
-            const blogPosts = JSON.parse(await res.text());
+            const blogPosts = deserialize(await res.text());
 
             setPosts(sortPosts(blogPosts, sortBy));
             

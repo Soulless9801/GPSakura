@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { deserialize } from "/src/utils/serial";
 
 import { useAbly } from "/src/shengji/server/ably";
-import { GameRequest, clientRequest } from "/src/utils/request";
+import { GameRequest, clientRequest } from "/src/services/request";
 
 import * as SJGame from "/src/shengji/core/game";
 import * as SJCore from "/src/shengji/core/entities";

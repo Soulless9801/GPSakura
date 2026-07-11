@@ -1,8 +1,11 @@
 import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
+
 import * as firebase from 'firebase/app';
 import * as fireStore from 'firebase/firestore';
+
+import { errorJSON, successJSON } from './data/json.ts';
 
 const {
     FIREBASE_API_KEY,
@@ -38,8 +41,6 @@ export async function handler(event: any) {
 
     const body = JSON.parse(event.body || '{}');
 
-    console.log(body);
-
     const col : string = String(body.col || "").trim();
     const loc : string = String(body.loc || "").trim();
     const id : string = String(body.id || "").trim();
@@ -70,20 +71,17 @@ export async function handler(event: any) {
         });
 
     } catch (error) {
-        const filePath = path.resolve(`./netlify/functions/data/${loc}.json`);
-        collection = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        // Timestamps should already be in ISO format
+        console.log(`firebase-collection-query: Error fetching collection from Firestore, falling back to local file ${loc}.json`, error);
+        try {
+            const filePath = path.resolve(`./netlify/functions/data/${loc}.json`);
+            collection = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            // Timestamps should already be in ISO format
+        } catch (error) {
+            return errorJSON("Error fetching collection from Firestore and local fallback", 500);
+        }   
     }
 
-    if (id){ // requesting specific id
-        return {
-            statusCode: 200,
-            body: JSON.stringify(collection.find((doc: any) => doc.id === id)),
-        }
-    }
+    if (id) return successJSON(collection.find((doc: any) => doc.id === id) || null);
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(collection),
-    };
+    return successJSON(collection);
 };
