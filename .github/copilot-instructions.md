@@ -107,18 +107,29 @@
 ### Directory Organization
 
 ```
+netlify/
+├── functions/                # Serverless functions (Netlify Functions) and associated data
+│   ├── data/                 # Static data files (e.g., CSV, JSON) used by functions
+│   ├── old/                  # Legacy or deprecated functions (if any) or backups for refactored functions
+public/
+│   └──                       # Static assets (images, fonts, etc.) can be placed here
 src/
-├── components/        # Reusable UI components
-│   ├── common/       # Generic components (Button, Modal, etc.)
-│   ├── layout/       # Layout components (Header, Footer, etc.)
-│   └── [Feature]/    # Feature-specific components
-├── pages/            # Page components (route-level)
-├── entities/         # Data models, constants, enums
-├── utils/            # Utility functions, helpers
-├── hooks/            # Custom React hooks
-├── services/         # API calls, external service integrations
-├── styles/           # Global styles and CSS variables
-└── types/            # Shared TypeScript types (if not co-located)
+├── components/               # Reusable UI components
+│   ├── [Feature]/            # Feature-specific components, may be contained in subfolders
+│   │   ├── [Feature].tsx     # React component
+│   │   └── [Feature].css     # Optional CSS module or stylesheet
+│   ├── layout/               # Layout components (Header, Footer, etc.)
+│   └── tools/                # Components for general use (Button, Modal, etc.)
+├── entities/                 # Data models, constants, enums
+├── hooks/                    # Custom React hooks
+├── pages/                    # Page components (route-level)
+├── services/                 # API calls, external service integrations (if not co-located)
+├── styles/                   # Global styles and CSS variables (likely unused, as global CSS is mostly discouraged and stored in `index.css` or `index.scss`)
+├── types/                    # Shared TypeScript types (if not co-located)
+└── utils/                    # Utility functions, helpers
+
+Note: Co-locate types with components when possible, unless they are shared across multiple components.
+
 ```
 
 ### Component Naming & Structure
@@ -127,6 +138,16 @@ src/
 - Component files match the component name: `MyComponent.tsx` exports `MyComponent`
 - Co-locate component tests and styles with the component file when possible
 - Use barrel exports (`index.ts`) in folders for cleaner imports: `import { MyComponent } from '@/components/common'`
+
+### Import Order
+
+- Group imports in this order:
+  - First, npm-installed packages and other external dependencies
+  - Next, internal types, services, utilities, entities from `src/types`, `src/services`, `src/utils`, and `src/entities` in that order
+  - Next, other project components, pages, layouts, and similar local modules
+  - Last, CSS and other stylesheet imports
+- Keep a blank line between each import group
+- Within each group, sort imports alphabetically when practical
 
 ### React Best Practices
 
