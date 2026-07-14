@@ -19,11 +19,31 @@ const sql = neon(process.env.NEON_DATABASE_URL!);
 
 const db = drizzle(sql);
 
-function parseBJGameData(gameRow: any): BJGame.GameData {
+interface GameRow extends BJGame.GameData {
+    id: number;
+}
+
+function parseGameRow(data: any): GameRow | null {
+    if (!data || typeof data !== "object") return null;
+
+    const id = Number(data.id);
+    const player_cards = Number(data.player_cards);
+    const dealer_cards = Number(data.dealer_cards);
+    const deck_seed = Number(data.deck_seed);
+    const bet_amount = Number(data.bet_amount);
+    const settled = Boolean(data.settled);
+
+    if (isNaN(id) || isNaN(player_cards) || isNaN(dealer_cards) || isNaN(deck_seed) || isNaN(bet_amount)) {
+        return null;
+    }
+
     return {
-        player_cards: gameRow.player_cards,
-        dealer_cards: gameRow.dealer_cards,
-        deck_seed: gameRow.deck_seed,
+        id,
+        player_cards,
+        dealer_cards,
+        deck_seed,
+        bet_amount,
+        settled,
     };
 }
 
@@ -55,6 +75,17 @@ export async function handler(event: any) {
         if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) return errorJSON("Invalid clientId");
         if (!signature || !verify(identityClientId, signature)) return errorJSON("Invalid signature");
 
+        async function getMoney() {
+            return db
+                .select({ money: players.money })
+                .from(players)
+                .where(eq(players.id, clientId))
+                .limit(1)
+                .then(rows => (rows.length > 0) ? rows[0].money : null);
+        }
+
+        const money : number | null = await getMoney();
+
         // helper function to get game state
         async function getGame() {
 
@@ -66,12 +97,10 @@ export async function handler(event: any) {
                 .where(and(eq(games.id, roomId), eq(games.player_id, clientId)))
                 .limit(1);
             
-            const gameRow = (row.length > 0) ? row[0] : null;
+            const gameRow : GameRow | null = (row.length > 0) ? row[0] : null;
             if (!gameRow) return null;
 
-            const data : BJGame.GameData = parseBJGameData(gameRow);
-
-            return new BJGame.Game(data);
+            return new BJGame.Game(gameRow);
         }
 
         async function getGames() {
@@ -83,40 +112,63 @@ export async function handler(event: any) {
             
             if (rows.length < 1) return null;
 
-            return rows.map(row => ({
-                game_id: row.id,
-                player_cards: row.player_cards,
-                dealer_cards: row.dealer_cards,
-                deck_seed: row.deck_seed,
-            }));
-        }  
+            return rows.map(row => parseGameRow(row)).filter((v): v is GameRow => !!v);
+        }
+
+        async function settleGame(game: BJGame.Game) {
+
+            const over : boolean = game.checkOver();
+            const status : string = game.checkWinner();
+            const settled : boolean = game.isSettled();
+
+            if (over && !settled) {
+
+                game.setSettled(true);
+                
+                const betAmount : number = game.getBetAmount();
+                if (money === null) return errorJSON("Player not found");
+
+                if (status === "player") {
+                    await db.update(players)
+                        .set({ money: money + betAmount })
+                        .where(eq(players.id, clientId));
+                } else {
+                    await db.update(players)
+                        .set({ money: money - betAmount })
+                        .where(eq(players.id, clientId));
+                }
+            }
+
+            await db
+                .update(games)
+                .set(game.getGameData())
+                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
+        }
         
         function retJSON(game: BJGame.Game) {
 
             if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) return errorJSON("Invalid roomId");
 
-            const over : boolean = game.checkOver();
-            const status : string = game.checkWinner();
-
             return successJSON({
-                game_id: roomId,
+                id: roomId,
                 player_cards: game.getPlayerHand(),
                 dealer_cards: game.getDealerHand(),
-                over: over,
-                status: status,
+                over: game.checkOver(),
+                status: game.checkWinner(),
             });
         }
 
         if (action === "start") { // ACTION: START GAME
 
             const bet : number = Number(payload.bet_amount);
+            const money : number | null = await getMoney();
 
-            if (isNaN(bet) || bet <= 0) return errorJSON("Invalid bet amount");
+            if (!money || isNaN(bet) || bet <= 0 || bet > money) return errorJSON("Invalid bet amount");
 
             // console.log('Starting game...');
 
             const seed : number = genSeed();
-            
+
             const result = await db
                 .insert(games)
                 .values({
@@ -125,21 +177,23 @@ export async function handler(event: any) {
                     player_cards: 2,
                     dealer_cards: 1,
                     deck_seed: seed,
+                    settled: false,
                 })
                 .returning({
-                    game_id: games.id, 
+                    id: games.id, 
                     player_cards: games.player_cards, 
                     dealer_cards: games.dealer_cards, 
-                    deck_seed: games.deck_seed
+                    deck_seed: games.deck_seed,
+                    bet_amount: games.bet_amount,
+                    settled: games.settled,
                 });
 
             // console.log(result);
 
-            const ret = result[0];
-            roomId = ret.game_id; // update roomId to the actual ID from the database
+            const ret : GameRow = result[0];
+            roomId = ret.id; // update roomId to the actual ID from the database
 
-            const data : BJGame.GameData = parseBJGameData(ret);
-            const game : BJGame.Game = new BJGame.Game(data);
+            const game : BJGame.Game = new BJGame.Game(ret);
 
             return retJSON(game);
         }
@@ -149,13 +203,12 @@ export async function handler(event: any) {
             const games = await getGames();
             if (!games) return errorJSON("No games found for this player");
 
-            const game_row = games.reduce((prev, curr) => (curr.game_id > prev.game_id ? curr : prev), games[0]);
-            if (!game_row) return errorJSON("No games found for this player");
+            const gameRow = games.reduce((prev, curr) => (curr.id > prev.id ? curr : prev), games[0]);
+            if (!gameRow) return errorJSON("No games found for this player");
             
-            roomId = game_row.game_id; // update roomId to the actual ID from the database
+            roomId = gameRow.id; // update roomId to the actual ID from the database
 
-            const data : BJGame.GameData = parseBJGameData(game_row);
-            const game : BJGame.Game = new BJGame.Game(data);
+            const game : BJGame.Game = new BJGame.Game(gameRow);
 
             return retJSON(game);
         }    
@@ -166,11 +219,7 @@ export async function handler(event: any) {
             if (!(game instanceof BJGame.Game)) return errorJSON("Game not found");
             if (!game.playerHit()) return errorJSON("Player hit failed");
 
-            await db
-                .update(games)
-                .set(game.getGameData())
-                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
-
+            await settleGame(game);
             return retJSON(game);
         }
 
@@ -180,11 +229,7 @@ export async function handler(event: any) {
             if (!(game instanceof BJGame.Game)) return errorJSON("Game not found");
             if (!game.playerStand()) return errorJSON("Player stand failed");
 
-            await db
-                .update(games)
-                .set(game.getGameData())
-                .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
-
+            await settleGame(game);
             return retJSON(game);
         }
 
@@ -197,7 +242,7 @@ export async function handler(event: any) {
 
         //     await db
         //         .update(games)
-        //         .set(game.getBJGame.GameData())
+        //         .set(game.getGameData())
         //         .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
 
         //     // console.log(result);
@@ -208,7 +253,7 @@ export async function handler(event: any) {
         return errorJSON("Invalid action");
 
     } catch (error: any) {
-        // console.log("Error in handler:", error);
+        console.log("Error in handler:", error);
         return errorJSON(error.message, 500);
     }
 }

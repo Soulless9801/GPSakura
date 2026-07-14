@@ -9,6 +9,7 @@ import { Identity, getIdentity } from "/src/utils/verify";
 import * as BJCore from "/src/blackjack/core/entities";
 
 import Hand from "/src/components/tools/Hand/Hand";
+import Form from "/src/components/tools/Form/Form";
 
 import "./GameRoom.css";
 
@@ -140,13 +141,15 @@ export default function GameRoom() {
 
     const [status, setStatus] = useState<string | null>(null);
 
+    const [money, setMoney] = useState<number>(0);
+
     async function startGame() {
         const res = await BJRequest({
             action: "start",
             identity: identity,
             roomId: gameId,
             payload: {
-                bet_amount: 100,
+                bet_amount: money,
             }
         });
 
@@ -193,7 +196,7 @@ export default function GameRoom() {
         if (!des_data || typeof des_data !== "object") return;
 
         const ret = des_data as { 
-            game_id?: number, 
+            id?: number, 
             player_cards?: BJCore.HandData, 
             dealer_cards?: BJCore.HandData, 
             over?: boolean, 
@@ -206,7 +209,7 @@ export default function GameRoom() {
 
         if (ret.over) setStatus(ret.status || null);
         else setStatus(null);
-        setGameId(String(ret.game_id || gameId));
+        setGameId(String(ret.id || gameId));
         if (ret.player_cards) setPlayerCards(BJCore.Hand.deserialize(ret.player_cards));
         if (ret.dealer_cards) setDealerCards(BJCore.Hand.deserialize(ret.dealer_cards));
         // setPlayerCards(BJCore.Hand.deserialize(deserialize(data.player_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
@@ -243,6 +246,7 @@ export default function GameRoom() {
                 <button onClick={startGame} className="bjg-button">
                     Start Game
                 </button>
+                <Form init={money} min={0} max={1000} onChange={setMoney} />
                 <button onClick={hit} className="bjg-button">
                     Hit
                 </button>
