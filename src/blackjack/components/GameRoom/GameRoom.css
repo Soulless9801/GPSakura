@@ -4,6 +4,7 @@
     align-items: center;
     justify-content: center;
     gap: 2rem;
+    padding: 1rem;
 }
 
 .bjg-labels {
@@ -16,6 +17,7 @@
 .bjg-actions {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 1rem;
     align-items: center;
     justify-content: center;

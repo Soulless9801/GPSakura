@@ -84,7 +84,19 @@ export async function handler(event: any) {
                 .then(rows => (rows.length > 0) ? rows[0].money : null);
         }
 
-        const money : number | null = await getMoney();
+        let money : number | null = await getMoney();
+
+        if (action === "money") {
+            return successJSON({ money: money });
+        }
+
+        if (action === "refill") {
+            money = (money || 0) + 1000; // refill 1000 money
+            await db.update(players)
+                .set({ money: money })
+                .where(eq(players.id, clientId));
+            return successJSON({ money: money });
+        }
 
         // helper function to get game state
         async function getGame() {
@@ -129,12 +141,14 @@ export async function handler(event: any) {
                 if (money === null) return errorJSON("Player not found");
 
                 if (status === "player") {
+                    money += betAmount;
                     await db.update(players)
-                        .set({ money: money + betAmount })
+                        .set({ money: money })
                         .where(eq(players.id, clientId));
                 } else {
+                    money -= betAmount;
                     await db.update(players)
-                        .set({ money: money - betAmount })
+                        .set({ money: money })
                         .where(eq(players.id, clientId));
                 }
             }
@@ -151,6 +165,7 @@ export async function handler(event: any) {
 
             return successJSON({
                 id: roomId,
+                money: money,
                 player_cards: game.getPlayerHand(),
                 dealer_cards: game.getDealerHand(),
                 over: game.checkOver(),
@@ -158,12 +173,13 @@ export async function handler(event: any) {
             });
         }
 
+        const MIN_BET : number = 0; // TODO: set minimum bet amount
+
         if (action === "start") { // ACTION: START GAME
 
             const bet : number = Number(payload.bet_amount);
-            const money : number | null = await getMoney();
 
-            if (!money || isNaN(bet) || bet <= 0 || bet > money) return errorJSON("Invalid bet amount");
+            if (money === null || isNaN(bet) || bet <= MIN_BET || bet > money) return errorJSON("Invalid bet amount");
 
             // console.log('Starting game...');
 

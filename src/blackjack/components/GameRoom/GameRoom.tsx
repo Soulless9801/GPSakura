@@ -64,76 +64,6 @@ export default function GameRoom() {
 
         identify();
 
-        // const identify = async () => {
-        //     let clientId = localStorage.getItem("bjClientId");
-        //     let nSig = localStorage.getItem("bjSignature");
-
-        //     const ver = await fetch("/.netlify/functions/create-session", {
-        //         method: "POST",
-        //         headers: {
-        //             "Content-Type": "application/json",
-        //         },
-        //         body: JSON.stringify({
-        //             action: "verify",
-        //             clientId: clientId,
-        //             signature: nSig,
-        //         }),
-        //     });
-
-        //     if (!ver || !ver.ok) {
-        //         const res_id = await fetch("/.netlify/functions/neon-create-user", {
-        //             method: "POST",
-        //             headers: {
-        //                 "Content-Type": "application/json",
-        //             },
-        //         });
-        //         // console.log("res_id:", res_id);
-        //         if (!res_id || !res_id.ok) return;
-
-        //         const data_id = await res_id.text();
-        //         if (!data_id) return;
-
-        //         // console.log(data_id);
-
-        //         const des_id = deserialize(data_id);
-        //         if (!des_id || typeof des_id !== "object") return;
-
-        //         const ret_id = des_id as { player_id: string };
-        //         if (!ret_id || !ret_id.player_id) return;
-
-        //         clientId = ret_id.player_id;
-
-        //         const res_sig =  await fetch("/.netlify/functions/create-session", {
-        //             method: "POST",
-        //             headers: {
-        //                 "Content-Type": "application/json",
-        //             },
-        //             body: JSON.stringify({
-        //                 action: "sign",
-        //                 clientId: clientId,
-        //             }),
-        //         });
-        //         if (!res_sig || !res_sig.ok) return;
-
-        //         const data_sig = await res_sig.text();
-        //         if (!data_sig) return;
-
-        //         const des_sig = deserialize(data_sig);
-        //         if (!des_sig || typeof des_sig !== "object") return;
-                
-        //         const ret_sig = des_sig as { signature: string };
-        //         if (!ret_sig || !ret_sig.signature) return;
-
-        //         nSig = ret_sig.signature;
-
-        //         localStorage.setItem("bjClientId", clientId);
-        //         localStorage.setItem("bjSignature", nSig);
-        //     }
-
-        //     setPlayerId(clientId || "");
-        //     setSignature(nSig || "");
-        // }
-
     }, []);
 
     const [playerCards, setPlayerCards] = useState<BJCore.Hand | null>(null);
@@ -142,6 +72,32 @@ export default function GameRoom() {
     const [status, setStatus] = useState<string | null>(null);
 
     const [money, setMoney] = useState<number>(0);
+    const [bet, setBet] = useState<number>(0);
+
+    async function getMoney() {
+        const res = await BJRequest({
+            action: "money",
+            identity: identity,
+            roomId: gameId,
+        });
+
+        setJson(res);
+    }
+
+    useEffect(() => {
+        if (!identity) return;
+        getMoney();
+    }, []);
+
+    async function refillMoney() {
+        const res = await BJRequest({
+            action: "refill",
+            identity: identity,
+            roomId: gameId,
+        });
+
+        setJson(res);
+    }
 
     async function startGame() {
         const res = await BJRequest({
@@ -149,7 +105,7 @@ export default function GameRoom() {
             identity: identity,
             roomId: gameId,
             payload: {
-                bet_amount: money,
+                bet_amount: bet,
             }
         });
 
@@ -196,7 +152,8 @@ export default function GameRoom() {
         if (!des_data || typeof des_data !== "object") return;
 
         const ret = des_data as { 
-            id?: number, 
+            id?: number,
+            money?: number,
             player_cards?: BJCore.HandData, 
             dealer_cards?: BJCore.HandData, 
             over?: boolean, 
@@ -207,13 +164,12 @@ export default function GameRoom() {
 
         // console.log("GameRoom setJson:", ret);
 
+        if (ret.money !== undefined) setMoney(ret.money);
         if (ret.over) setStatus(ret.status || null);
         else setStatus(null);
         setGameId(String(ret.id || gameId));
         if (ret.player_cards) setPlayerCards(BJCore.Hand.deserialize(ret.player_cards));
         if (ret.dealer_cards) setDealerCards(BJCore.Hand.deserialize(ret.dealer_cards));
-        // setPlayerCards(BJCore.Hand.deserialize(deserialize(data.player_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
-        // setDealerCards(BJCore.Hand.deserialize(deserialize(data.dealer_cards) /* as { cards: Map<Suit, BJCore.Card[],  card_count: number, hand_value: number, ace_count: number } */));
     }, [gameId]);
 
     return (
@@ -239,6 +195,9 @@ export default function GameRoom() {
                 <h2>Player Cards: {handToString(playerCards)}</h2>
                 <h2>Dealer Cards: {handToString(dealerCards)}</h2>
             </div> */}
+            <div>
+                <p>Money: {money}</p>
+            </div>
             <div className="bjg-actions">
                 <button onClick={loadGame} className="bjg-button">
                     Load Game
@@ -246,12 +205,15 @@ export default function GameRoom() {
                 <button onClick={startGame} className="bjg-button">
                     Start Game
                 </button>
-                <Form init={money} min={0} max={1000} onChange={setMoney} />
+                <Form init={bet} min={0} max={1000} onChange={setBet} />
                 <button onClick={hit} className="bjg-button">
                     Hit
                 </button>
                 <button onClick={stand} className="bjg-button">
                     Stand
+                </button>
+                <button onClick={refillMoney} className="bjg-button">
+                    Refill
                 </button>
             </div>
         </div>
