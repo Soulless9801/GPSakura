@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
 import lightImage from '/favicon.png';
 import darkImage from '/favicom.png';

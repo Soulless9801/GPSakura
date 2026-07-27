@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router';
 
 import AppLayout from '/src/layouts/AppLayout.jsx';
 import PageLoader from '/src/components/tools/PageLoader/PageLoader.jsx';
