@@ -4,11 +4,16 @@ export type GameData = {
     player_cards: number;
     dealer_cards: number;
     deck_seed: number;
+    bet_amount: number;
+    settled: boolean;
 };
 
 export class Game {
 
     private deck: BJCore.Deck;
+    private betAmount: number;
+
+    private settled: boolean;
 
     private playerHand: BJCore.Hand;
     private dealerHand: BJCore.Hand;
@@ -24,7 +29,11 @@ export class Game {
 
     constructor(data: GameData) {
 
+        this.settled = data.settled || false;
+
         this.deck = new BJCore.Deck(1, data.deck_seed);
+
+        this.betAmount = data.bet_amount;
 
         this.playerHand = new BJCore.Hand();
         this.dealerHand = new BJCore.Hand();
@@ -122,6 +131,8 @@ export class Game {
             player_cards: this.playerHand.getCardCount(),
             dealer_cards: this.dealerHand.getCardCount(),
             deck_seed: this.deck.getSeed(),
+            bet_amount: this.betAmount,
+            settled: this.settled,
         };
     }
 
@@ -135,5 +146,17 @@ export class Game {
 
     getDealerHand(): BJCore.Hand {
         return this.dealerHand;
+    }
+
+    getBetAmount(): number {
+        return this.betAmount;
+    }
+
+    isSettled(): boolean {
+        return this.settled;
+    }
+
+    setSettled(settled: boolean) {
+        this.settled = settled;
     }
 }

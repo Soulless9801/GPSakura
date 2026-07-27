@@ -1,4 +1,4 @@
-import { doublePrecision, integer, pgTable, serial, text } from 'drizzle-orm/pg-core'
+import { doublePrecision, integer, boolean, pgTable, serial, text } from 'drizzle-orm/pg-core'
 
 export const games = pgTable('games', {
   id: serial('id').primaryKey(),
@@ -7,6 +7,7 @@ export const games = pgTable('games', {
   player_cards: integer('player_cards').notNull(),
   dealer_cards: integer('dealer_cards').notNull(),
   deck_seed: integer('deck_seed').notNull(),
+  settled: boolean('settled').notNull().default(false),
 })
 
 export const players = pgTable('players', {
