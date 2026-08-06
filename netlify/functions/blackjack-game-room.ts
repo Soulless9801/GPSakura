@@ -90,8 +90,10 @@ export async function handler(event: any) {
             return successJSON({ money: money });
         }
 
+        const REFILL_AMOUNT : number = 1000; // amount to refill when action is "refill"
+
         if (action === "refill") {
-            money = (money || 0) + 1000; // refill 1000 money
+            money = (money || 0) + REFILL_AMOUNT;
             await db.update(players)
                 .set({ money: money })
                 .where(eq(players.id, clientId));
@@ -248,23 +250,6 @@ export async function handler(event: any) {
             await settleGame(game);
             return retJSON(game);
         }
-
-        // if (action === "dealer") { // ACTION: DEALER ACTION
-
-        //     const game = await getGame();
-        //     if (!(game instanceof Game)) return game; 
-        //     while (game.dealerPlay()) continue; // keep playing until dealer is done
-        //     // if (!game.dealerPlay()) return errorJSON("Dealer play failed");
-
-        //     await db
-        //         .update(games)
-        //         .set(game.getGameData())
-        //         .where(and(eq(games.id, roomId), eq(games.player_id, clientId)));
-
-        //     // console.log(result);
-
-        //     return retJSON(game);
-        // }
 
         return errorJSON("Invalid action");
 

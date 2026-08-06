@@ -36,6 +36,10 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 		return newValue;
 	};
 
+	useEffect(() => {
+		setValue(prev => updateValue(Number(prev)));
+	}, [min, max, step, places]);
+
 	const commit = useCallback((off = 0) => {
 		let num = parseFloat(draft);
 		if (!isNaN(num)) {

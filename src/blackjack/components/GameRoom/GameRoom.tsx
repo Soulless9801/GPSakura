@@ -87,7 +87,7 @@ export default function GameRoom() {
     useEffect(() => {
         if (!identity) return;
         getMoney();
-    }, []);
+    }, [identity]);
 
     async function refillMoney() {
         const res = await BJRequest({
@@ -205,7 +205,7 @@ export default function GameRoom() {
                 <button onClick={startGame} className="bjg-button">
                     Start Game
                 </button>
-                <Form init={bet} min={0} max={1000} onChange={setBet} />
+                <Form init={bet} min={1} max={Math.max(money, 1)} onChange={setBet} />
                 <button onClick={hit} className="bjg-button">
                     Hit
                 </button>
