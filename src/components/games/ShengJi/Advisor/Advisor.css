@@ -1,0 +1,534 @@
+/* The advisor page. Everything is driven by the theme variables in /src/index.css, so
+   light and dark both come for free. */
+
+.advWrapper {
+    padding: 0 5% 4rem;
+    color: var(--primary-color);
+    transition: var(--transition-timers);
+}
+
+/* ---------- shared shell ---------- */
+
+.advPanel {
+    background: var(--bg-color-secondary);
+    border: var(--border-width) solid var(--secondary-color);
+    border-radius: var(--table-border-radius-secondary);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: var(--transition-timers);
+}
+
+.advPanel__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.advPanel__head h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.advPanel__head h3 em {
+    font-style: normal;
+    color: var(--border-highlight-color);
+}
+
+.advPanel h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--secondary-color);
+    margin: 1.25rem 0 0.5rem;
+}
+
+.advCount {
+    margin-right: auto;
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+
+.advNote {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    margin: 0 0 0.75rem;
+    line-height: 1.5;
+}
+
+.advEmpty {
+    font-size: 0.85rem;
+    color: var(--disabled-color);
+}
+
+.advRed {
+    color: #d32f2f;
+}
+
+/* ---------- steps ---------- */
+
+.advSteps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    list-style: none;
+    counter-reset: adv-step;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.advSteps li {
+    counter-increment: adv-step;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.advSteps li::before {
+    content: counter(adv-step);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 auto;
+    border: var(--border-width) solid var(--secondary-color);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    color: var(--primary-color);
+}
+
+/* ---------- setup ---------- */
+
+.advSetup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1.25rem;
+}
+
+.advField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.advField__label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--secondary-color);
+}
+
+.advSetup__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.advSegmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.advSeg {
+    min-width: 2rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    border-color: var(--secondary-color);
+}
+
+.advSeg.active {
+    background-color: var(--bg-color-hover);
+    border-color: var(--border-highlight-color);
+    box-shadow: 0 0 0 1px var(--border-highlight-color);
+}
+
+/* ---------- layout ---------- */
+
+.advGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.advColumn {
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .advGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ---------- cards ---------- */
+
+.advCardRow,
+.advChips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.advCard {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 1px;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+}
+
+.advCard--md {
+    min-width: 2.75rem;
+    padding: 0.6rem 0.4rem;
+    font-size: 1.3rem;
+}
+
+.advCard--sm {
+    min-width: 1.9rem;
+    padding: 0.3rem 0.25rem;
+    font-size: 0.9rem;
+}
+
+.advCard--red {
+    color: #d32f2f;
+}
+
+.advCard--black {
+    color: #111;
+}
+
+.advCard__suit {
+    font-size: 0.9em;
+}
+
+/* ---------- chips ---------- */
+
+.advChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: var(--border-width) solid transparent;
+    background: transparent;
+}
+
+.advChip:hover {
+    border-color: #d32f2f;
+    background: transparent;
+}
+
+.advChip__x {
+    font-size: 0.75rem;
+    color: var(--disabled-color);
+}
+
+.advChip:hover .advChip__x {
+    color: #d32f2f;
+}
+
+/* ---------- the trick ---------- */
+
+.advSeat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    border: var(--border-width) solid transparent;
+    border-left: 3px solid var(--secondary-color);
+    border-radius: var(--table-border-radius-secondary);
+    margin-bottom: 0.4rem;
+    transition: var(--transition-timers);
+}
+
+.advSeat--winning {
+    border-left-color: var(--border-highlight-color);
+    background: var(--bg-color-hover);
+}
+
+.advSeat--you {
+    border-left-style: dashed;
+    border-left-color: var(--primary-color);
+}
+
+.advSeat__who {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 11rem;
+}
+
+.advSeat__name {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.advSeat__cards {
+    margin-right: auto;
+}
+
+.advSeat__actions {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.advSeat__actions button {
+    font-size: 0.75rem;
+}
+
+.advTag {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border: var(--border-width) solid var(--secondary-color);
+    border-radius: 999px;
+    color: var(--secondary-color);
+    white-space: nowrap;
+}
+
+.advTag--partner {
+    border-color: #2e7d32;
+    color: #2e7d32;
+}
+
+.advTag--opponent {
+    border-color: #c62828;
+    color: #c62828;
+}
+
+.advTag--winning,
+.advTag--you {
+    border-color: var(--border-highlight-color);
+    color: var(--border-highlight-color);
+}
+
+.advTag--warn {
+    border-color: #b26a00;
+    color: #b26a00;
+    margin-left: 0.4rem;
+    cursor: help;
+}
+
+[data-theme="dark"] .advTag--partner {
+    border-color: #7bc47f;
+    color: #7bc47f;
+}
+
+[data-theme="dark"] .advTag--opponent {
+    border-color: #ef9a9a;
+    color: #ef9a9a;
+}
+
+[data-theme="dark"] .advTag--warn {
+    border-color: #e0a458;
+    color: #e0a458;
+}
+
+/* ---------- the answer ---------- */
+
+.advBest {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0 1.25rem;
+}
+
+.advStats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: var(--border-width) solid var(--secondary-color);
+}
+
+.advStat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.advStat__value {
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.advStat__label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--secondary-color);
+}
+
+.advRules,
+.advAlts,
+.advProblems {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.advRules li {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.45rem 0;
+    border-bottom: var(--border-width) solid var(--bg-color-hover);
+}
+
+.advRule__delta {
+    flex: 0 0 3.25rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.advRule__delta--up {
+    color: #2e7d32;
+}
+
+.advRule__delta--down {
+    color: #c62828;
+}
+
+[data-theme="dark"] .advRule__delta--up {
+    color: #7bc47f;
+}
+
+[data-theme="dark"] .advRule__delta--down {
+    color: #ef9a9a;
+}
+
+.advRule__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.advRule__id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.78rem;
+    color: var(--primary-color);
+}
+
+.advRule__plain {
+    font-size: 0.82rem;
+    color: var(--secondary-color);
+    line-height: 1.45;
+}
+
+.advAlts li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+    border-bottom: var(--border-width) solid var(--bg-color-hover);
+}
+
+.advAlt__score {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+.advAlt__why {
+    flex: 0 0 auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.7rem;
+    color: var(--secondary-color);
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.advProblems li {
+    font-size: 0.9rem;
+    color: #c62828;
+    padding: 0.2rem 0;
+}
+
+[data-theme="dark"] .advProblems li {
+    color: #ef9a9a;
+}
+
+.advCaveat p {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--secondary-color);
+    margin: 0 0 0.6rem;
+}
+
+.advCaveat code {
+    font-size: 0.78rem;
+    color: var(--primary-color);
+}
+
+/* ---------- picker ---------- */
+
+.advPickRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 4px;
+}
+
+.advPickRow__suit {
+    width: 1.75rem;
+    font-size: 1.1rem;
+    text-align: center;
+    flex: 0 0 auto;
+}
+
+.advPick {
+    position: relative;
+    min-width: 2.35rem;
+    padding: 0.35rem 0.3rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    border-color: var(--secondary-color);
+}
+
+.advPick--used {
+    border-color: var(--border-highlight-color);
+}
+
+.advPick--joker {
+    min-width: 2.8rem;
+}
+
+.advPick__used {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: var(--border-highlight-color);
+    color: var(--bg-color-primary);
+    font-size: 0.6rem;
+    line-height: 14px;
+    text-align: center;
+}

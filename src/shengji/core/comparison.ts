@@ -248,7 +248,7 @@ export function isCardEqual(card_a: Card, card_b: Card): boolean {
 }
 
 // check if card_a = card_b + 1
-function isCardNext(card_a: Card, card_b: Card, trump: Trump): boolean {
+export function isCardNext(card_a: Card, card_b: Card, trump: Trump): boolean {
 
     if (!isMainLine(card_a, trump) && card_a.suit !== card_b.suit) return false;
     
@@ -266,7 +266,7 @@ function isCardNext(card_a: Card, card_b: Card, trump: Trump): boolean {
 }
 
 // check if card and lead have same suit/mainline status
-function checkInline(card: Card, lead: Card, trump: Trump): boolean {
+export function checkInline(card: Card, lead: Card, trump: Trump): boolean {
     if (!SJCore.validateCard(card)) return false;
     const card_main : boolean = isMainLine(card, trump);
     const lead_main : boolean = isMainLine(lead, trump);
@@ -276,7 +276,7 @@ function checkInline(card: Card, lead: Card, trump: Trump): boolean {
 }
 
 // check if card_a > card_b, assuming card_b was played first (trumps in the case of equality)
-function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
+export function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
 
     if (!checkInline(card_a, card_b, trump)) return isMainLine(card_a, trump); // check same suit / mainline status
 
@@ -315,21 +315,50 @@ function getTrickCount(ihand: IHand, lead: Card, trump: Trump): { tricks: Card[]
     return { tricks: tricks, suit_count: suit_count };
 }
 
-// return counts of lengths of consecutive cards
-function findMaxConsecutive(cards: Card[], trump: Trump): number[] {
-    
+// a card and how many groups of the size the lead asks for it can supply
+type TrickUnit = { card: Card, units: number };
+
+// project the trick buckets onto one group size: a card held `count` times can stand in for
+// floor(count / size) groups of that size, so a quad answers a lead of pairs as two pairs
+function getTrickUnits(tricks: Card[][], size: number): TrickUnit[] {
+
+    const units : TrickUnit[] = [];
+
+    if (size <= 0) return units;
+
+    for (let count = size; count < tricks.length; count++) {
+        for (const card of tricks[count]) units.push({ card: card, units: Math.floor(count / size) });
+    }
+
+    return units;
+}
+
+function cardKey(card: Card): string {
+    return `${card.suit}:${card.rank}`;
+}
+
+// return counts of lengths of consecutive cards, where a card supplying several groups
+// counts for that many links in the chain (a quad is two pairs in a row)
+function findMaxConsecutive(units: TrickUnit[], trump: Trump): number[] {
+
+    const cards : Card[] = units.map(unit => unit.card);
     sortCards(cards, trump);
     // console.log("Finding max consecutive in:", cards);
 
-    let len : number = 1;
+    const supply : Map<string, number> = new Map<string, number>();
+    for (const unit of units) supply.set(cardKey(unit.card), unit.units);
+
+    const amount = (card: Card): number => supply.get(cardKey(card)) || 1;
+
+    let len : number = cards.length > 0 ? amount(cards[0]) : 1;
 
     const seq : number[] = [];
     for (let i = 0; i < cards.length - 1; i++) {
-        if (isCardNext(cards[i + 1], cards[i], trump)) len++;
+        if (isCardNext(cards[i + 1], cards[i], trump)) len += amount(cards[i + 1]);
         else {
             while (seq.length <= len) seq.push(0);
             seq[len]++;
-            len = 1;
+            len = amount(cards[i + 1]);
         }
     }
 
@@ -367,8 +396,8 @@ function isPlayStructValid(struct: { cards: Card[][], count: number[] }): boolea
 }
 
 // check if "covering" of lead with hand is satisfied by play
-function isTrickValid(lead: number[], play: Card[], hand: Card[], trump: Trump): boolean {
-    
+function isTrickValid(lead: number[], play: TrickUnit[], hand: TrickUnit[], trump: Trump): boolean {
+
     const play_max : number[] = findMaxConsecutive(play, trump);
     const hand_max : number[] = findMaxConsecutive(hand, trump);
 
@@ -384,9 +413,9 @@ function isTrickValid(lead: number[], play: Card[], hand: Card[], trump: Trump):
             if (lead[i] === 0) break;
             while (hand_idx > 0 && hand_max[hand_idx] === 0) hand_idx--;
             if (hand_idx <= 0) {
-                const play_map : Map<Card, boolean> = new Map<Card, boolean>();
-                for (const card of play) play_map.set(card, true);
-                for (const card of hand) if (!play_map.get(card)) return false; // if you have a card in the play, must be able to play it
+                const play_map : Map<string, boolean> = new Map<string, boolean>();
+                for (const unit of play) play_map.set(cardKey(unit.card), true);
+                for (const unit of hand) if (!play_map.get(cardKey(unit.card))) return false; // if you have a card in the play, must be able to play it
                 return true;
             }
             while (play_idx > 0 && play_max[play_idx] === 0) play_idx--;
@@ -426,7 +455,7 @@ function isPlayPossible(lead: number[][], iplay: IPlay, ilead: IPlay, ihand: IHa
         while (pos.length > 0 && pos[pos.length - 1] === 0) pos.pop();
         if (pos.length === 0) continue;
         // console.log("Possible Lead:", pos);
-        if (!isTrickValid(pos, play_tricks.tricks[i] || [], hand_tricks.tricks[i] || [], trump)) return false;
+        if (!isTrickValid(pos, getTrickUnits(play_tricks.tricks, i), getTrickUnits(hand_tricks.tricks, i), trump)) return false;
     }
 
     return true;

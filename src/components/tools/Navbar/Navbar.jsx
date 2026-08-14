@@ -140,6 +140,7 @@ export default function Navbar() {
                                     id="gamesMenu"
                                     options={[
                                         { value: 'ShengJi', label: '升级', to: '/shengji' },
+                                        { value: 'ShengJiAdvisor', label: '升级 Advisor', to: '/shengji-advisor' },
                                         { value: 'Color', label: 'Color Picker', to: '/color' },
                                         { value: 'Freq', label: 'Frequency Guesser', to: '/freq' },
                                         { value: 'BlackJack', label: 'Black Jack', to: '/blackjack' },
