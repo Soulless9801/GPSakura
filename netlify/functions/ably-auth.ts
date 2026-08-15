@@ -8,9 +8,9 @@ import { errorJSON, successJSON } from './data/json.ts';
 
 import { verify } from "./create-session";
 
-const { ABLY_API_KEY } = process.env;
+const { ABLY_API_KEY_CLIENT } = process.env;
 
-const client = new Ably.Rest(ABLY_API_KEY!);
+const client = new Ably.Rest({ key: ABLY_API_KEY_CLIENT });
 
 export const handler = async (event: any) => {
 

@@ -16,7 +16,7 @@ import { serialize } from '../../src/utils/serial.ts';
 
 function getAbly() {
     return new Ably.Rest({ 
-        key: process.env.ABLY_API_KEY
+        key: process.env.ABLY_API_KEY_SERVER
     });
 }
 
@@ -95,7 +95,8 @@ export const handler = async(event: any) => {
 
         // rate limit check
         const rlClientId : string = clientId || "unknown";
-        const key : string = `rl:${roomId}:${!roomSpecific.has(action) ? "global" : rlClientId}:${action}`;
+        const key : string = `rl:${roomId}:${roomSpecific.has(action) ? "global" : rlClientId}:${action}`;
+        console.log(`rate limit check for key ${key}: limit ${limit} per ${windowSeconds} seconds`);
         const isAllowed : boolean = await rateLimit(redis, key, limit, windowSeconds);
         if (!isAllowed) return errorJSON("Rate limit exceeded", 429);
 
@@ -347,6 +348,20 @@ export const handler = async(event: any) => {
 
             return successJSON({ msg: "Game ended" });
 
+        }
+
+        if (action === "speed") { // ACTION: END GAME
+
+            if (!clientId) return errorJSON("Missing clientId");
+
+            const game = currentGame;
+            if (!(game instanceof SJGame.Game)) return errorJSON("Game not found");
+
+            if (!game.speedDraw()) return errorJSON("Speed draw failed");
+
+            await savePublish(game);
+
+            return successJSON({ msg: "Speed draw executed" });
         }
 
         return errorJSON("Invalid action");

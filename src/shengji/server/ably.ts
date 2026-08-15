@@ -12,6 +12,11 @@ export function useAbly({ request }: { request: Identity | null }): Ably.Realtim
         const clientId: string = String(request?.clientId || "").trim();
         const signature: string = String(request?.signature || "").trim();
 
+        if (!clientId || !signature) {
+            setAbly(null);
+            return;
+        }
+
         let client: Ably.Realtime | null = null;
 
         client = new Ably.Realtime({

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import { deserialize } from "/src/utils/serial";
 
@@ -9,6 +9,9 @@ import * as SJGame from "/src/shengji/core/game";
 import * as SJCore from "/src/shengji/core/entities";
 import * as SJComp from "/src/shengji/core/comparison";
 import * as SJConv from "/src/shengji/core/convert";
+
+import * as SJAdvt from "/src/shengji/advisor/types";
+import * as SJAdvr from "/src/shengji/advisor/advisor";
 
 import Ably from "ably";
 
@@ -44,6 +47,20 @@ function PlayerList({ players, teams }: { players: string[], teams: number[] }) 
                     ))}
                 </div>
             </div>
+        </div>
+    );
+}
+
+function CardAdvice({ cards }: { cards: SJCore.Card[] | undefined }) {
+
+    if (!cards || cards.length === 0) return <p>No advice available</p>;
+
+    return (
+        <div className="sjg-advice__wrapper">
+            <h3>Recommended Play</h3>
+            {cards.map((card, i) => (
+                <Card key={i} card={card} />
+            ))}
         </div>
     );
 }
@@ -151,6 +168,16 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
         parseRes(res);
     }
 
+    async function speedDraw() {
+        if (phase !== "draw") return;
+        if (!window.confirm("Are you sure you want to speed draw?")) return;
+        await SJRequest({
+            roomId,
+            action: "speed",
+            identity,
+        });
+    }
+
     async function exchangeDipai() {
         const give = handRef.current?.getActiveCards() || [];
         const receive = dipaiRef.current?.getActiveCards() || [];
@@ -169,12 +196,48 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
 
     const [phase, setPhase] = useState<string | null>(null);
 
+    const [help, setHelp] = useState<boolean>(false); // toggle advice display
+    const [advice, setAdvice] = useState<SJAdvt.Advice | null>(null);
+
+    const getAdvice = useCallback(() => {
+        if (!game || !hand) return;
+        let i = game.lead;
+        const tricks : SJAdvt.Move[] = [];
+        while (true) {
+            const play = game.info.get(game.players[i])?.play;
+            if (!play) break;
+            tricks.push(play.cards);
+            i = (i + 1) % game.players.length;
+            if (i === game.lead) break;
+        }
+        if (i === game.lead) tricks.length = 0; // no tricks played yet
+        if (game.players[game.turn] === identity?.clientId || !help) {
+            const pos: SJAdvt.Position = {
+                numPlayers: game.players.length,
+                decks: game.players.length / 2,
+                trump: game.trump,
+                hand: SJConv.handToCards(hand, game.trump),
+                trick: tricks,
+                seen: game.discard,
+            };
+            const adv = SJAdvr.analyse(pos);
+            // console.log(adv);
+            setAdvice(adv);
+        } else setAdvice(null);
+    }, [game, hand, help]);
+
     useEffect(() => {
-        if (!game) { 
+        if (!game) {
+            setAdvice(null);
             setPhase(null); 
             setHand(null);
             return; 
         }
+
+        const refresh = async () => {
+            await getHand();
+        }
+
         // phase update
         if (game.over) setPhase("over");
         else if (game.draw) setPhase("draw");
@@ -182,13 +245,18 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
             setPhase("dipai");
             if (game.players[game.zhuang] !== identity?.clientId) return;
             getDipai();
-        } else setPhase("play");
+        } else {
+            getAdvice();
+            setPhase("play");
+        }
     }, [game]);
 
     useEffect(() => {
         if (!phase || phase === "over") setHand(null);
-        if (phase && phase !== "over" && !hand) getHand();
-        if (phase !== "dipai") setDipai([]);
+        else {
+            if (phase !== "dipai") setDipai([]);
+            else getHand();
+        }
     }, [phase]);
 
     if (!game) return null;
@@ -280,8 +348,17 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                                     <button className="sjg-button__game" onClick={() => getHand()}>Refresh Hand</button>
                                 </div>
                             </div>
+                            {help && (
+                                <div className="sjg-advice">
+                                    <CardAdvice cards={advice?.candidates[0]?.move} />
+                                </div>
+                            )}
                         </div>
                     )}
+                    <div className="sjg-button__group">
+                        <button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
+                        <button className="sjg-button__game" onClick={() => setHelp(help => !help)}>Toggle Help</button>
+                    </div>
                 </div>
             )}
         </div>
@@ -309,42 +386,6 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         }
 
         identify();
-
-        // async function getIdentity() {
-        //     let clientId = localStorage.getItem("ablyClientId");
-        //     let signature = localStorage.getItem("ablySignature");
-        //     if (!clientId || !signature) {
-
-        //         clientId = `player_${Math.random().toString(36).substring(2, 10)}`;
-        //         localStorage.setItem("ablyClientId", clientId);
-
-        //         const res = await fetch("/.netlify/functions/create-session", {
-        //             method: "POST",
-        //             headers: {
-        //                 "Content-Type": "application/json",
-        //             },
-        //             body: JSON.stringify({
-        //                 action: "sign",
-        //                 clientId: clientId,
-        //             }),
-        //         });
-        //         if (!res || !res.ok) return;
-
-        //         const data = await res.text();
-        //         if (!data) return;
-
-        //         const des_data = deserialize(data);
-        //         if (!des_data || typeof des_data !== "object") return;
-
-        //         const ret = des_data as { signature: string | null };
-        //         signature = ret.signature;
-        //         localStorage.setItem("ablySignature", signature || "");
-        //     }
-
-        //     setIdentity({ clientId: clientId || "", signature: signature || "" });
-        // }
-
-        // getIdentity();
 
     }, []);
 
@@ -403,22 +444,12 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         });
     }
 
-    // UNUSED / ADMIN FUNCTIONS
-
     async function endGame() {
         if (team < 0) return false;
         if (!window.confirm("Are you sure you want to end the current game?")) return false;
         return SJRequest({
             roomId,
             action: "end",
-            identity,
-        });
-    }
-
-    async function speedDraw() {
-        await SJRequest({
-            roomId,
-            action: "speed_draw",
             identity,
         });
     }
@@ -565,7 +596,6 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 </div>
             )}
             <GameInfo identity={identity} roomId={roomId} team={team} game={game} missing={missing} />
-            {/*<button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>*/}
         </div>
     );
 }

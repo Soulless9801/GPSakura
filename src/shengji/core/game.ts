@@ -55,6 +55,8 @@ export interface GameState {
     over: boolean
     dip: boolean // diapi exchanging or not
     paused: boolean
+
+    discard: Card[] // cards discarded by players
 }
 
 function nullPlay(): Play {
@@ -162,6 +164,8 @@ export class Game {
             over: false,
             dip: false,
             paused: false,
+
+            discard: [],
         }
 
         this.hands = new Map(players.map(p => [p, new Hand()]));
@@ -430,6 +434,12 @@ export class Game {
 
         if (this.state.count === 0) this.endRound(team === this.state.atk ? lead.cards.length * 2 : 0);
 
+        for (const player of this.state.players){
+            const pInfo = this.state.info.get(player);
+            if (!pInfo) continue;
+            for (const card of pInfo?.play?.cards || []) this.state.discard.push(card);
+        }
+
         this.state.chu = this.state.lead; // winner of the trick starts the next trick
         this.state.turn = this.state.chu;
         this.state.shuai = false; // reset shuai for next trick
@@ -542,6 +552,7 @@ export function baseGame(): Game {
         over: false,
         dip: false,
         paused: false,
+        discard: [],
     };
 
     return new Game(state, new Map(), new Deck(1), []);
