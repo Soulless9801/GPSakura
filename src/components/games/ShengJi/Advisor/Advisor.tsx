@@ -6,37 +6,11 @@ import { allCards, cardKey, moveKey } from "/src/shengji/advisor/moves";
 import { HARMFUL_RULES, PARAMETERS } from "/src/shengji/advisor/playbook";
 import type { Advice, Card, Move, Position, Rank, Suit, Trump } from "/src/shengji/advisor/types";
 
+import * as CardModule from '/src/entities/card';
+
 import "./Advisor.css";
 
-const SUIT_GLYPH: Record<string, string> = {
-    spades: "♠",
-    hearts: "♥",
-    diamonds: "♦",
-    clubs: "♣",
-    jokers: "王",
-};
-
-const RANK_LABEL: Record<number, string> = { 11: "J", 12: "Q", 13: "K", 14: "A" };
-
-const PLAY_SUITS: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
-const RANKS: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
-
-function isRed(card: Card): boolean {
-    if (card.suit === "jokers") return card.rank === 2;
-    return card.suit === "hearts" || card.suit === "diamonds";
-}
-
-function rankLabel(card: Card): string {
-    if (card.suit === "jokers") return card.rank === 2 ? "大" : "小";
-    return RANK_LABEL[card.rank] || String(card.rank);
-}
-
-function cardName(card: Card): string {
-    if (card.suit === "jokers") return card.rank === 2 ? "big joker" : "small joker";
-    return `${rankLabel(card)} of ${card.suit}`;
-}
-
-/** The one position the demo loads, chosen because the right answer is easy to check. */
+// example with easy correct answer
 const EXAMPLE: { hand: Card[]; trick: Move[]; trump: Trump } = {
     trump: { suit: "spades", rank: 2 },
     hand: [
@@ -57,17 +31,15 @@ const EXAMPLE: { hand: Card[]; trick: Move[]; trump: Trump } = {
     trick: [[{ suit: "hearts", rank: 14 }], [{ suit: "hearts", rank: 6 }]],
 };
 
+// adding to card to where?
 type Target = { kind: "hand" } | { kind: "seen" } | { kind: "trick"; index: number };
 
-// ---------------------------------------------------------------------------
-// small display pieces
-// ---------------------------------------------------------------------------
-
+// small display copmonents
 function PlayCard({ card, size = "md" }: { card: Card; size?: "sm" | "md" }) {
     return (
-        <span className={`advCard advCard--${size} ${isRed(card) ? "advCard--red" : "advCard--black"}`}>
-            <span className="advCard__rank">{rankLabel(card)}</span>
-            <span className="advCard__suit">{SUIT_GLYPH[card.suit]}</span>
+        <span className={`advCard advCard--${size} ${CardModule.isRed(card) ? "advCard--red" : "advCard--black"}`}>
+            <span className="advCard__rank">{CardModule.rankLabel(card)}</span>
+            <span className="advCard__suit">{CardModule.SUIT_GLYPH[card.suit]}</span>
         </span>
     );
 }
@@ -90,7 +62,7 @@ function Chips({ cards, onRemove }: { cards: Card[]; onRemove: (index: number) =
                 <button
                     key={`${cardKey(card)}-${i}`}
                     className="advChip"
-                    title={`remove ${cardName(card)}`}
+                    title={`remove ${CardModule.cardName(card)}`}
                     onClick={() => onRemove(i)}
                 >
                     <PlayCard card={card} size="sm" />
@@ -231,7 +203,7 @@ export default function Advisor() {
                 <li>Read the play, and why.</li>
             </ol>
 
-            {/* ---------------- setup ---------------- */}
+            {/* game config/setup */}
             <section className="advPanel advSetup">
                 <div className="advField">
                     <span className="advField__label">Players</span>
@@ -241,15 +213,15 @@ export default function Advisor() {
                 <div className="advField">
                     <span className="advField__label">Trump suit</span>
                     <Segmented
-                        options={[...PLAY_SUITS, "none"] as Array<Suit | "none">}
+                        options={[...CardModule.PLAY_SUITS, "none"] as Array<Suit | "none">}
                         value={(trumpSuit ?? "none") as Suit | "none"}
                         onChange={(next) => setTrumpSuit(next === "none" ? null : (next as Suit))}
                         render={(option) =>
                             option === "none" ? (
                                 "NT"
                             ) : (
-                                <span className={isRed({ suit: option as Suit, rank: 2 }) ? "advRed" : ""}>
-                                    {SUIT_GLYPH[option as string]}
+                                <span className={CardModule.isRed({ suit: option as Suit, rank: 2 }) ? "advRed" : ""}>
+                                    {CardModule.SUIT_GLYPH[option as string]}
                                 </span>
                             )
                         }
@@ -257,23 +229,80 @@ export default function Advisor() {
                 </div>
 
                 <div className="advField">
-                    <span className="advField__label">Trump rank</span>
+                    <span className="advField__label">Trump Rank</span>
                     <Segmented
-                        options={RANKS}
+                        options={CardModule.RANKS}
                         value={trumpRank}
                         onChange={setTrumpRank}
-                        render={(option) => RANK_LABEL[option as number] || String(option)}
+                        render={(option) => CardModule.RANK_LABEL[option as number] || String(option)}
                     />
                 </div>
 
                 <span className="advSetup__actions">
-                    <button onClick={loadExample}>Load an example</button>
+                    <button onClick={loadExample}>Load Example</button>
                     <button onClick={reset}>Clear</button>
                 </span>
             </section>
 
+            {/* card picker */}
+            <section className="advPanel advPicker">
+                <header className="advPanel__head">
+                    <h3>
+                        Adding to <em>{targetLabel}</em>
+                    </h3>
+                    <span className="advCount">
+                        {decks} decks &mdash; each card can appear {decks} times
+                    </span>
+                </header>
+
+                {CardModule.PLAY_SUITS.map((suit) => (
+                    <div key={suit} className="advPickRow">
+                        <span className={`advPickRow__suit${CardModule.isRed({ suit, rank: 2 }) ? " advRed" : ""}`}>
+                            {CardModule.SUIT_GLYPH[suit]}
+                        </span>
+                        {CardModule.RANKS.map((rank) => {
+                            const card: Card = { suit, rank };
+                            const spent: number = used.get(cardKey(card)) || 0;
+                            return (
+                                <button
+                                    key={rank}
+                                    className={`advPick${spent ? " advPick--used" : ""}`}
+                                    disabled={spent >= decks}
+                                    onClick={() => addCard(card)}
+                                    title={`add ${CardModule.cardName(card)}`}
+                                >
+                                    {CardModule.RANK_LABEL[rank] || rank}
+                                    {spent > 0 && <span className="advPick__used">{spent}</span>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                ))}
+
+                <div className="advPickRow">
+                    <span className="advPickRow__suit">{CardModule.SUIT_GLYPH.jokers}</span>
+                    {allCards()
+                        .filter((card) => card.suit === "jokers")
+                        .map((card) => {
+                            const spent: number = used.get(cardKey(card)) || 0;
+                            return (
+                                <button
+                                    key={card.rank}
+                                    className={`advPick advPick--joker${spent ? " advPick--used" : ""}${CardModule.isRed(card) ? " advRed" : ""}`}
+                                    disabled={spent >= decks}
+                                    onClick={() => addCard(card)}
+                                    title={`add the ${CardModule.cardName(card)}`}
+                                >
+                                    {CardModule.rankLabel(card)}
+                                    {spent > 0 && <span className="advPick__used">{spent}</span>}
+                                </button>
+                            );
+                        })}
+                </div>
+            </section>
+
             <div className="advGrid">
-                {/* ---------------- the position ---------------- */}
+                {/* current game state column*/}
                 <div className="advColumn">
                     <section className="advPanel">
                         <header className="advPanel__head">
@@ -373,12 +402,12 @@ export default function Advisor() {
                     </section>
                 </div>
 
-                {/* ---------------- the answer ---------------- */}
+                {/* answer column */}
                 <div className="advColumn">
                     <section className="advPanel advResult">
                         {advice.problems.length > 0 ? (
                             <>
-                                <h3>Not enough to go on</h3>
+                                <h3>Not Enough Information</h3>
                                 <ul className="advProblems">
                                     {advice.problems.map((problem) => (
                                         <li key={problem}>{problem}</li>
@@ -387,7 +416,7 @@ export default function Advisor() {
                             </>
                         ) : best ? (
                             <>
-                                <h3>Play this</h3>
+                                <h3>Play</h3>
                                 <div className="advBest">
                                     <CardRow cards={best.move} />
                                 </div>
@@ -473,7 +502,9 @@ export default function Advisor() {
                             </>
                         ) : null}
                     </section>
-
+                </div>
+            </div>
+            <div className="advPickRow">
                     <section className="advPanel advCaveat">
                         <h4>What this actually is</h4>
                         <p>
@@ -495,64 +526,6 @@ export default function Advisor() {
                         </p>
                     </section>
                 </div>
-            </div>
-
-            {/* ---------------- the picker ---------------- */}
-            <section className="advPanel advPicker">
-                <header className="advPanel__head">
-                    <h3>
-                        Adding to <em>{targetLabel}</em>
-                    </h3>
-                    <span className="advCount">
-                        {decks} decks &mdash; each card can appear {decks} times
-                    </span>
-                </header>
-
-                {PLAY_SUITS.map((suit) => (
-                    <div key={suit} className="advPickRow">
-                        <span className={`advPickRow__suit${isRed({ suit, rank: 2 }) ? " advRed" : ""}`}>
-                            {SUIT_GLYPH[suit]}
-                        </span>
-                        {RANKS.map((rank) => {
-                            const card: Card = { suit, rank };
-                            const spent: number = used.get(cardKey(card)) || 0;
-                            return (
-                                <button
-                                    key={rank}
-                                    className={`advPick${spent ? " advPick--used" : ""}`}
-                                    disabled={spent >= decks}
-                                    onClick={() => addCard(card)}
-                                    title={`add ${cardName(card)}`}
-                                >
-                                    {RANK_LABEL[rank] || rank}
-                                    {spent > 0 && <span className="advPick__used">{spent}</span>}
-                                </button>
-                            );
-                        })}
-                    </div>
-                ))}
-
-                <div className="advPickRow">
-                    <span className="advPickRow__suit">{SUIT_GLYPH.jokers}</span>
-                    {allCards()
-                        .filter((card) => card.suit === "jokers")
-                        .map((card) => {
-                            const spent: number = used.get(cardKey(card)) || 0;
-                            return (
-                                <button
-                                    key={card.rank}
-                                    className={`advPick advPick--joker${spent ? " advPick--used" : ""}${isRed(card) ? " advRed" : ""}`}
-                                    disabled={spent >= decks}
-                                    onClick={() => addCard(card)}
-                                    title={`add the ${cardName(card)}`}
-                                >
-                                    {rankLabel(card)}
-                                    {spent > 0 && <span className="advPick__used">{spent}</span>}
-                                </button>
-                            );
-                        })}
-                </div>
-            </section>
         </div>
     );
 }

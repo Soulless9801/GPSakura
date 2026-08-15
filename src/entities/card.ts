@@ -14,6 +14,34 @@ export function validateCard(card: Card): boolean {
     return card.rank >= 1 && card.rank <= 2; // 1 = small joker, 2 = big joker
 }
 
+export const SUIT_GLYPH: Record<string, string> = {
+    spades: "\u2660",
+    hearts: "\u2665",
+    diamonds: "\u2666",
+    clubs: "\u2663",
+    jokers: "王",
+};
+
+export const RANK_LABEL: Record<number, string> = { 11: "J", 12: "Q", 13: "K", 14: "A" };
+
+export const PLAY_SUITS: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
+export const RANKS: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+
+export function isRed(card: Card): boolean {
+    if (card.suit === "jokers") return card.rank === 2;
+    return card.suit === "hearts" || card.suit === "diamonds";
+}
+
+export function rankLabel(card: Card): string {
+    if (card.suit === "jokers") return card.rank === 2 ? "大" : "小";
+    return RANK_LABEL[card.rank] || String(card.rank);
+}
+
+export function cardName(card: Card): string {
+    if (card.suit === "jokers") return card.rank === 2 ? "big joker" : "small joker";
+    return `${rankLabel(card)} of ${card.suit}`;
+}
+
 export interface DeckData {
     cards: Card[];
 }

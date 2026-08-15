@@ -507,6 +507,8 @@ function isFormatted(iplay_a: IPlay, iplay_b: IPlay): boolean {
         return a[0] - b[0];
     });
 
+    if (struct_a_simp.length !== struct_b_simp.length) return false;
+
     for (let i = 0; i < struct_b_simp.length; i++) {
         if (struct_b_simp[i][0] !== struct_a_simp[i][0]) return false;
         if (struct_b_simp[i][1] !== struct_a_simp[i][1]) return false;
