@@ -16,6 +16,7 @@ const Chaos = lazy(() => import('/src/pages/Experiments/Chaos.jsx'));
 const Color = lazy(() => import('/src/pages/Games/Color.jsx'));
 const Freq = lazy(() => import('/src/pages/Games/Freq.jsx'));
 const ShengJi = lazy(() => import('/src/pages/Games/ShengJi.jsx'));
+const ShengJiAdvisor = lazy(() => import('/src/pages/Games/ShengJiAdvisor.jsx'));
 const TriD = lazy(() => import('/src/pages/Experiments/ThreeD.jsx'));
 const BlackJack = lazy(() => import('/src/pages/Games/BJ.jsx'));
 
@@ -44,6 +45,7 @@ export default function App() {
                     <Route path="color" element={lazyPage(Color)} />
                     <Route path="freq" element={lazyPage(Freq)} />
                     <Route path="shengji" element={lazyPage(ShengJi)} />
+                    <Route path="shengji-advisor" element={lazyPage(ShengJiAdvisor)} />
                     <Route path="3d" element={lazyPage(TriD)} />
                     <Route path="blackjack" element={lazyPage(BlackJack)} />
                 </Route>
