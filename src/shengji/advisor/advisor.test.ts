@@ -73,6 +73,24 @@ describe("legal move generation", () => {
             expect(SJComp.isPlayValid(playInfo(move, TRUMP), ilead, ihand, TRUMP)).toBe(true);
         }
     });
+    it("allows non-splitting of triples when playing pairs", () => {
+        const hand: Card[] = [H(6), H(6), H(6), H(7), H(8)];
+        const lead: Move = [H(12), H(12)];
+        const moves = legalMoves(hand, lead, TRUMP);
+        expect(moves).toContainEqual([H(7), H(8)]);
+    });
+    it("allows filling in of a triple tlj with equal number of pairs", () => {
+        const hand: Card[] = [H(6), H(6), H(7), H(7), H(8), H(8), H(9), H(10)];
+        const lead: Move = [H(12), H(12), H(12), H(13), H(13), H(13)];
+        const moves = legalMoves(hand, lead, TRUMP);
+        expect(moves).toContainEqual([H(6), H(6), H(7), H(7), H(9), H(10)]);
+    });
+    it("allows killing with main when out of a suit", () => {
+        const hand: Card[] = [S(9), S(10)];
+        const lead: Move = [H(12)];
+        const moves = legalMoves(hand, lead, TRUMP);
+        expect(moves).toContainEqual([S(9)]);
+    });
 });
 
 describe("reading the trick", () => {

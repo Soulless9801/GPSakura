@@ -1,26 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 
-import { Card as CardType } from "/src/shengji/core/entities";
+import * as CardModule from '/src/entities/card';
 
 import "./Card.css";
 
-const suitToEntity: Record<string, string> = {
-	spades: "\u2660",
-	hearts: "\u2665",
-	diamonds: "\u2666",
-	clubs: "\u2663",
-	jokers: "王"
-};
-
-const rankToLabel: Record<number, string> = {
-	11: "J",
-	12: "Q",
-	13: "K",
-	14: "A",
-};
 
 interface CardProps {
-	card: CardType | null;
+	card: CardModule.Card | null;
 	pos?: number;
 	className?: string;
 	onClick?: ((index: number, active: boolean) => void) | null;
@@ -42,15 +28,14 @@ export default function Card({ card, pos = -1, className = "", onClick = null }:
 
 	if (!card) return null;
 
-	const isJoker = card.suit === "jokers";
-	const isRed = card.suit === "hearts" || card.suit === "diamonds" || (isJoker && card.rank === 2);
+	const red = CardModule.isRed(card);
 
-	const rank = isJoker ? (card.rank === 2 ? "大" : "小") : rankToLabel[card.rank] || String(card.rank);
-	const suit = suitToEntity[card.suit] || "?";
+	const rank = CardModule.rankLabel(card);
+	const suit = CardModule.SUIT_GLYPH[card.suit] || "?";
 
 	return (
 		<button
-			className={`sj-card ${isRed ? "sj-card__red" : "sj-card__black"} ${className} ${active ? "selected" : ""}`.trim()}
+			className={`sj-card ${red ? "sj-card__red" : "sj-card__black"} ${className} ${active ? "selected" : ""}`.trim()}
 			aria-label={`${rank}${card.suit}`}
 			onClick={handleClick}
 		>

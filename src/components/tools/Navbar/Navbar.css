@@ -14,6 +14,7 @@
 .navbar {
     transition: var(--transition-timers);
     background-color: var(--bg-color-secondary);
+    
 }
 
 .navbar .nav-link,
@@ -38,7 +39,7 @@
     margin: var(--sep-distance-primary);
     display: inline-block;
     border-radius: 50px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .navbar-logo,

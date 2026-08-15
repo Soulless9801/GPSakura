@@ -34,6 +34,7 @@ export default function Join() {
         <div className="sjJoin">
             {!roomId || !username ? (   
                 <div>
+                    <div className="sjJoinTitle">Play</div>
                     <div className="sjJoinForm">
                         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
                         <input type="text" placeholder="Room ID" value={tempId} onChange={(e) => setTempId(e.target.value)} />
