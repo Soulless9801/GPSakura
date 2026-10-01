@@ -36,8 +36,8 @@ export async function handler(event: any) {
 
     let firebaseApp;
 
-    if (!firebase.getApps().length) firebaseApp = firebase.initializeApp(firebaseConfig);
-    else firebaseApp = firebase.getApp();
+    if (!firebase.getApps().length) {firebaseApp = firebase.initializeApp(firebaseConfig);}
+    else {firebaseApp = firebase.getApp();}
 
     const body = JSON.parse(event.body || '{}');
 
@@ -57,7 +57,7 @@ export async function handler(event: any) {
 
         const snap = await fireStore.getDocs(q);
 
-        if (snap.empty) throw new Error();
+        if (snap.empty) {throw new Error();}
 
         collection = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         
@@ -81,7 +81,7 @@ export async function handler(event: any) {
         }   
     }
 
-    if (id) return successJSON(collection.find((doc: any) => doc.id === id) || null);
+    if (id) {return successJSON(collection.find((doc: any) => doc.id === id) || null);}
 
     return successJSON(collection);
 };

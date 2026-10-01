@@ -17,7 +17,7 @@ export const handler = async (_event: any) => {
 
         const res = await fetch(url);
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) {throw new Error();}
 
         csv = await res.text();
         csv = csv.replaceAll('\t', ';'); // replace delimiter

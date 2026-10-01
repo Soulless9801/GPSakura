@@ -113,19 +113,6 @@ export function hexToHsv(hex) {
     return rgbToHsv(rgb);
 }
 
-function ensure(rgb, fallbackColor = [0, 0, 0]) {
-    if (!Array.isArray(rgb)) {return fallbackColor;}
-
-    if (
-        rgb.length < 3 ||
-        !rgb.slice(0, 3).every(value => typeof value === "number")
-    ) {
-        return fallbackColor;
-    }
-
-    return rgb.slice(0, 3);
-}
-
 const FALLBACK_RGB = [255, 255, 255];
 
 export function readColor() {

@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { verify } from "./create-session";
-import { Identity } from "../../src/utils/verify";
+import type { Identity } from "../../src/utils/verify";
 
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -24,7 +24,7 @@ interface GameRow extends BJGame.GameData {
 }
 
 function parseGameRow(data: any): GameRow | null {
-    if (!data || typeof data !== "object") return null;
+    if (!data || typeof data !== "object") {return null;}
 
     const id = Number(data.id);
     const player_cards = Number(data.player_cards);
@@ -60,9 +60,9 @@ export async function handler(event: any) {
         const body = JSON.parse(event.body || '{}');
 
         const identity : Identity | null = body.identity || null;
-        if (!identity) return errorJSON("Missing identity", 400);
+        if (!identity) {return errorJSON("Missing identity", 400);}
         const identityClientId : string = String(identity.clientId || "").trim();
-        if (!identityClientId) return errorJSON("Missing clientId", 400);
+        if (!identityClientId) {return errorJSON("Missing clientId", 400);}
         const clientId : number = Number(identityClientId);
         const signature : string = String(identity.signature || "").trim();
 
@@ -72,8 +72,8 @@ export async function handler(event: any) {
 
         console.log(`blackjack-game-room: Received action ${action} from clientId ${clientId} for roomId ${roomId}`);
 
-        if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) return errorJSON("Invalid clientId");
-        if (!signature || !verify(identityClientId, signature)) return errorJSON("Invalid signature");
+        if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) {return errorJSON("Invalid clientId");}
+        if (!signature || !verify(identityClientId, signature)) {return errorJSON("Invalid signature");}
 
         async function getMoney() {
             return db
@@ -87,7 +87,7 @@ export async function handler(event: any) {
         let money : number | null = await getMoney();
 
         if (action === "money") {
-            return successJSON({ money: money });
+            return successJSON({ money });
         }
 
         const REFILL_AMOUNT : number = 1000; // amount to refill when action is "refill"
@@ -95,15 +95,15 @@ export async function handler(event: any) {
         if (action === "refill") {
             money = (money || 0) + REFILL_AMOUNT;
             await db.update(players)
-                .set({ money: money })
+                .set({ money })
                 .where(eq(players.id, clientId));
-            return successJSON({ money: money });
+            return successJSON({ money });
         }
 
         // helper function to get game state
         async function getGame() {
 
-            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) return null;
+            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) {return null;}
 
             const row = await db
                 .select()
@@ -112,7 +112,7 @@ export async function handler(event: any) {
                 .limit(1);
             
             const gameRow : GameRow | null = (row.length > 0) ? row[0] : null;
-            if (!gameRow) return null;
+            if (!gameRow) {return null;}
 
             return new BJGame.Game(gameRow);
         }
@@ -124,9 +124,9 @@ export async function handler(event: any) {
                 .from(games)
                 .where(eq(games.player_id, clientId));
             
-            if (rows.length < 1) return null;
+            if (rows.length < 1) {return null;}
 
-            return rows.map(row => parseGameRow(row)).filter((v): v is GameRow => !!v);
+            return rows.map(row => parseGameRow(row)).filter((v): v is GameRow => Boolean(v));
         }
 
         async function settleGame(game: BJGame.Game) {
@@ -140,17 +140,17 @@ export async function handler(event: any) {
                 game.setSettled(true);
                 
                 const betAmount : number = game.getBetAmount();
-                if (money === null) return errorJSON("Player not found");
+                if (money === null) {return errorJSON("Player not found");}
 
                 if (status === "player") {
                     money += betAmount;
                     await db.update(players)
-                        .set({ money: money })
+                        .set({ money })
                         .where(eq(players.id, clientId));
                 } else {
                     money -= betAmount;
                     await db.update(players)
-                        .set({ money: money })
+                        .set({ money })
                         .where(eq(players.id, clientId));
                 }
             }
@@ -163,11 +163,11 @@ export async function handler(event: any) {
         
         function retJSON(game: BJGame.Game) {
 
-            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) return errorJSON("Invalid roomId");
+            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) {return errorJSON("Invalid roomId");}
 
             return successJSON({
                 id: roomId,
-                money: money,
+                money,
                 player_cards: game.getPlayerHand(),
                 dealer_cards: game.getDealerHand(),
                 over: game.checkOver(),
@@ -181,7 +181,7 @@ export async function handler(event: any) {
 
             const bet : number = Number(payload.bet_amount);
 
-            if (money === null || isNaN(bet) || bet <= MIN_BET || bet > money) return errorJSON("Invalid bet amount");
+            if (money === null || isNaN(bet) || bet <= MIN_BET || bet > money) {return errorJSON("Invalid bet amount");}
 
             // console.log('Starting game...');
 
@@ -219,10 +219,10 @@ export async function handler(event: any) {
         if (action === "load") { // ACTION: LOAD GAME
             
             const games = await getGames();
-            if (!games) return errorJSON("No games found for this player");
+            if (!games) {return errorJSON("No games found for this player");}
 
             const gameRow = games.reduce((prev, curr) => (curr.id > prev.id ? curr : prev), games[0]);
-            if (!gameRow) return errorJSON("No games found for this player");
+            if (!gameRow) {return errorJSON("No games found for this player");}
             
             roomId = gameRow.id; // update roomId to the actual ID from the database
 
@@ -234,8 +234,8 @@ export async function handler(event: any) {
         if (action === "hit") { // ACTION: HIT
 
             const game = await getGame();
-            if (!(game instanceof BJGame.Game)) return errorJSON("Game not found");
-            if (!game.playerHit()) return errorJSON("Player hit failed");
+            if (!(game instanceof BJGame.Game)) {return errorJSON("Game not found");}
+            if (!game.playerHit()) {return errorJSON("Player hit failed");}
 
             await settleGame(game);
             return retJSON(game);
@@ -244,8 +244,8 @@ export async function handler(event: any) {
         if (action === "stand") { // ACTION: STAND
 
             const game = await getGame();
-            if (!(game instanceof BJGame.Game)) return errorJSON("Game not found");
-            if (!game.playerStand()) return errorJSON("Player stand failed");
+            if (!(game instanceof BJGame.Game)) {return errorJSON("Game not found");}
+            if (!game.playerStand()) {return errorJSON("Player stand failed");}
 
             await settleGame(game);
             return retJSON(game);

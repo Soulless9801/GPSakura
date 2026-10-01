@@ -15,7 +15,7 @@ function sign(clientId: string) {
 }
 
 export function verify(clientId: string, signature: string) {
-    if (!clientId || !signature) return false;
+    if (!clientId || !signature) {return false;}
     const expected = sign(clientId);
     return expected === signature;
 }
@@ -34,7 +34,7 @@ export const handler = async (event: any) => {
 
         const clientVal: string = String(clientId || "").trim();
 
-        if (clientVal.length === 0) return errorJSON("Missing clientId", 400);
+        if (clientVal.length === 0) {return errorJSON("Missing clientId", 400);}
 
         if (action === "sign") {
             const sig = sign(clientVal);
@@ -45,7 +45,7 @@ export const handler = async (event: any) => {
         if (action === "verify") {
             const sigVal: string = String(signature || "").trim();
 
-            if (sigVal.length === 0) return errorJSON("Missing signature", 400);
+            if (sigVal.length === 0) {return errorJSON("Missing signature", 400);}
 
             const isValid = verify(clientVal, sigVal);
 

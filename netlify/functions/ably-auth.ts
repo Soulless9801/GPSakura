@@ -19,8 +19,8 @@ export const handler = async (event: any) => {
         const clientId = event.queryStringParameters?.clientId;
         const signature = event.queryStringParameters?.signature;
 
-        if (!clientId || !signature) return errorJSON("Missing clientId or signature", 400);
-        if (!verify(clientId, signature)) return errorJSON("Invalid signature", 403);
+        if (!clientId || !signature) {return errorJSON("Missing clientId or signature", 400);}
+        if (!verify(clientId, signature)) {return errorJSON("Invalid signature", 403);}
 
         console.log(`ably-auth: Received token generation request for clientId ${clientId}`);
 
