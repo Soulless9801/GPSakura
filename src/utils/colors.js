@@ -134,8 +134,6 @@ export function readColor() {
     const primaryColor = hexToRGB(styles.getPropertyValue("--primary-color"));
     const secondaryColor = hexToRGB(styles.getPropertyValue("--secondary-color"));
 
-    console.log("Read colors:", primaryColor, secondaryColor);
-
     return [
         primaryColor ?? [...FALLBACK_RGB],
         secondaryColor ?? [...FALLBACK_RGB],
