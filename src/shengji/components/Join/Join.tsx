@@ -17,14 +17,14 @@ export default function Join() {
     const prevUser = localStorage.getItem("sjUsername");
 
     const joinRoom = useCallback(() => {
-        if (!tempId || !username) return;
+        if (!tempId || !username) {return;}
         localStorage.setItem("sjRoomId", tempId);
         localStorage.setItem("sjUsername", username);
         setRoomId(tempId);
     }, [tempId, username]);
 
     const rejoinRoom = () => {
-        if (!prevRoom || !prevUser) return;
+        if (!prevRoom || !prevUser) {return;}
         setTempId(prevRoom);
         setUsername(prevUser);
         setRoomId(prevRoom);
@@ -36,11 +36,11 @@ export default function Join() {
                 <div>
                     <div className="sjJoinTitle">Play</div>
                     <div className="sjJoinForm">
-                        <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                        <input type="text" placeholder="Room ID" value={tempId} onChange={(e) => setTempId(e.target.value)} />
-                        <button onClick={() => joinRoom()}>Join Room</button>
+                        <input type="text" placeholder="Username" value={username} onChange={(e) => { setUsername(e.target.value); }} />
+                        <input type="text" placeholder="Room ID" value={tempId} onChange={(e) => { setTempId(e.target.value); }} />
+                        <button onClick={() => { joinRoom(); }}>Join Room</button>
                         {prevRoom && prevUser && (
-                            <button onClick={() => rejoinRoom()} className="sjRejoinCard">
+                            <button onClick={() => { rejoinRoom(); }} className="sjRejoinCard">
                                 Rejoin Room <strong>{prevRoom}</strong> as <strong>{prevUser}</strong>
                             </button>
                         )}
@@ -48,7 +48,7 @@ export default function Join() {
                 </div>
             ) : (
                 <div className="sjGame">
-                    <button onClick={() => setRoomId(null)}>Leave Room</button>
+                    <button onClick={() => { setRoomId(null); }}>Leave Room</button>
                     <GameRoom roomId={roomId} username={username} />
                 </div>
             )}

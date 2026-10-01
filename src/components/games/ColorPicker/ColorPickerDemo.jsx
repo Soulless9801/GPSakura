@@ -40,9 +40,9 @@ export default function ColorPickerDemo() {
     const [count, setCount] = useState(loadValue(countKey, 0));
     const [giveUp, setGiveUp] = useState(loadValue(giveUpKey, 0));
 
-    useEffect(() => localStorage.setItem(sumKey, JSON.stringify(sum)), [sum]);
-    useEffect(() => localStorage.setItem(countKey, JSON.stringify(count)), [count]);
-    useEffect(() => localStorage.setItem(giveUpKey, JSON.stringify(giveUp)), [giveUp]);
+    useEffect(() => { localStorage.setItem(sumKey, JSON.stringify(sum)); }, [sum]);
+    useEffect(() => { localStorage.setItem(countKey, JSON.stringify(count)); }, [count]);
+    useEffect(() => { localStorage.setItem(giveUpKey, JSON.stringify(giveUp)); }, [giveUp]);
 
     const [primary, setPrimary] = useState([0, 0, 0]);
 
@@ -54,30 +54,30 @@ export default function ColorPickerDemo() {
             setPrimary(col[0]);
         };
         window.addEventListener("themeStorage", onStorage);
-        return () => window.removeEventListener("themeStorage", onStorage);
+        return () => { window.removeEventListener("themeStorage", onStorage); };
     }, []);
 
     const colorFromDistance = useCallback((d) => {
-        if (d < 0) return rgbToCss(primary);
-        if (d === 0) return "#00ff00";
-        if (d < 10) return "#ffff00";
-        if (d < 100) return "#ffa500";
+        if (d < 0) {return rgbToCss(primary);}
+        if (d === 0) {return "#00ff00";}
+        if (d < 10) {return "#ffff00";}
+        if (d < 100) {return "#ffa500";}
         return "#ff0000";
     }, [primary]);
 
     const chk = useCallback(() => {
         const res = [0, 0, 0];
-        for (let i = 0; i < 3; i++) res[i] = Math.abs(targetColor[i] - cachedColor[i]);
+        for (let i = 0; i < 3; i++) {res[i] = Math.abs(targetColor[i] - cachedColor[i]);}
         setRgbD(res);
         return res[0] === 0 && res[1] === 0 && res[2] === 0;
     }, [targetColor, cachedColor]);
 
     const guess = useCallback(() => {
-        if (win) return;
+        if (win) {return;}
         setGuesses(prev => prev + 1);
         setGuessColor(cachedColor);
-        if (chk()) setWin(true);
-        else setWin(false);
+        if (chk()) {setWin(true);}
+        else {setWin(false);}
     }, [cachedColor, chk, win]);
 
     useEffect(() => {
@@ -88,8 +88,8 @@ export default function ColorPickerDemo() {
     }, [win]);
 
     const gen = useCallback(() => {
-        if (!win) setGiveUp(prev => prev + 1);
-        else setWin(false);
+        if (!win) {setGiveUp(prev => prev + 1);}
+        else {setWin(false);}
         setTargetColor(randomColor());
         setGuessColor([0, 0, 0]);
         setRgbD([-1, -1, -1]);
@@ -164,7 +164,7 @@ export default function ColorPickerDemo() {
                             </div>
                             <div className='row g-3 colorRow'>
                                 <div className='col-6'>
-                                    <button className='colorButton' onClick={() => guess()}>
+                                    <button className='colorButton' onClick={() => { guess(); }}>
                                         Guess
                                     </button>
                                 </div>
@@ -174,7 +174,7 @@ export default function ColorPickerDemo() {
                             </div>
                             <div className='row g-3 colorRow'>
                                 <div className='col-6'>
-                                    <button className='colorButton' onClick={() => gen()} >
+                                    <button className='colorButton' onClick={() => { gen(); }} >
                                         Randomize
                                     </button>
                                 </div>

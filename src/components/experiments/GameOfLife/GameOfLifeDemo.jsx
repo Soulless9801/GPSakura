@@ -34,11 +34,11 @@ export default function GameOfLifeDemo() {
 		birth: [3]
 	}));
 
-    useEffect(() => localStorage.setItem(interactiveKey, JSON.stringify(interactive)), [interactive]);
-    useEffect(() => localStorage.setItem(showGridKey, JSON.stringify(showGrid)), [showGrid]);
-    useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
-    useEffect(() => localStorage.setItem(zoomKey, JSON.stringify(zoom)), [zoom]);
-    useEffect(() => localStorage.setItem(rulesKey, JSON.stringify(rules)), [rules]);
+    useEffect(() => { localStorage.setItem(interactiveKey, JSON.stringify(interactive)); }, [interactive]);
+    useEffect(() => { localStorage.setItem(showGridKey, JSON.stringify(showGrid)); }, [showGrid]);
+    useEffect(() => { localStorage.setItem(speedKey, JSON.stringify(speed)); }, [speed]);
+    useEffect(() => { localStorage.setItem(zoomKey, JSON.stringify(zoom)); }, [zoom]);
+    useEffect(() => { localStorage.setItem(rulesKey, JSON.stringify(rules)); }, [rules]);
 
     const gameRef = useRef(null);
 
@@ -78,13 +78,13 @@ export default function GameOfLifeDemo() {
                 </div>
                 <div className='col-4'>
                     <button className="cellButton col-4" onClick={() => {
-                        if (gameRef.current) gameRef.current.step();
+                        if (gameRef.current) {gameRef.current.step();}
                     }}>
                         Step
                     </button>
                 </div>
             </div>
-            <Slider min={1} max={100} value={speed} onChange={e => setSpeed(e)} label="Speed"/>
+            <Slider min={1} max={100} value={speed} onChange={e => { setSpeed(e); }} label="Speed"/>
             <div className='row g-1'>
                 <div className='col-4'>
                     <button className="cellButton" onClick={() => {
@@ -95,7 +95,7 @@ export default function GameOfLifeDemo() {
                 </div>
                 <div className='col-4'>
                     <button className="cellButton" onClick={() => {
-                        if (gameRef.current) gameRef.current.randomize();
+                        if (gameRef.current) {gameRef.current.randomize();}
                     }}>
                         Random
                     </button>
@@ -108,15 +108,15 @@ export default function GameOfLifeDemo() {
                     </button>
                 </div>
             </div>
-            <Slider min={minZoom.current} max={maxZoom.current} value={zoom} unit={"%"} onChange={e => setZoom(e)} label="Zoom"/>
+            <Slider min={minZoom.current} max={maxZoom.current} value={zoom} unit={"%"} onChange={e => { setZoom(e); }} label="Zoom"/>
             <div className='row g-1'>
                 <div className='col-6'>
-                    <button className="cellButton" onClick={() => setZoom(prev => Math.min(Number(prev) + 10, maxZoom.current))}>
+                    <button className="cellButton" onClick={() => { setZoom(prev => Math.min(Number(prev) + 10, maxZoom.current)); }}>
                         Zoom In
                     </button>
                 </div>
                 <div className='col-6'>
-                    <button className="cellButton" onClick={() => setZoom(prev => Math.max(Number(prev) - 10, minZoom.current))}>
+                    <button className="cellButton" onClick={() => { setZoom(prev => Math.max(Number(prev) - 10, minZoom.current)); }}>
                         Zoom Out
                     </button>
                 </div>

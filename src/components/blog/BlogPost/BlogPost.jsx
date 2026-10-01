@@ -28,10 +28,10 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
 
     useEffect(() => {
         const el = bodyRef.current;
-        if (!el) return;
+        if (!el) {return;}
 
         const update = () => {
-            if (!scrolled) return;
+            if (!scrolled) {return;}
             const canScroll = el.clientHeight >= minHeight && el.scrollHeight > el.clientHeight;
             setFit(canScroll);  
         };
@@ -49,13 +49,13 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
     return (
         <section className="container-fluid blogPostContainer">
             <div className="blogPostHeader">
-                <div className="blogPostTitle" onClick={() => setCollapsed(prev => !prev)}>{title}</div>
-                <div><i className="fa fa-scroll" style={{cursor: "pointer"}} onClick={() => setScrolled(prev => !prev)}></i></div>
+                <div className="blogPostTitle" onClick={() => { setCollapsed(prev => !prev); }}>{title}</div>
+                <div><i className="fa fa-scroll" style={{cursor: "pointer"}} onClick={() => { setScrolled(prev => !prev); }}></i></div>
             </div>
             {collapsed ? null :
                 <>
                     <div className="timestamp">Posted {formatDate(creationTime)}</div>
-                    <div className={`blogPostBody ${scrolled && fit ? "fadeScroll" : ""}`}><TextParser ref={bodyRef} text={body} className={`${scrolled && fit ? "fadeScrollInner" : ""}`} /></div>
+                    <div className={`blogPostBody ${scrolled && fit ? "fadeScroll" : ""}`}><TextParser ref={bodyRef} text={body} className={scrolled && fit ? "fadeScrollInner" : ""} /></div>
                 </>
             }
             <div className="timestamp">Updated {formatDate(updateTime)}</div>

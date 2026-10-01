@@ -15,7 +15,7 @@ export default function FreqGuesserDemo() {
 
     const [components, setComponents] = useState(loadValue(componentsKey, 2));
 
-    useEffect(() => localStorage.setItem(componentsKey, JSON.stringify(components)), [components]);
+    useEffect(() => { localStorage.setItem(componentsKey, JSON.stringify(components)); }, [components]);
 
     const t = useMemo(() => generateTimeArray(512, 1), []);
 
@@ -61,9 +61,9 @@ export default function FreqGuesserDemo() {
     const [count, setCount] = useState(loadValue(countKey, 0));
     const [giveUp, setGiveUp] = useState(loadValue(giveUpKey, 0));
 
-    useEffect(() => localStorage.setItem(sumKey, JSON.stringify(sum)), [sum]);
-    useEffect(() => localStorage.setItem(countKey, JSON.stringify(count)), [count]);
-    useEffect(() => localStorage.setItem(giveUpKey, JSON.stringify(giveUp)), [giveUp]);
+    useEffect(() => { localStorage.setItem(sumKey, JSON.stringify(sum)); }, [sum]);
+    useEffect(() => { localStorage.setItem(countKey, JSON.stringify(count)); }, [count]);
+    useEffect(() => { localStorage.setItem(giveUpKey, JSON.stringify(giveUp)); }, [giveUp]);
 
     const [primary, setPrimary] = useState([0, 0, 0]);
 
@@ -75,11 +75,11 @@ export default function FreqGuesserDemo() {
             setPrimary(col[0]);
         };
         window.addEventListener("themeStorage", onStorage);
-        return () => window.removeEventListener("themeStorage", onStorage);
+        return () => { window.removeEventListener("themeStorage", onStorage); };
     }, []);
 
     const reset = useCallback(() => {
-        if (!win) setGiveUp(prev => prev + 1);
+        if (!win) {setGiveUp(prev => prev + 1);}
         setTargetFreq(Array.from({ length: components }, randomComponent));
         setGuessFreq(Array.from({ length: components }, defaultComponent));
         setGuesses(0);
@@ -87,22 +87,22 @@ export default function FreqGuesserDemo() {
     }, [win, components]);
 
     const chk = useCallback(() => {
-        let targetStrings = [];
-        let cachedStrings = [];
-        for (const { a, f } of targetFreq) targetStrings.push(`${a}_${f}`);
-        for (const { a, f } of cachedFreq) cachedStrings.push(`${a}_${f}`);
+        const targetStrings = [];
+        const cachedStrings = [];
+        for (const { a, f } of targetFreq) {targetStrings.push(`${a}_${f}`);}
+        for (const { a, f } of cachedFreq) {cachedStrings.push(`${a}_${f}`);}
         targetStrings.sort();
         cachedStrings.sort();
-        for (let i = 0; i < components; i++) if (targetStrings[i] !== cachedStrings[i]) return false;
+        for (let i = 0; i < components; i++) {if (targetStrings[i] !== cachedStrings[i]) {return false;}}
         return true;
     }, [cachedFreq, targetFreq, components]);
 
     const guess = useCallback(() => {
-        if (win) return;
+        if (win) {return;}
         setGuesses(prev => prev + 1);
         setGuessFreq(cachedFreq);
-        if (chk()) setWin(true);
-        else setWin(false);
+        if (chk()) {setWin(true);}
+        else {setWin(false);}
     }, [cachedFreq, win]);
 
     useEffect(() => {
@@ -167,7 +167,7 @@ export default function FreqGuesserDemo() {
                                     min={2}
                                     max={5}
                                     init={components}
-                                    onChange={e => setComponents(e)}
+                                    onChange={e => { setComponents(e); }}
                                 />  
                             </div>
                             <div className='row g-3 freqRow'>
@@ -179,7 +179,7 @@ export default function FreqGuesserDemo() {
                                                 min={1}
                                                 max={3}
                                                 init={g.a}
-                                                onChange={e => update(i, "a", e)}
+                                                onChange={e => { update(i, "a", e); }}
                                             />
                                         </div>
                                         <div className="col-6">
@@ -188,7 +188,7 @@ export default function FreqGuesserDemo() {
                                                 min={1}
                                                 max={10}
                                                 init={g.f}
-                                                onChange={e => update(i, "f", e)}
+                                                onChange={e => { update(i, "f", e); }}
                                             />
                                         </div>
                                     </div>
@@ -196,7 +196,7 @@ export default function FreqGuesserDemo() {
                             </div>
                             <div className='row g-3 freqRow'>
                                 <div className='col-6'>
-                                    <button className='freqButton' onClick={() => guess()}>
+                                    <button className='freqButton' onClick={() => { guess(); }}>
                                         Guess
                                     </button>
                                 </div>
@@ -206,7 +206,7 @@ export default function FreqGuesserDemo() {
                             </div>
                             <div className='row g-3 freqRow'>
                                 <div className='col-6'>
-                                    <button className='freqButton' onClick={() => reset()} >
+                                    <button className='freqButton' onClick={() => { reset(); }} >
                                         Randomize
                                     </button>
                                 </div>

@@ -17,15 +17,15 @@ export async function getIdentity(functionName: string, clidntIdLoc: string, sig
         },
         body: JSON.stringify({
             action: "verify",
-            clientId: clientId,
-            signature: signature,
+            clientId,
+            signature,
         }),
     });
 
     if (!ver || !ver.ok || forceNew) {
 
         clientId = await gen();
-        if (!clientId) return null;
+        if (!clientId) {return null;}
         localStorage.setItem(clidntIdLoc, clientId);
 
         const res = await fetch(`/.netlify/functions/${functionName}`, {
@@ -35,16 +35,16 @@ export async function getIdentity(functionName: string, clidntIdLoc: string, sig
             },
             body: JSON.stringify({
                 action: "sign",
-                clientId: clientId,
+                clientId,
             }),
         });
-        if (!res || !res.ok) return null;
+        if (!res || !res.ok) {return null;}
 
         const data = await res.text();
-        if (!data) return null;
+        if (!data) {return null;}
 
         const des_data = deserialize(data);
-        if (!des_data || typeof des_data !== "object") return null;
+        if (!des_data || typeof des_data !== "object") {return null;}
 
         const ret = des_data as { signature: string | null };
         signature = ret.signature;

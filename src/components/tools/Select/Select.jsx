@@ -23,7 +23,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
 
     useEffect(() => {
         // console.log(defaultValue);
-        if (!fixedSelect) handleSelect(options[findIndex(defaultValue, options, defaultIndex)]);
+        if (!fixedSelect) {handleSelect(options[findIndex(defaultValue, options, defaultIndex)]);}
         const handleClickOutside = (event) => {
             if (ref.current && !ref.current.contains(event.target)) {
                 setOpen(false);
@@ -31,7 +31,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
             }
         };
         document.addEventListener("pointerdown", handleClickOutside);
-        return () => document.removeEventListener("pointerdown", handleClickOutside);
+        return () => { document.removeEventListener("pointerdown", handleClickOutside); };
     }, []);
 
     const [showMenu, setShowMenu] = useState(false);
@@ -44,14 +44,14 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
         <div className="customSelectWrapper">
             {labelL && <label className="customSelectLabelR">{labelL}</label>}
             <div className="customSelect">
-                <div ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => {setHover(false); setClosed(false);}}>
+                <div ref={ref} onMouseEnter={() => { setHover(true); }} onMouseLeave={() => {setHover(false); setClosed(false);}}>
                     <div className="customSelectSelected" onClick={() => {setClosed(open); setOpen((prev) => !prev);}}>
                         {fixedSelect ? placeholder : value.label}
                         <span className="customSelectArrow">{open ? "↑" : "↓"}</span>
                     </div>
                     <div className={`customSelectOptions${showMenu ? " show" : ""}${align === "right" ? " right" : ""}`} ref={menuRef}>
                         {options.map((option) => (
-                            <div key={option.value} className={`customSelectOption${value && value.value === option.value ? " selected" : ""}`} onClick={() => handleSelect(option)}>
+                            <div key={option.value} className={`customSelectOption${value && value.value === option.value ? " selected" : ""}`} onClick={() => { handleSelect(option); }}>
                                 {option.label}
                             </div>
                         ))}

@@ -32,7 +32,7 @@ import type { Ctx, Rule } from "./playbook";
 /** Cards that could still be in someone else's hand or the kitty. */
 export function unseenCounts(position: Position): Array<[Card, number]> {
     const remaining: Map<string, [Card, number]> = new Map<string, [Card, number]>();
-    for (const card of allCards()) remaining.set(cardKey(card), [card, position.decks]);
+    for (const card of allCards()) {remaining.set(cardKey(card), [card, position.decks]);}
 
     const accountedFor: Card[] = [
         ...position.hand,
@@ -41,7 +41,7 @@ export function unseenCounts(position: Position): Array<[Card, number]> {
     ];
     for (const card of accountedFor) {
         const entry = remaining.get(cardKey(card));
-        if (entry) entry[1] -= 1;
+        if (entry) {entry[1] -= 1;}
     }
 
     return [...remaining.values()].filter(([, n]) => n > 0);
@@ -49,7 +49,7 @@ export function unseenCounts(position: Position): Array<[Card, number]> {
 
 /** Which play in the trick is winning right now. Null when the trick is empty. */
 export function winningPosition(trick: Move[], trump: Trump): number | null {
-    if (trick.length === 0) return null;
+    if (trick.length === 0) {return null;}
     let best: number = 0;
     for (let i = 1; i < trick.length; i++) {
         if (SJComp.isPlayBigger(playInfo(trick[i], trump), playInfo(trick[best], trump), trump)) {
@@ -77,7 +77,7 @@ function survivalProbability(
     trump: Trump,
 ): number {
     const winning: Move = trick[winnerPos];
-    if (!winning || winning.length === 0) return 0.5;
+    if (!winning || winning.length === 0) {return 0.5;}
 
     const iwin = playInfo(winning, trump);
     const top: Card = iwin.play.cards[iwin.play.cards.length - 1]; // sorted ascending
@@ -94,20 +94,20 @@ function survivalProbability(
     let linePool: number = 0;
     for (const [card, n] of unseen) {
         pool += n;
-        if (!SJComp.checkInline(card, leadCard, trump)) continue;
+        if (!SJComp.checkInline(card, leadCard, trump)) {continue;}
         linePool += n;
-        if (n >= width && SJComp.isCardBigger(card, top, trump)) beaters += n;
+        if (n >= width && SJComp.isCardBigger(card, top, trump)) {beaters += n;}
     }
 
     const winnerIsOurs: boolean = (myPosition - winnerPos) % 2 === 0;
-    if (pool <= 0) return winnerIsOurs ? 1.0 : 0.0;
+    if (pool <= 0) {return winnerIsOurs ? 1.0 : 0.0;}
 
     let survive: number = 1.0;
     for (let other = 0; other < numPlayers; other++) {
-        if (other <= myPosition) continue; // already acted this trick
-        if ((other - myPosition) % 2 === 0) continue; // partner, not a threat
+        if (other <= myPosition) {continue;} // already acted this trick
+        if ((other - myPosition) % 2 === 0) {continue;} // partner, not a threat
         const held: number = Math.min(cardsLeft, 25);
-        if (held <= 0) continue;
+        if (held <= 0) {continue;}
 
         let pBeat: number = 1.0 - Math.pow(Math.max(0.0, 1.0 - beaters / pool), held);
         if (!ledLineIsTrump) {
@@ -129,7 +129,7 @@ function afterMove(
 ): { trick: Move[]; winner: number } {
     const myPosition: number = trick.length;
     const next: Move[] = [...trick, move];
-    if (currentWinner === null) return { trick: next, winner: myPosition };
+    if (currentWinner === null) {return { trick: next, winner: myPosition };}
     const beats: boolean = SJComp.isPlayBigger(
         playInfo(move, trump),
         playInfo(trick[currentWinner], trump),
@@ -143,16 +143,16 @@ function scoreMove(ctx: Ctx, rules: Rule[]): { score: number; hits: RuleHit[] } 
     const hits: RuleHit[] = [];
 
     for (const rule of rules) {
-        if (!rule.when.every((name) => CONDITIONS[name](ctx))) continue;
+        if (!rule.when.every((name) => CONDITIONS[name](ctx))) {continue;}
 
         const before: number = total;
         for (const [param, feature] of Object.entries(rule.add || {})) {
             total += PARAMETERS[param] * FEATURES[feature](ctx);
         }
-        if (rule.constParam !== undefined) total += PARAMETERS[rule.constParam];
-        if (rule.const !== undefined) total += rule.const;
+        if (rule.constParam !== undefined) {total += PARAMETERS[rule.constParam];}
+        if (rule.const !== undefined) {total += rule.const;}
 
-        if (total !== before) hits.push({ id: rule.id, delta: total - before, plain: rule.plain });
+        if (total !== before) {hits.push({ id: rule.id, delta: total - before, plain: rule.plain });}
     }
 
     return { score: total, hits };
@@ -162,11 +162,11 @@ function scoreMove(ctx: Ctx, rules: Rule[]): { score: number; hits: RuleHit[] } 
 function validate(position: Position): string[] {
     const problems: string[] = [];
 
-    if (position.numPlayers % 2 !== 0) problems.push("Player count must be even.");
+    if (position.numPlayers % 2 !== 0) {problems.push("Player count must be even.");}
     if (position.trick.length >= position.numPlayers) {
         problems.push("The trick already has a play from every seat — nobody is left to act.");
     }
-    if (!position.hand.length) problems.push("Add the cards you are holding.");
+    if (!position.hand.length) {problems.push("Add the cards you are holding.");}
     if (position.trick.some((play) => play.length === 0)) {
         problems.push("Every play in the trick needs at least one card.");
     }
@@ -190,8 +190,8 @@ function validate(position: Position): string[] {
     const total: Map<string, [Card, number]> = new Map<string, [Card, number]>();
     for (const card of [...position.hand, ...position.seen, ...position.trick.flat()]) {
         const entry = total.get(cardKey(card));
-        if (entry) entry[1] += 1;
-        else total.set(cardKey(card), [card, 1]);
+        if (entry) {entry[1] += 1;}
+        else {total.set(cardKey(card), [card, 1]);}
     }
     for (const [card, n] of total.values()) {
         if (n > position.decks) {
@@ -217,7 +217,7 @@ export function analyse(position: Position): Advice {
 
     const facts: Advice["facts"] = {
         leading: isLead,
-        cardsLeft: cardsLeft,
+        cardsLeft,
         phase: early ? "early" : "late",
         potPoints: pot,
         winningPosition: currentWinner,
@@ -230,7 +230,7 @@ export function analyse(position: Position): Advice {
         legalMoveCount: 0,
     };
 
-    if (problems.length) return { candidates: [], facts: facts, problems: problems };
+    if (problems.length) {return { candidates: [], facts, problems };}
 
     let legal: Move[] = [];
     try {
@@ -238,7 +238,7 @@ export function analyse(position: Position): Advice {
     } catch (err) {
         return {
             candidates: [],
-            facts: facts,
+            facts,
             problems: [`Could not enumerate legal plays: ${(err as Error).message}`],
         };
     }
@@ -247,7 +247,7 @@ export function analyse(position: Position): Advice {
     if (!legal.length) {
         return {
             candidates: [],
-            facts: facts,
+            facts,
             problems: ["No legal play — check the hand and the lead."],
         };
     }
@@ -278,29 +278,29 @@ export function analyse(position: Position): Advice {
               );
 
         const ctx: Ctx = {
-            trump: trump,
+            trump,
             hand: position.hand,
-            handCounts: handCounts,
-            move: move,
-            isLead: isLead,
-            early: early,
-            unseen: unseen,
-            order: order,
-            winProbability: winProbability,
+            handCounts,
+            move,
+            isLead,
+            early,
+            unseen,
+            order,
+            winProbability,
             threshold: PARAMETERS.trump_commit_threshold,
-            pot: pot,
+            pot,
             trick: position.trick,
-            myPosition: myPosition,
+            myPosition,
             winningPosition: currentWinner,
         };
 
         const { score, hits } = scoreMove(ctx, rules);
 
         return {
-            move: move,
-            score: score,
+            move,
+            score,
             rules: hits,
-            winProbability: winProbability,
+            winProbability,
             pointsAdded: move.reduce((sum, card) => sum + pointValue(card), 0),
             takesTrick: outcome.winner === myPosition,
         };
@@ -308,5 +308,5 @@ export function analyse(position: Position): Advice {
 
     candidates.sort((a, b) => b.score - a.score);
 
-    return { candidates: candidates, facts: facts, problems: [] };
+    return { candidates, facts, problems: [] };
 }

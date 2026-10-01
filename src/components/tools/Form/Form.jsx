@@ -26,7 +26,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	}, [value]);
 
 	useEffect(() => {
-		if (!focus) inputRef.current.blur();
+		if (!focus) {inputRef.current.blur();}
 	}, [focus]);
 
 	const updateValue = (newValue) => {
@@ -51,7 +51,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	}, [draft, value]);
 
 	const handleKeyDown = useCallback((e) => {
-		if (disabled || !focus) return;
+		if (disabled || !focus) {return;}
 		if (e.key === "Enter") {
 			setFocus(false);
 		}
@@ -64,7 +64,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	}, [disabled, focus]);
 
 	const handleClick = useCallback(() => {
-		if (disabled) return;
+		if (disabled) {return;}
 		setFocus(true);
 	}, [disabled]);
 
@@ -76,7 +76,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	const holdTimeout = useRef(null);
 
 	const startHold = (inc) => {
-		if (disabled || holdTimeout.current || holdInterval.current) return;
+		if (disabled || holdTimeout.current || holdInterval.current) {return;}
 		setValue(prev => updateValue(Number(prev) + inc));
 		holdTimeout.current = setTimeout(() => {
 			holdInterval.current = setInterval(() => {
@@ -94,7 +94,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 
 	return (
 		<div className={`customNumberInput ${disabled ? "disabled" : ""} ${className}`} style={style} onClick={handleClick} onBlur={handleBlur} >
-			<input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)} onFocus={() => setFocus(true)} onKeyDown={handleKeyDown} />
+			<input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={e => { setDraft(e.target.value); }} onFocus={() => { setFocus(true); }} onKeyDown={handleKeyDown} />
 			<div className="customNumberButtons">
 				<div
 					className="btn-up"

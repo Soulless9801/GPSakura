@@ -55,7 +55,7 @@ function CardRow({ cards, size = "md" }: { cards: Card[]; size?: "sm" | "md" }) 
 }
 
 function Chips({ cards, onRemove }: { cards: Card[]; onRemove: (index: number) => void }) {
-    if (!cards.length) return <span className="advEmpty">nothing yet</span>;
+    if (!cards.length) {return <span className="advEmpty">nothing yet</span>;}
     return (
         <span className="advChips">
             {cards.map((card, i) => (
@@ -63,7 +63,7 @@ function Chips({ cards, onRemove }: { cards: Card[]; onRemove: (index: number) =
                     key={`${cardKey(card)}-${i}`}
                     className="advChip"
                     title={`remove ${CardModule.cardName(card)}`}
-                    onClick={() => onRemove(i)}
+                    onClick={() => { onRemove(i); }}
                 >
                     <PlayCard card={card} size="sm" />
                     <span className="advChip__x">&times;</span>
@@ -90,7 +90,7 @@ function Segmented<T extends string | number>({
                 <button
                     key={String(option)}
                     className={`advSeg${option === value ? " active" : ""}`}
-                    onClick={() => onChange(option)}
+                    onClick={() => { onChange(option); }}
                 >
                     {render ? render(option) : String(option)}
                 </button>
@@ -120,12 +120,12 @@ export default function Advisor() {
 
     const advice: Advice = useMemo(() => {
         const position: Position = {
-            numPlayers: numPlayers,
+            numPlayers,
             decks: numPlayers / 2,
             trump: { suit: trumpSuit, rank: trumpRank },
-            hand: hand,
-            trick: trick,
-            seen: seen,
+            hand,
+            trick,
+            seen,
         };
         return analyse(position);
     }, [numPlayers, trumpSuit, trumpRank, hand, trick, seen]);
@@ -140,8 +140,8 @@ export default function Advisor() {
     }, [hand, trick, seen]);
 
     const addCard = (card: Card): void => {
-        if (target.kind === "hand") setHand((prev) => [...prev, card]);
-        else if (target.kind === "seen") setSeen((prev) => [...prev, card]);
+        if (target.kind === "hand") {setHand((prev) => [...prev, card]);}
+        else if (target.kind === "seen") {setSeen((prev) => [...prev, card]);}
         else {
             setTrick((prev) =>
                 prev.map((play, i) => (i === target.index ? [...play, card] : play)),
@@ -151,13 +151,13 @@ export default function Advisor() {
 
     const removeFrom = (where: Target, index: number): void => {
         const drop = (list: Card[]): Card[] => list.filter((_, i) => i !== index);
-        if (where.kind === "hand") setHand(drop);
-        else if (where.kind === "seen") setSeen(drop);
-        else setTrick((prev) => prev.map((play, i) => (i === where.index ? drop(play) : play)));
+        if (where.kind === "hand") {setHand(drop);}
+        else if (where.kind === "seen") {setSeen(drop);}
+        else {setTrick((prev) => prev.map((play, i) => (i === where.index ? drop(play) : play)));}
     };
 
     const addPlay = (): void => {
-        if (trick.length >= numPlayers - 1) return;
+        if (trick.length >= numPlayers - 1) {return;}
         setTrick((prev) => [...prev, []]);
         setTarget({ kind: "trick", index: trick.length });
     };
@@ -214,13 +214,13 @@ export default function Advisor() {
                     <span className="advField__label">Trump suit</span>
                     <Segmented
                         options={[...CardModule.PLAY_SUITS, "none"] as Array<Suit | "none">}
-                        value={(trumpSuit ?? "none") as Suit | "none"}
-                        onChange={(next) => setTrumpSuit(next === "none" ? null : (next as Suit))}
+                        value={(trumpSuit ?? "none")}
+                        onChange={(next) => { setTrumpSuit(next === "none" ? null : (next)); }}
                         render={(option) =>
                             option === "none" ? (
                                 "NT"
                             ) : (
-                                <span className={CardModule.isRed({ suit: option as Suit, rank: 2 }) ? "advRed" : ""}>
+                                <span className={CardModule.isRed({ suit: option, rank: 2 }) ? "advRed" : ""}>
                                     {CardModule.SUIT_GLYPH[option as string]}
                                 </span>
                             )
@@ -268,7 +268,7 @@ export default function Advisor() {
                                     key={rank}
                                     className={`advPick${spent ? " advPick--used" : ""}`}
                                     disabled={spent >= decks}
-                                    onClick={() => addCard(card)}
+                                    onClick={() => { addCard(card); }}
                                     title={`add ${CardModule.cardName(card)}`}
                                 >
                                     {CardModule.RANK_LABEL[rank] || rank}
@@ -290,7 +290,7 @@ export default function Advisor() {
                                     key={card.rank}
                                     className={`advPick advPick--joker${spent ? " advPick--used" : ""}${CardModule.isRed(card) ? " advRed" : ""}`}
                                     disabled={spent >= decks}
-                                    onClick={() => addCard(card)}
+                                    onClick={() => { addCard(card); }}
                                     title={`add the ${CardModule.cardName(card)}`}
                                 >
                                     {CardModule.rankLabel(card)}
@@ -310,12 +310,12 @@ export default function Advisor() {
                             <span className="advCount">{hand.length} cards</span>
                             <button
                                 className={target.kind === "hand" ? "active" : ""}
-                                onClick={() => setTarget({ kind: "hand" })}
+                                onClick={() => { setTarget({ kind: "hand" }); }}
                             >
                                 {target.kind === "hand" ? "adding here" : "add cards"}
                             </button>
                         </header>
-                        <Chips cards={hand} onRemove={(i) => removeFrom({ kind: "hand" }, i)} />
+                        <Chips cards={hand} onRemove={(i) => { removeFrom({ kind: "hand" }, i); }} />
                     </section>
 
                     <section className="advPanel">
@@ -347,7 +347,7 @@ export default function Advisor() {
                                     <span className="advSeat__cards">
                                         <Chips
                                             cards={play}
-                                            onRemove={(index) => removeFrom({ kind: "trick", index: i }, index)}
+                                            onRemove={(index) => { removeFrom({ kind: "trick", index: i }, index); }}
                                         />
                                     </span>
                                     <span className="advSeat__actions">
@@ -355,11 +355,11 @@ export default function Advisor() {
                                             className={
                                                 target.kind === "trick" && target.index === i ? "active" : ""
                                             }
-                                            onClick={() => setTarget({ kind: "trick", index: i })}
+                                            onClick={() => { setTarget({ kind: "trick", index: i }); }}
                                         >
                                             {target.kind === "trick" && target.index === i ? "adding" : "add"}
                                         </button>
-                                        <button onClick={() => removePlay(i)}>remove</button>
+                                        <button onClick={() => { removePlay(i); }}>remove</button>
                                     </span>
                                 </div>
                             );
@@ -377,7 +377,7 @@ export default function Advisor() {
                         <header className="advPanel__head">
                             <h3>Seen earlier this round</h3>
                             <span className="advCount">{seen.length} cards</span>
-                            <button onClick={() => setShowSeen((prev) => !prev)}>
+                            <button onClick={() => { setShowSeen((prev) => !prev); }}>
                                 {showSeen ? "hide" : "optional"}
                             </button>
                         </header>
@@ -391,12 +391,12 @@ export default function Advisor() {
                                 <div className="advPanel__head">
                                     <button
                                         className={target.kind === "seen" ? "active" : ""}
-                                        onClick={() => setTarget({ kind: "seen" })}
+                                        onClick={() => { setTarget({ kind: "seen" }); }}
                                     >
                                         {target.kind === "seen" ? "adding here" : "add cards"}
                                     </button>
                                 </div>
-                                <Chips cards={seen} onRemove={(i) => removeFrom({ kind: "seen" }, i)} />
+                                <Chips cards={seen} onRemove={(i) => { removeFrom({ kind: "seen" }, i); }} />
                             </>
                         )}
                     </section>

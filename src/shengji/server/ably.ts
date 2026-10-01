@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Ably from "ably";
 
-import { Identity } from "/src/utils/verify";
+import type { Identity } from "/src/utils/verify";
 
 export function useAbly({ request }: { request: Identity | null }): Ably.Realtime | null {
     

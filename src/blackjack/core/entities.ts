@@ -11,9 +11,9 @@ function validateCard(card: Card): boolean {
 }
 
 function pointValue(card: Card): number {
-    if (card.rank > 1 && card.rank < 11) return card.rank;
-    if (card.rank > 10 && card.rank < 14) return 10;
-    if (card.rank === 14) return 11;
+    if (card.rank > 1 && card.rank < 11) {return card.rank;}
+    if (card.rank > 10 && card.rank < 14) {return 10;}
+    if (card.rank === 14) {return 11;}
     return 0;
 }
 
@@ -32,7 +32,7 @@ export class Deck extends CardModule.Deck {
 
     draw(): Card | null {
         let card : Card | null = super.draw();
-        while (card && !validateCard(card)) card = super.draw(); // skip non-valid cards
+        while (card && !validateCard(card)) {card = super.draw();} // skip non-valid cards
         return card;
     }
 
@@ -70,7 +70,7 @@ export class Hand {
         this.cards.push(card);
         this.card_count++;
         this.hand_value += pointValue(card);
-        if (card.rank === 14) this.ace_count++;
+        if (card.rank === 14) {this.ace_count++;}
     }
 
     getCards(): Card[] {

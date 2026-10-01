@@ -14,13 +14,13 @@ export default function Pagination({ page, setPage, postsLength, pageSize }) {
 
         pages.push(0);
 
-        if (left > 1) pages.push("ellipsis");
+        if (left > 1) {pages.push("ellipsis");}
 
         for (let i = left; i <= right; i++) {
             pages.push(i);
         }
 
-        if (right < pageCount - 2) pages.push("ellipsis");
+        if (right < pageCount - 2) {pages.push("ellipsis");}
 
         pages.push(pageCount - 1);
 

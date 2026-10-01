@@ -13,14 +13,14 @@ function ModalContent({ open, onClose, onExited, children, scrollable = true }) 
     useEffect(() => {
         const onKey = e => e.key === "Escape" && onClose();
         window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
+        return () => { window.removeEventListener("keydown", onKey); };
     }, [onClose]);
 
 
     useEffect(() => {
         if (!open) {
             const timer = setTimeout(onExited, 300); // should match CSS transition duration
-            return () => clearTimeout(timer);
+            return () => { clearTimeout(timer); };
         }
     }, [open, onExited]);
 
@@ -43,7 +43,7 @@ export default function Modal({title, description, buttonText, buttonStyle={}, b
     const [open, setOpen] = useState(false);
 
     const openModal = () => {
-        requestAnimationFrame(() => setOpen(true));
+        requestAnimationFrame(() => { setOpen(true); });
     };
 
     const closeModal = () => {

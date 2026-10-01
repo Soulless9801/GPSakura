@@ -4,13 +4,13 @@ import $ from 'jquery';
 import CustomDataTable from '/src/components/tables/DataTable.jsx';
 
 $.fn.dataTable.ext.oSort['rating-asc'] = (a, b) => {
-    if (a === 'unrated') a = '0';
-    if (b === 'unrated') b = '0';
+    if (a === 'unrated') {a = '0';}
+    if (b === 'unrated') {b = '0';}
     return parseFloat(a) - parseFloat(b);
 };
 $.fn.dataTable.ext.oSort['rating-desc'] = (a, b) => {
-    if (a === 'unrated') a = '0';
-    if (b === 'unrated') b = '0';
+    if (a === 'unrated') {a = '0';}
+    if (b === 'unrated') {b = '0';}
     return parseFloat(b) - parseFloat(a);
 };
 

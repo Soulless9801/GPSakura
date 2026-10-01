@@ -27,8 +27,8 @@ export function sortCards(cards: Card[], trump: Trump | null): Card[] {
     // console.log("Sorting cards:", cardsToString(cards), "Trump:", trumpToString(trump || { suit: null, rank: 0 })); 
     return cards.sort((b, a) => {
         if (!trump || (!isMainLine(a, trump) && !isMainLine(b, trump))) {
-            if (a.suit !== b.suit) return suit_order.get(b.suit)! - suit_order.get(a.suit)!;
-            else return b.rank - a.rank;
+            if (a.suit !== b.suit) {return suit_order.get(b.suit)! - suit_order.get(a.suit)!;}
+            else {return b.rank - a.rank;}
         }
         return isCardBigger(a, b, trump) ? -1 : 1;
     });
@@ -81,9 +81,9 @@ export function getPlayStruct(ihand: IHand, trump: Trump): { cards: Card[][], co
     for (let i = 0; i < hand_struct.cards.length; i++) {
         const card : Card = hand_struct.cards[i];
         const cnt : number = hand_struct.count[i];
-        if (cnt === 0) continue;
+        if (cnt === 0) {continue;}
         // console.log("Card:", card, "Last:", lst.length > 0 ? lst[lst.length - 1] : null, "Count:", cnt, "Last count:", count);
-        if ((cnt === count) && (lst.length > 0 && isCardNext(card, lst[lst.length - 1], trump))) lst.push(card);
+        if ((cnt === count) && (lst.length > 0 && isCardNext(card, lst[lst.length - 1], trump))) {lst.push(card);}
         else {
             if (lst.length > 0) {
                 if (count === 1){
@@ -119,7 +119,7 @@ export function getPlayStruct(ihand: IHand, trump: Trump): { cards: Card[][], co
 
 export function handToInfo(hand: Hand, trump: Trump): IHand {
     return {
-        hand: hand,
+        hand,
         struct: getHandStruct(hand, trump)
     }
 }
@@ -128,8 +128,8 @@ export function playToInfo(play: Play, trump: Trump): IPlay {
     sortCards(play.cards, trump);
     const ihand = handToInfo(playToHand(play), trump);
     return {
-        play: play,
-        ihand: ihand,
+        play,
+        ihand,
         struct: getPlayStruct(ihand, trump)
     }
 }
@@ -137,7 +137,7 @@ export function playToInfo(play: Play, trump: Trump): IPlay {
 // TODO: maybe move to sjconv?
 function playToHand(play: Play): Hand {
     const hand: Hand = new Hand();
-    for (const card of play.cards) hand.addCard(card);
+    for (const card of play.cards) {hand.addCard(card);}
     return hand;
 }
 
@@ -154,22 +154,22 @@ function getCardData(card: Card, trump: Trump): number[]{
 // get card data for card + 1, return null if card is biggest
 export function getNextCardData(card: Card, trump: Trump): number[] | null {
 
-    if (isJoker(card) && card.rank === 2) return null; // biggest card
+    if (isJoker(card) && card.rank === 2) {return null;} // biggest card
 
-    if (isBigTrump(card, trump)) return [1, 0, 0, 1]; // small joker
+    if (isBigTrump(card, trump)) {return [1, 0, 0, 1];} // small joker
 
     const val : number[] = getCardData(card, trump);
 
-    if (isSmallTrump(card, trump)) val[2] = 1; // big trump
+    if (isSmallTrump(card, trump)) {val[2] = 1;} // big trump
     else {
         val[3] += 1;
-        if (val[3] === trump.rank) val[3] += 1;
+        if (val[3] === trump.rank) {val[3] += 1;}
         if (val[3] > 14) {
             val[3] = trump.rank;
             if (isTrumpSuit(card, trump)) {
                 val[1] = 1;
                 val[2] = 0;
-            } else return null;
+            } else {return null;}
         }
     }
 
@@ -196,7 +196,7 @@ function isTrumpSuit(card: Card, trump: Trump): boolean {
 }
 
 function isTrumpRank(card: Card, trump: Trump): boolean {
-    if (isJoker(card)) return false; // joker technically has no rank
+    if (isJoker(card)) {return false;} // joker technically has no rank
     return card.rank === trump.rank;
 }
 
@@ -206,11 +206,11 @@ export function isMainLine(card: Card, trump: Trump): boolean {
 
 // helper function to check if cards all the same
 export function isAllSame(cards: Card[]): boolean {
-    if (cards.length === 0) return true;
+    if (cards.length === 0) {return true;}
     const suit : Suit = cards[0].suit;
     const rank : Rank = cards[0].rank;
     for (const card of cards) {
-        if (card.suit !== suit || card.rank !== rank) return false;
+        if (card.suit !== suit || card.rank !== rank) {return false;}
     }
     return true;
 }
@@ -218,17 +218,17 @@ export function isAllSame(cards: Card[]): boolean {
 // helper function to check if cards are all jokers
 export function isAllJokers(cards: Card[]): boolean {
     for (const card of cards) {
-        if (card.suit !== "jokers") return false;
+        if (card.suit !== "jokers") {return false;}
     }
     return true;
 }
 
 // helper function to check if cards are all same suit
 function isAllSameSuit(cards: Card[]): boolean {
-    if (cards.length === 0) return true;
+    if (cards.length === 0) {return true;}
     const suit : Suit = cards[0].suit;
     for (const card of cards) {
-        if (card.suit !== suit) return false;
+        if (card.suit !== suit) {return false;}
     }
     return true;
 }
@@ -236,7 +236,7 @@ function isAllSameSuit(cards: Card[]): boolean {
 // helper function to check if cards are all main line cards
 function isAllMainLine(cards: Card[], trump: Trump): boolean {
     for (const card of cards) {
-        if (!isMainLine(card, trump)) return false;
+        if (!isMainLine(card, trump)) {return false;}
     }
     return true;
 }
@@ -250,16 +250,16 @@ export function isCardEqual(cardA: Card, cardB: Card): boolean {
 // check if cardA = cardB + 1
 export function isCardNext(cardA: Card, cardB: Card, trump: Trump): boolean {
 
-    if (!isMainLine(cardA, trump) && cardA.suit !== cardB.suit) return false;
+    if (!isMainLine(cardA, trump) && cardA.suit !== cardB.suit) {return false;}
     
     const val_a : number[] = getCardData(cardA, trump);
     const val_b : number[] | null = getNextCardData(cardB, trump);
 
-    if (!val_b) return false;
+    if (!val_b) {return false;}
 
     for (let i = 0; i < 4; i++) {
-        if (val_a[i] > val_b[i]) return false;
-        if (val_a[i] < val_b[i]) return false;
+        if (val_a[i] > val_b[i]) {return false;}
+        if (val_a[i] < val_b[i]) {return false;}
     }
 
     return true;
@@ -267,25 +267,25 @@ export function isCardNext(cardA: Card, cardB: Card, trump: Trump): boolean {
 
 // check if card and lead have same suit/mainline status
 export function checkInline(card: Card, lead: Card, trump: Trump): boolean {
-    if (!SJCore.validateCard(card)) return false;
+    if (!SJCore.validateCard(card)) {return false;}
     const card_main : boolean = isMainLine(card, trump);
     const lead_main : boolean = isMainLine(lead, trump);
-    if ((!lead_main && card_main) || (lead_main && !card_main)) return false; // opposite
-    if (!(lead_main && card_main) && !(card.suit === lead.suit)) return false; // not the same suit
+    if ((!lead_main && card_main) || (lead_main && !card_main)) {return false;} // opposite
+    if (!(lead_main && card_main) && !(card.suit === lead.suit)) {return false;} // not the same suit
     return true;
 }
 
 // check if cardA > cardB, assuming cardB was played first (trumps in the case of equality)
 export function isCardBigger(cardA: Card, cardB: Card, trump: Trump): boolean {
 
-    if (!checkInline(cardA, cardB, trump)) return isMainLine(cardA, trump); // check same suit / mainline status
+    if (!checkInline(cardA, cardB, trump)) {return isMainLine(cardA, trump);} // check same suit / mainline status
 
     const val_a : number[] = getCardData(cardA, trump);
     const val_b : number[] = getCardData(cardB, trump);
 
     for (let i = 0; i < 4; i++) {
-        if (val_a[i] > val_b[i]) return true;
-        if (val_a[i] < val_b[i]) return false;
+        if (val_a[i] > val_b[i]) {return true;}
+        if (val_a[i] < val_b[i]) {return false;}
     }
 
     return false;
@@ -306,13 +306,13 @@ function getTrickCount(ihand: IHand, lead: Card, trump: Trump): { tricks: Card[]
         const card : Card = hand_struct.cards[i];
         const count : number = hand_struct.count[i];
         if (checkInline(card, lead, trump)) {
-            while (tricks.length <= count) tricks.push([]);
+            while (tricks.length <= count) {tricks.push([]);}
             tricks[count].push(card);
             suit_count += count;
         }
     }
 
-    return { tricks: tricks, suit_count: suit_count };
+    return { tricks, suit_count };
 }
 
 // a card and how many groups of the size the lead asks for it can supply
@@ -324,10 +324,10 @@ function getTrickUnits(tricks: Card[][], size: number): TrickUnit[] {
 
     const units : TrickUnit[] = [];
 
-    if (size <= 0) return units;
+    if (size <= 0) {return units;}
 
     for (let count = size; count < tricks.length; count++) {
-        for (const card of tricks[count]) units.push({ card: card, units: Math.floor(count / size) });
+        for (const card of tricks[count]) {units.push({ card, units: Math.floor(count / size) });}
     }
 
     return units;
@@ -346,7 +346,7 @@ function findMaxConsecutive(units: TrickUnit[], trump: Trump): number[] {
     // console.log("Finding max consecutive in:", cards);
 
     const supply : Map<string, number> = new Map<string, number>();
-    for (const unit of units) supply.set(cardKey(unit.card), unit.units);
+    for (const unit of units) {supply.set(cardKey(unit.card), unit.units);}
 
     const amount = (card: Card): number => supply.get(cardKey(card)) || 1;
 
@@ -354,15 +354,15 @@ function findMaxConsecutive(units: TrickUnit[], trump: Trump): number[] {
 
     const seq : number[] = [];
     for (let i = 0; i < cards.length - 1; i++) {
-        if (isCardNext(cards[i + 1], cards[i], trump)) len += amount(cards[i + 1]);
+        if (isCardNext(cards[i + 1], cards[i], trump)) {len += amount(cards[i + 1]);}
         else {
-            while (seq.length <= len) seq.push(0);
+            while (seq.length <= len) {seq.push(0);}
             seq[len]++;
             len = amount(cards[i + 1]);
         }
     }
 
-    while (seq.length <= len) seq.push(0);
+    while (seq.length <= len) {seq.push(0);}
     seq[len]++;
 
     return seq;
@@ -376,7 +376,7 @@ export function isSubset(iplay: IPlay, ihand: IHand): boolean {
 
     const hand : Hand = ihand.hand;
 
-    for (const card of play.cards) if (play_hand.countCard(card) > hand.countCard(card)) return false;
+    for (const card of play.cards) {if (play_hand.countCard(card) > hand.countCard(card)) {return false;}}
 
     return true;
 }
@@ -384,13 +384,13 @@ export function isSubset(iplay: IPlay, ihand: IHand): boolean {
 // check if is valid PLAY struct
 function isPlayStructValid(struct: { cards: Card[][], count: number[] }): boolean {
 
-    if (struct.cards.length !== 1) return false;
+    if (struct.cards.length !== 1) {return false;}
 
     const cards : Card[] = struct.cards[0];
     const count : number = struct.count[0];
 
-    if (cards.length === 0 || count === 0) return false;
-    if (count === 1 && cards.length > 1) return false; // if single, must be only 1 card
+    if (cards.length === 0 || count === 0) {return false;}
+    if (count === 1 && cards.length > 1) {return false;} // if single, must be only 1 card
 
     return true;
 }
@@ -410,18 +410,18 @@ function isTrickValid(lead: number[], play: TrickUnit[], hand: TrickUnit[], trum
         // console.log("Play Max:", play_max);
         // console.log("Hand Max:", hand_max);
         while (lead[i] > 0){
-            if (lead[i] === 0) break;
-            while (hand_idx > 0 && hand_max[hand_idx] === 0) hand_idx--;
+            if (lead[i] === 0) {break;}
+            while (hand_idx > 0 && hand_max[hand_idx] === 0) {hand_idx--;}
             if (hand_idx <= 0) {
                 const play_map : Map<string, boolean> = new Map<string, boolean>();
-                for (const unit of play) play_map.set(cardKey(unit.card), true);
-                for (const unit of hand) if (!play_map.get(cardKey(unit.card))) return false; // if you have a card in the play, must be able to play it
+                for (const unit of play) {play_map.set(cardKey(unit.card), true);}
+                for (const unit of hand) {if (!play_map.get(cardKey(unit.card))) {return false;}} // if you have a card in the play, must be able to play it
                 return true;
             }
-            while (play_idx > 0 && play_max[play_idx] === 0) play_idx--;
-            if (play_idx <= 0) return false; // still more tricks to play
+            while (play_idx > 0 && play_max[play_idx] === 0) {play_idx--;}
+            if (play_idx <= 0) {return false;} // still more tricks to play
             const num : number = Math.min(lead[i], hand_idx);
-            if (play_idx < num) return false;
+            if (play_idx < num) {return false;}
             lead[i] -= num;
             play_max[play_idx]--; play_max[play_idx - num]++;
             hand_max[hand_idx]--; hand_max[hand_idx - num]++;
@@ -444,18 +444,18 @@ function isPlayPossible(lead: number[][], iplay: IPlay, ilead: IPlay, ihand: IHa
     // console.log("Hand Tricks:", hand_tricks);
     // console.log("Play Tricks:", play_tricks);
 
-    if (play_tricks.suit_count < Math.min(hand_tricks.suit_count, iplay.play.cards.length)) return false;
+    if (play_tricks.suit_count < Math.min(hand_tricks.suit_count, iplay.play.cards.length)) {return false;}
 
     for (let i = lead.length - 1; i >= 0; i--) {
-        for (const card of lead[i]) pos.push(card);
-        pos.sort((a, b) => { // sort greatest to least
-            return b - a;
-        });
+        for (const card of lead[i]) {pos.push(card);}
+        pos.sort((a, b) =>  // sort greatest to least
+             b - a
+        );
         // pop of zeroes (optional)
-        while (pos.length > 0 && pos[pos.length - 1] === 0) pos.pop();
-        if (pos.length === 0) continue;
+        while (pos.length > 0 && pos[pos.length - 1] === 0) {pos.pop();}
+        if (pos.length === 0) {continue;}
         // console.log("Possible Lead:", pos);
-        if (!isTrickValid(pos, getTrickUnits(play_tricks.tricks, i), getTrickUnits(hand_tricks.tricks, i), trump)) return false;
+        if (!isTrickValid(pos, getTrickUnits(play_tricks.tricks, i), getTrickUnits(hand_tricks.tricks, i), trump)) {return false;}
     }
 
     return true;
@@ -464,20 +464,20 @@ function isPlayPossible(lead: number[][], iplay: IPlay, ilead: IPlay, ihand: IHa
 // check if play is valid given current hand and lead play (assume lead is a valid play)
 export function isPlayValid(iplay: IPlay, ilead: IPlay, ihand: IHand, trump: Trump): boolean {
 
-    if (!isSubset(iplay, ihand)) return false;
+    if (!isSubset(iplay, ihand)) {return false;}
 
     // get lead play struct
     const lead_struct = ilead.struct;
     const play_struct = iplay.struct;
 
-    if (!isPlayStructValid(lead_struct)) return isPlayStructValid(play_struct); // must be valid play struct
-    if (iplay.play.cards.length !== ilead.play.cards.length) return false; // must be same amount of cards
+    if (!isPlayStructValid(lead_struct)) {return isPlayStructValid(play_struct);} // must be valid play struct
+    if (iplay.play.cards.length !== ilead.play.cards.length) {return false;} // must be same amount of cards
 
     const n : number = lead_struct.cards[0].length;
     const m : number = lead_struct.count[0];
 
     const lead : number[][] = [];
-    while (lead.length <= m) lead.push([]);
+    while (lead.length <= m) {lead.push([]);}
     lead[m].push(n);
 
     return isPlayPossible(lead, iplay, ilead, ihand, trump);
@@ -495,23 +495,23 @@ function isFormatted(iplayA: IPlay, iplayB: IPlay): boolean {
     const struct_a_simp : number[][] = [];
     const struct_b_simp : number[][] = [];
 
-    for (let i = 0; i < struct_a.count.length; i++) struct_a_simp.push([struct_a.cards[i].length, struct_a.count[i]]);
-    for (let i = 0; i < struct_b.count.length; i++) struct_b_simp.push([struct_b.cards[i].length, struct_b.count[i]]);
+    for (let i = 0; i < struct_a.count.length; i++) {struct_a_simp.push([struct_a.cards[i].length, struct_a.count[i]]);}
+    for (let i = 0; i < struct_b.count.length; i++) {struct_b_simp.push([struct_b.cards[i].length, struct_b.count[i]]);}
 
     struct_a_simp.sort((a, b) => {
-        if (a[0] === b[0]) return a[1] - b[1];
+        if (a[0] === b[0]) {return a[1] - b[1];}
         return a[0] - b[0];
     });
     struct_b_simp.sort((a, b) => {
-        if (a[0] === b[0]) return a[1] - b[1];
+        if (a[0] === b[0]) {return a[1] - b[1];}
         return a[0] - b[0];
     });
 
-    if (struct_a_simp.length !== struct_b_simp.length) return false;
+    if (struct_a_simp.length !== struct_b_simp.length) {return false;}
 
     for (let i = 0; i < struct_b_simp.length; i++) {
-        if (struct_b_simp[i][0] !== struct_a_simp[i][0]) return false;
-        if (struct_b_simp[i][1] !== struct_a_simp[i][1]) return false;
+        if (struct_b_simp[i][0] !== struct_a_simp[i][0]) {return false;}
+        if (struct_b_simp[i][1] !== struct_a_simp[i][1]) {return false;}
     }
 
     return true;
@@ -520,13 +520,13 @@ function isFormatted(iplayA: IPlay, iplayB: IPlay): boolean {
 //check if play_a "kills" play_b
 export function isPlayBigger(iplayA: IPlay, iplayB: IPlay, trump: Trump): boolean { // assumes same kind of play, both plays are valid
 
-    if (iplayB.play.cards.length === 0) return true; // if no cards played, any play is bigger
+    if (iplayB.play.cards.length === 0) {return true;} // if no cards played, any play is bigger
 
     // console.log("Play A:", playToString(iplayA.play));
     // console.log("Play B:", playToString(iplayB.play));
-    if (!isFormatted(iplayA, iplayB)) return false;
+    if (!isFormatted(iplayA, iplayB)) {return false;}
 
-    for (let i = iplayB.play.cards.length - 1; i >= 0; i--) if (!isCardBigger(iplayA.play.cards[i], iplayB.play.cards[i], trump)) return false;
+    for (let i = iplayB.play.cards.length - 1; i >= 0; i--) {if (!isCardBigger(iplayA.play.cards[i], iplayB.play.cards[i], trump)) {return false;}}
     
     return true;
 }
@@ -562,7 +562,7 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
                 lst = null;
                 // console.log("Unsame");
             } else if (count != m || !lst || (lst && !isCardNext(lst, card, trump))) {
-                if (!isCardBigger(card, lead, trump)) break;
+                if (!isCardBigger(card, lead, trump)) {break;}
                 cnt = 1;
                 lst = card;
                 // console.log("New Sequence");
@@ -571,7 +571,7 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
                 lst = card;
                 // console.log("Add Sequence");
             }
-            if (cnt >= n) return true;
+            if (cnt >= n) {return true;}
         }
     }
 
@@ -582,9 +582,9 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
 // check if shuai is valid given lead or absence
 export function isShuaiValid(iplay: IPlay, ilead: IPlay, ihand: IHand, hands: Hand[], trump: Trump): boolean {
 
-    if (!isAllMainLine(iplay.play.cards, trump) && !isAllSameSuit(iplay.play.cards)) return false; // must be all main line cards or all same suit cards
+    if (!isAllMainLine(iplay.play.cards, trump) && !isAllSameSuit(iplay.play.cards)) {return false;} // must be all main line cards or all same suit cards
 
-    if (!isSubset(iplay, ihand)) return false; // must be subset of hand
+    if (!isSubset(iplay, ihand)) {return false;} // must be subset of hand
 
     if (ilead.play.cards.length === 0){ // initial shuai
 
@@ -607,7 +607,7 @@ export function isShuaiValid(iplay: IPlay, ilead: IPlay, ihand: IHand, hands: Ha
         for (let i = 0; i < lead_struct.cards.length; i++){
             const cards : Card[] = lead_struct.cards[i];
             const count : number = lead_struct.count[i];
-            while (lead.length <= count) lead.push([]);
+            while (lead.length <= count) {lead.push([]);}
             lead[count].push(cards.length);
         }
 

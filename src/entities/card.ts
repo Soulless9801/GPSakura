@@ -10,7 +10,7 @@ export interface Card {
 
 // check if card is valid
 export function validateCard(card: Card): boolean {
-    if (card.suit !== "jokers") return card.rank >= 2 && card.rank <= 14;
+    if (card.suit !== "jokers") {return card.rank >= 2 && card.rank <= 14;}
     return card.rank >= 1 && card.rank <= 2; // 1 = small joker, 2 = big joker
 }
 
@@ -28,17 +28,17 @@ export const PLAY_SUITS: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
 export const RANKS: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 
 export function isRed(card: Card): boolean {
-    if (card.suit === "jokers") return card.rank === 2;
+    if (card.suit === "jokers") {return card.rank === 2;}
     return card.suit === "hearts" || card.suit === "diamonds";
 }
 
 export function rankLabel(card: Card): string {
-    if (card.suit === "jokers") return card.rank === 2 ? "大" : "小";
+    if (card.suit === "jokers") {return card.rank === 2 ? "大" : "小";}
     return RANK_LABEL[card.rank] || String(card.rank);
 }
 
 export function cardName(card: Card): string {
-    if (card.suit === "jokers") return card.rank === 2 ? "big joker" : "small joker";
+    if (card.suit === "jokers") {return card.rank === 2 ? "big joker" : "small joker";}
     return `${rankLabel(card)} of ${card.suit}`;
 }
 
@@ -54,9 +54,9 @@ export class Deck {
         this.cards = []
         for (const suit of ["spades", "hearts", "diamonds", "clubs", "jokers"] as Suit[]) {
             for (let rank = 1; rank <= 14; rank++){
-                const card : Card = { suit: suit, rank: rank as Rank };
-                if (!validateCard(card)) continue;
-                for (let d = 0; d < decks; d++) this.cards.push(card);
+                const card : Card = { suit, rank: rank as Rank };
+                if (!validateCard(card)) {continue;}
+                for (let d = 0; d < decks; d++) {this.cards.push(card);}
             }
         }
         if (seed !== undefined) {
@@ -76,7 +76,7 @@ export class Deck {
 
     draw(): Card | null {
         // console.log(`Deck has ${this.cards.length} cards left.`);
-        if (this.cards.length === 0) return null;
+        if (this.cards.length === 0) {return null;}
         return this.cards.pop() || null;
     }
 

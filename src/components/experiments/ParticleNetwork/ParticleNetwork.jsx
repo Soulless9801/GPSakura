@@ -31,9 +31,9 @@ export default memo(function ParticleNetwork({
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
-        if (!canvas || !wrapper) return;
-        if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
-        if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
+        if (!canvas || !wrapper) {return;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
 
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;
@@ -77,18 +77,18 @@ export default memo(function ParticleNetwork({
             transitionProgressRef.current = 0;
         };
         window.addEventListener("themeStorage", onStorage);
-        return () => window.removeEventListener("themeStorage", onStorage);
+        return () => { window.removeEventListener("themeStorage", onStorage); };
     }, []);
 
     // Update Particle
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas) {return;}
 
         const desired = Math.max(0, Math.floor(numParticles));
         const current = particlesRef.current.length;
-        for (let p of particlesRef.current) {
+        for (const p of particlesRef.current) {
             p.addFreeze();
             p.radius = particleRadius;
             p.s = Math.random() * speed;
@@ -106,7 +106,7 @@ export default memo(function ParticleNetwork({
     // Freeze Period
 
     useEffect(() => {
-        for (let p of particlesRef.current) p.addFreeze();
+        for (const p of particlesRef.current) {p.addFreeze();}
     }, [pointerRadius, pointerStrength]);
 
     // Listeners
@@ -115,7 +115,7 @@ export default memo(function ParticleNetwork({
     useEffect(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
-        if (!canvas || !wrapper) return;
+        if (!canvas || !wrapper) {return;}
 
         canvas.style.pointerEvents = pointerEvents ? "auto" : "none";
         canvas.setAttribute("aria-hidden", "true");
@@ -127,7 +127,7 @@ export default memo(function ParticleNetwork({
         const debouncedResize = debounce(resizeCanvas, 150);
         
         const handlePointerMove = (ev) => {
-        if (!interactive) return;
+        if (!interactive) {return;}
             const rect = wrapper.getBoundingClientRect();
             pointerRef.current.x = ev.clientX - rect.left;
             pointerRef.current.y = ev.clientY - rect.top;
@@ -162,7 +162,7 @@ export default memo(function ParticleNetwork({
     useEffect(() =>{
 
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas) {return;}
 
         const ctx = canvas.getContext("2d");
 
@@ -241,7 +241,7 @@ export default memo(function ParticleNetwork({
                 const gx = Math.min(gridCols - 1, Math.max(0, Math.floor(p.x / gridSize)));
                 const gy = Math.min(gridRows - 1, Math.max(0, Math.floor(p.y / gridSize)));
                 const idx = gy * gridCols + gx;
-                if (!grid[idx]) grid[idx] = [];
+                if (!grid[idx]) {grid[idx] = [];}
                 grid[idx].push(p);
             }
 
@@ -258,9 +258,9 @@ export default memo(function ParticleNetwork({
                         if (nx >= 0 && nx < gridCols && ny >= 0 && ny < gridRows) {
                             const cellIdx = ny * gridCols + nx;
                             const cell = grid[cellIdx];
-                            if (!cell) continue;
+                            if (!cell) {continue;}
                             for (const other of cell) {
-                                if (p === other) continue;
+                                if (p === other) {continue;}
                                 const dx2 = p.x - other.x;
                                 const dy2 = p.y - other.y;
                                 const dist = Math.hypot(dx2, dy2);
@@ -291,7 +291,7 @@ export default memo(function ParticleNetwork({
         rafRef.current = requestAnimationFrame(run);
 
         return () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
         };
     }, [interactive, pointerEvents, colorTransition, connectionDistance, pointerRadius, pointerStrength, particleRadius, numParticles, speed, maxAccel]);
 

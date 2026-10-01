@@ -10,9 +10,9 @@ export default function FreqGuesser({signal, width, height, components, classNam
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
-        if (!canvas || !wrapper) return;
-        if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
-        if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
+        if (!canvas || !wrapper) {return;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
 
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;
@@ -51,13 +51,13 @@ export default function FreqGuesser({signal, width, height, components, classNam
 			transitionProgressRef.current = 0;
 		};
 		window.addEventListener("themeStorage", onStorage);
-		return () => window.removeEventListener("themeStorage", onStorage);
+		return () => { window.removeEventListener("themeStorage", onStorage); };
 
 	}, [readColor]);
 
     const getCTX = () => {
         const canvas = canvasRef.current;
-        if (!canvas) return null;
+        if (!canvas) {return null;}
 
         const ctx = canvas.getContext("2d");
 
@@ -132,8 +132,8 @@ export default function FreqGuesser({signal, width, height, components, classNam
         signal.forEach((v, i) => {
             const x = (i / (signal.length - 1)) * W;
             const y = midY - (v / max) * (H * 0.4);
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
+            if (i === 0) {ctx.moveTo(x, y);}
+            else {ctx.lineTo(x, y);}
         });
 
         ctx.stroke();
@@ -199,7 +199,7 @@ export default function FreqGuesser({signal, width, height, components, classNam
         colorRafRef.current = requestAnimationFrame(loop);
 
         return () => {
-            if (colorRafRef.current) cancelAnimationFrame(colorRafRef.current);
+            if (colorRafRef.current) {cancelAnimationFrame(colorRafRef.current);}
         };
 
     }, [colorTransition]);

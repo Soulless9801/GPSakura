@@ -23,10 +23,10 @@ export default function Card({ card, pos = -1, className = "", onClick = null }:
 	const handleClick = useCallback(() => {
 		const nactive = !active;
 		setActive(nactive);
-		if (onClick && card) onClick(pos, nactive);
+		if (onClick && card) {onClick(pos, nactive);}
 	}, [active, onClick, card]);
 
-	if (!card) return null;
+	if (!card) {return null;}
 
 	const red = CardModule.isRed(card);
 

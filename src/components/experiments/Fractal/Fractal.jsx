@@ -26,9 +26,9 @@ export default memo(function Fractal({
 	const resizeCanvas = useCallback(() => {
 		const canvas = canvasRef.current;
 		const wrapper = wrapperRef.current;
-		if (!canvas || !wrapper) return;
-		if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
-		if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
+		if (!canvas || !wrapper) {return;}
+		if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
+		if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
 
 		const dpr = window.devicePixelRatio || 1;
 		const cssW = canvas.clientWidth || wrapper.clientWidth;
@@ -67,13 +67,13 @@ export default memo(function Fractal({
 			transitionProgressRef.current = 0;
 		};
 		window.addEventListener("themeStorage", onStorage);
-		return () => window.removeEventListener("themeStorage", onStorage);
+		return () => { window.removeEventListener("themeStorage", onStorage); };
 
 	}, [readColor]);
 
 	const getCTX = () => {
         const canvas = canvasRef.current;
-        if (!canvas) return null;
+        if (!canvas) {return null;}
 
         const ctx = canvas.getContext("2d");
 
@@ -168,7 +168,7 @@ export default memo(function Fractal({
 		const B = { x: cx + size / 2, y: cy + (Math.sqrt(3) / 6) * size };
 		const C = { x: cx, y: cy - (Math.sqrt(3) / 3) * size };
 
-		let p = { x: (A.x + B.x + C.x) / 3, y: (A.y + B.y + C.y) / 3 };
+		const p = { x: (A.x + B.x + C.x) / 3, y: (A.y + B.y + C.y) / 3 };
 
 		const pointsPerFrame = speed;
 		const pointSize = lineWidth;
@@ -286,10 +286,10 @@ export default memo(function Fractal({
 		let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
 
 		for (const [px, py] of points) {
-			if (px < minX) minX = px;
-			if (px > maxX) maxX = px;
-			if (py < minY) minY = py;
-			if (py > maxY) maxY = py;
+			if (px < minX) {minX = px;}
+			if (px > maxX) {maxX = px;}
+			if (py < minY) {minY = py;}
+			if (py > maxY) {maxY = py;}
 		}
 
 		const fractalWidth = maxX - minX;
@@ -338,7 +338,7 @@ export default memo(function Fractal({
 			const sq = queue.shift();
 			squares.push(sq);
 
-			if (sq.d >= depth) continue;
+			if (sq.d >= depth) {continue;}
 
 			const { x, y, size, angle, d } = sq;
 
@@ -401,10 +401,10 @@ export default memo(function Fractal({
 			];
 
 			for (const [px, py] of pts) {
-				if (px < minX) minX = px;
-				if (px > maxX) maxX = px;
-				if (py < minY) minY = py;
-				if (py > maxY) maxY = py;
+				if (px < minX) {minX = px;}
+				if (px > maxX) {maxX = px;}
+				if (py < minY) {minY = py;}
+				if (py > maxY) {maxY = py;}
 			}
 		}
 
@@ -436,7 +436,7 @@ export default memo(function Fractal({
 			ctx.fill();
 		};
 
-		for (const sq of squares) drawSquare(sq);
+		for (const sq of squares) {drawSquare(sq);}
 
 		fillFractal();
 
@@ -446,7 +446,7 @@ export default memo(function Fractal({
 	useEffect(() => {
 		const cut = () => {
 
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+			if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 
 			switch (type) {
 				case "koch": {
@@ -487,7 +487,7 @@ export default memo(function Fractal({
 		return () => {
 			debouncedResize.cancel();
 			window.removeEventListener("resize", debouncedResize);
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+			if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 		};
 
 	}, [type, drawSierpinski, drawKoch, drawFern, drawDragon, drawPythagoras, resizeCanvas]);
@@ -524,7 +524,7 @@ export default memo(function Fractal({
 		colorRafRef.current = requestAnimationFrame(loop);
 
 		return () => {
-			if (colorRafRef.current) cancelAnimationFrame(colorRafRef.current);
+			if (colorRafRef.current) {cancelAnimationFrame(colorRafRef.current);}
 		};
 
 	}, [colorTransition]);

@@ -15,7 +15,7 @@ export default function ThreeD() {
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas) {return;}
 
         const scene = new THREE.Scene();
         
@@ -85,14 +85,14 @@ export default function ThreeD() {
     }, []);
 
     useEffect(() => {
-        if (!materialRef.current) return;
+        if (!materialRef.current) {return;}
         materialRef.current.color.set(color);
     }, [color]);
 
     return (
         <div className="threed-container d-flex flex-column flex-md-row align-items-center align-items-md-start gap-3">
             <canvas ref={canvasRef} className="threed-canvas" />
-            <ColorSelector value={color} onChange={(newColor) => setColor(newColor)} />
+            <ColorSelector value={color} onChange={(newColor) => { setColor(newColor); }} />
         </div>
     );
 }
@@ -117,7 +117,7 @@ export function Chaos3D({
     useEffect(() => {
         const canvas = canvasRef.current;
 
-        if (!canvas || !attractor) return;
+        if (!canvas || !attractor) {return;}
 
         const scene = new THREE.Scene();
 
@@ -197,7 +197,7 @@ export function Chaos3D({
 
         function drawA() {
             const active = Math.min(count_points, max_points);
-            if (active <= 0) return;
+            if (active <= 0) {return;}
 
             if (active < max_points) {
                 geometry_a.setDrawRange(0, active);
@@ -210,7 +210,7 @@ export function Chaos3D({
 
         function drawB() {
             const active = Math.min(count_points, max_points);
-            if (active <= 0) return;
+            if (active <= 0) {return;}
 
             if (active < max_points) {
                 geometry_b.setDrawRange(0, 0);
@@ -236,7 +236,7 @@ export function Chaos3D({
             colors.set([current_color.r, current_color.g, current_color.b], write_offset);
 
             write_idx = (write_idx + 1) % max_points;
-            if (count_points < max_points) count_points += 1;
+            if (count_points < max_points) {count_points += 1;}
 
             total_points += 1;
         }
@@ -245,7 +245,7 @@ export function Chaos3D({
             frame = requestAnimationFrame(animate);
 
             const steps_per_frame = Math.max(1, Math.floor(1000 * speed));
-            for (let i = 0; i < steps_per_frame; i += 1) advanceAttractor();
+            for (let i = 0; i < steps_per_frame; i += 1) {advanceAttractor();}
 
             position_attr.needsUpdate = true;
             color_attr.needsUpdate = true;
@@ -274,13 +274,13 @@ export function Chaos3D({
 
     useEffect(() => {
         startColorValueRef.current = startColor;
-        if (!startColorRef.current) return;
+        if (!startColorRef.current) {return;}
         startColorRef.current.set(startColor);
     }, [startColor]);
 
     useEffect(() => {
         endColorValueRef.current = endColor;
-        if (!endColorRef.current) return;
+        if (!endColorRef.current) {return;}
         endColorRef.current.set(endColor);
     }, [endColor]);
 

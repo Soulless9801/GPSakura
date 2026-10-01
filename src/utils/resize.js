@@ -1,5 +1,5 @@
 export function convertToPixels(input, context = document.body) {
-    if (typeof input === "number") return input; // already px
+    if (typeof input === "number") {return input;} // already px
 
     const value = parseFloat(input);
     const unit = input.replace(value, "").trim();

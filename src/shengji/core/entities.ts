@@ -1,4 +1,4 @@
-import * as CardModule from '/src/entities/card';
+import type * as CardModule from '/src/entities/card';
 
 export type Suit = CardModule.Suit;
 export type Rank = CardModule.Rank;
@@ -15,8 +15,8 @@ export interface Trump {
 }
 
 export function pointValue(card: Card): number {
-    if (card.rank === 5) return 5;
-    if (card.rank === 10 || card.rank === 13) return 10;
+    if (card.rank === 5) {return 5;}
+    if (card.rank === 10 || card.rank === 13) {return 10;}
     return 0;
 }
 
@@ -46,14 +46,14 @@ export class Hand {
 
     addCard(card: Card): void {
         const suitMap = this.cards.get(card.suit);
-        if (!suitMap) return; // should never happen
+        if (!suitMap) {return;} // should never happen
         const prev = suitMap.get(card.rank) || 0;
         suitMap.set(card.rank, prev + 1);
     }
 
     removeCard(card: Card): void {
         const suitMap = this.cards.get(card.suit);
-        if (!suitMap) return; // should never happen
+        if (!suitMap) {return;} // should never happen
         const prev = suitMap.get(card.rank) || 0;
         suitMap.set(card.rank, Math.max(0, prev - 1));
     }

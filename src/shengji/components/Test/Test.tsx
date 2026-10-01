@@ -4,7 +4,8 @@ import * as SJCore from '/src/shengji/core/entities';
 import * as SJComp from '/src/shengji/core/comparison';
 import * as SJConv from '/src/shengji/core/convert';
 
-import Hand, { HandRef } from "/src/components/tools/Hand/Hand";
+import type { HandRef } from "/src/components/tools/Hand/Hand";
+import Hand from "/src/components/tools/Hand/Hand";
 
 import "./Test.css";
 
@@ -29,7 +30,7 @@ export default function Test() {
         <div className="sjTest">
             <div className="sjTestForm">
                 <button onClick={newTestCase}>Generate Testcase</button>
-                <button onClick={() => setTestCase(null)}>Clear Testcase</button>
+                <button onClick={() => { setTestCase(null); }}>Clear Testcase</button>
             </div>
             {testCase && (
                 <div>

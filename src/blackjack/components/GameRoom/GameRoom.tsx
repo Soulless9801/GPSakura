@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 
-import { clientRequest, GameRequest } from "/src/services/request";
+import type { GameRequest } from "/src/services/request";
+import { clientRequest } from "/src/services/request";
 
 import { deserialize } from "/src/utils/serial";
 
-import { Identity, getIdentity } from "/src/utils/verify";
+import type { Identity} from "/src/utils/verify";
+import { getIdentity } from "/src/utils/verify";
 
 import * as BJCore from "/src/blackjack/core/entities";
 
@@ -34,16 +36,16 @@ const gen = async () => {
             "Content-Type": "application/json",
         },
     });
-    if (!res || !res.ok) return null;
+    if (!res || !res.ok) {return null;}
 
     const data = await res.text();
-    if (!data) return null;
+    if (!data) {return null;}
 
     const des_data = deserialize(data);
-    if (!des_data || typeof des_data !== "object") return null;
+    if (!des_data || typeof des_data !== "object") {return null;}
 
     const ret = des_data as { player_id: string };
-    if (!ret || !ret.player_id) return null;
+    if (!ret || !ret.player_id) {return null;}
 
     return ret.player_id;
 }
@@ -57,7 +59,7 @@ export default function GameRoom() {
     useEffect(() => {
         const identify = async () => {
             await getIdentity("create-session", "bjClientId", "bjSignature", gen, false).then((id) => {
-                if (!id) return;
+                if (!id) {return;}
                 setIdentity(id);
             });
         }
@@ -77,7 +79,7 @@ export default function GameRoom() {
     async function getMoney() {
         const res = await BJRequest({
             action: "money",
-            identity: identity,
+            identity,
             roomId: gameId,
         });
 
@@ -85,14 +87,14 @@ export default function GameRoom() {
     }
 
     useEffect(() => {
-        if (!identity) return;
+        if (!identity) {return;}
         getMoney();
     }, [identity]);
 
     async function refillMoney() {
         const res = await BJRequest({
             action: "refill",
-            identity: identity,
+            identity,
             roomId: gameId,
         });
 
@@ -102,7 +104,7 @@ export default function GameRoom() {
     async function startGame() {
         const res = await BJRequest({
             action: "start",
-            identity: identity,
+            identity,
             roomId: gameId,
             payload: {
                 bet_amount: bet,
@@ -117,7 +119,7 @@ export default function GameRoom() {
     async function loadGame() {
         const res = await BJRequest({
             action: "load",
-            identity: identity,
+            identity,
             roomId: gameId,
         });
     
@@ -127,7 +129,7 @@ export default function GameRoom() {
     async function hit() {
         const res = await BJRequest({
             action: "hit",
-            identity: identity,
+            identity,
             roomId: gameId,
         });
     
@@ -137,7 +139,7 @@ export default function GameRoom() {
     async function stand() {
         const res = await BJRequest({
             action: "stand",
-            identity: identity,
+            identity,
             roomId: gameId,
         });
     
@@ -146,10 +148,10 @@ export default function GameRoom() {
 
     const setJson = useCallback((data: any) => {
 
-        if (!data) return;
+        if (!data) {return;}
 
         const des_data = deserialize(data);
-        if (!des_data || typeof des_data !== "object") return;
+        if (!des_data || typeof des_data !== "object") {return;}
 
         const ret = des_data as { 
             id?: number,
@@ -160,16 +162,16 @@ export default function GameRoom() {
             status?: string 
         };
 
-        if (!ret) return;
+        if (!ret) {return;}
 
         // console.log("GameRoom setJson:", ret);
 
-        if (ret.money !== undefined) setMoney(ret.money);
-        if (ret.over) setStatus(ret.status || null);
-        else setStatus(null);
+        if (ret.money !== undefined) {setMoney(ret.money);}
+        if (ret.over) {setStatus(ret.status || null);}
+        else {setStatus(null);}
         setGameId(String(ret.id || gameId));
-        if (ret.player_cards) setPlayerCards(BJCore.Hand.deserialize(ret.player_cards));
-        if (ret.dealer_cards) setDealerCards(BJCore.Hand.deserialize(ret.dealer_cards));
+        if (ret.player_cards) {setPlayerCards(BJCore.Hand.deserialize(ret.player_cards));}
+        if (ret.dealer_cards) {setDealerCards(BJCore.Hand.deserialize(ret.dealer_cards));}
     }, [gameId]);
 
     return (
@@ -177,7 +179,7 @@ export default function GameRoom() {
             <div className="bjg-labels">
                 <p>PlayerID: {identity?.clientId}</p>
                 <p>GameID: {gameId}</p>
-                <p style={{ color: `${status === "player" ? "green" : status === "dealer" ? "red" : "var(--primary-color)"}` }}>Winner: {status || "None"}</p>
+                <p style={{ color: status === "player" ? "green" : status === "dealer" ? "red" : "var(--primary-color)" }}>Winner: {status || "None"}</p>
             </div>
             <div className="bjg-hands">
                 <div className="bjg-hand">

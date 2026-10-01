@@ -92,7 +92,7 @@ export class Game {
     static deserializeGame(game: string): Game | null {
 
         const des : any = deserialize(game);
-        if (!des || typeof des !== "object") return null;
+        if (!des || typeof des !== "object") {return null;}
 
         const { state, hands, deck, dipai } = des as { 
             state: GameState, 
@@ -103,10 +103,10 @@ export class Game {
 
         // console.log(state, hands, deck, dipai);
 
-        if (!state || !hands || !deck || !dipai) return null;
+        if (!state || !hands || !deck || !dipai) {return null;}
 
         const hands_true = new Map<string, Hand>();
-        for (const [key, value] of hands.entries()) hands_true.set(key, SJCore.Hand.deserialize(value));
+        for (const [key, value] of hands.entries()) {hands_true.set(key, SJCore.Hand.deserialize(value));}
 
         // const rawHands = deserialize(hands) as Map<string, { cards: Map<Suit, Map<Rank, number>> }>;
         return new Game(state, hands_true, SJCore.Deck.deserialize(deck), dipai);
@@ -131,13 +131,13 @@ export class Game {
 
     initializeGame(players: string[], users: string[]) {
 
-        if (players.length < Game.minPlayers || players.length % 2 === 1 || players.length > Game.maxPlayers) return null;
+        if (players.length < Game.minPlayers || players.length % 2 === 1 || players.length > Game.maxPlayers) {return null;}
     
         this.state = {
             // deck: SJCore.initializeDeck(players.length / 2),
             round: 1,
 
-            players: players,
+            players,
             info: new Map(players.map((p, i) => [p, { index: i, username: users[i], play: null }])),
             atk: 0,
 
@@ -177,7 +177,7 @@ export class Game {
 
     changeUsername(player: string, user: string) {
         const playerInfo = this.state.info.get(player);
-        if (!playerInfo) return false;
+        if (!playerInfo) {return false;}
         playerInfo.username = user;
         return true;
     }
@@ -195,7 +195,7 @@ export class Game {
     }
 
     speedDraw() {
-        if (this.state.over || !this.state.draw) return false;
+        if (this.state.over || !this.state.draw) {return false;}
 
         while (this.state.draw) {
             const player = this.state.players[this.state.turn];
@@ -207,19 +207,19 @@ export class Game {
 
     drawCard(player: string) : boolean {
 
-        if (this.state.over || !this.state.draw) return false; // not drawing phase
+        if (this.state.over || !this.state.draw) {return false;} // not drawing phase
         const playerInfo = this.state.info.get(player);
-        if (!playerInfo || playerInfo.index !== this.state.turn) return false; // wait your turn lil bro
+        if (!playerInfo || playerInfo.index !== this.state.turn) {return false;} // wait your turn lil bro
 
         const card = this.deck.draw();
-        if (!card) return false; // deck is empty, should never happen
+        if (!card) {return false;} // deck is empty, should never happen
 
         const hand = this.hands.get(player);
-        if (!hand) return false; // should never happen
+        if (!hand) {return false;} // should never happen
 
         hand.addCard(card);
 
-        if (this.state.turn === 0) this.state.count++;
+        if (this.state.turn === 0) {this.state.count++;}
 
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
 
@@ -236,23 +236,23 @@ export class Game {
         this.state.trump.suit = suit;
         this.state.whodec = idx;
         this.state.declare = num;
-        if (this.state.round === 1) this.state.zhuang = idx; // 当庄
+        if (this.state.round === 1) {this.state.zhuang = idx;} // 当庄
         return true;
     }
 
     callTrump(player: string, trump: Trump) : boolean {
 
-        if (this.state.over || !this.state.draw || !trump.suit) return false;
+        if (this.state.over || !this.state.draw || !trump.suit) {return false;}
 
         const playerInfo = this.state.info.get(player);
-        if (!playerInfo) return false;
+        if (!playerInfo) {return false;}
 
         // console.log(`Player ${player} calls trump ${SJCore.trumpToString(trump)}`);
 
         // console.log(`Player index: ${idx}`);
 
         const hand = this.hands.get(player);
-        if (!hand) return false; // should never happen
+        if (!hand) {return false;} // should never happen
 
         if (trump.suit === "jokers"){ // joker declaration
             const joker_s : number = hand.countCard({ suit: "jokers", rank: 1 });
@@ -266,26 +266,26 @@ export class Game {
             return false;
         }
         
-        if (this.state.trump.rank !== trump.rank) return false; // only call same rank
+        if (this.state.trump.rank !== trump.rank) {return false;} // only call same rank
 
         const cnt: number = hand.countCard({ suit: trump.suit, rank: trump.rank });
-        if (cnt > this.state.declare) return this.setTrump(playerInfo.index, cnt, trump.suit); // regular declaration
+        if (cnt > this.state.declare) {return this.setTrump(playerInfo.index, cnt, trump.suit);} // regular declaration
 
         return false;
     }
 
     exchangeDipai(player: string, give: Card[], receive: Card[]) : boolean {
         
-        if (this.state.over || !this.state.dip) return false;
+        if (this.state.over || !this.state.dip) {return false;}
         const playerInfo = this.state.info.get(player);
-        if (!playerInfo || playerInfo.index !== this.state.turn) return false;
+        if (!playerInfo || playerInfo.index !== this.state.turn) {return false;}
 
-        if (give.length !== receive.length) return false; // must exchange same number of cards
+        if (give.length !== receive.length) {return false;} // must exchange same number of cards
 
         // console.log(give, receive); 
 
         const hand = this.hands.get(player);
-        if (!hand) return false; // should never happen
+        if (!hand) {return false;} // should never happen
 
         const igive = SJComp.playToInfo({ cards: give, suit: null }, this.state.trump);
         const ihand = SJComp.handToInfo(hand, this.state.trump);
@@ -293,8 +293,8 @@ export class Game {
         const ireceive = SJComp.playToInfo({ cards: receive, suit: null }, this.state.trump);
         const idipai = SJComp.playToInfo({ cards: this.dipai, suit: null }, this.state.trump);
 
-        if (!SJComp.isSubset(igive, ihand)) return false; // must give cards in hand
-        if (!SJComp.isSubset(ireceive, idipai.ihand)) return false; // must receive cards in dipai
+        if (!SJComp.isSubset(igive, ihand)) {return false;} // must give cards in hand
+        if (!SJComp.isSubset(ireceive, idipai.ihand)) {return false;} // must receive cards in dipai
 
         for (const card of give){
             hand.removeCard(card);
@@ -315,23 +315,23 @@ export class Game {
 
     tryPlay(player: string, play: Play) : boolean {
 
-        if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
+        if (this.state.over || this.state.draw || this.state.dip) {return false;} // this.state is already over
         const playerInfo = this.state.info.get(player);
-        if (!playerInfo || playerInfo.index !== this.state.turn) return false;
+        if (!playerInfo || playerInfo.index !== this.state.turn) {return false;}
 
-        if (this.state.shuai) return this.tryShuai(player, play); // if currently shuai, try shuai first
+        if (this.state.shuai) {return this.tryShuai(player, play);} // if currently shuai, try shuai first
 
-        if (play.cards.length === 0) return false; // must play at least one card
+        if (play.cards.length === 0) {return false;} // must play at least one card
 
         const hand = this.hands.get(player);
-        if (!hand) return false; // should never happen
+        if (!hand) {return false;} // should never happen
 
         // console.log(hand);
 
         if (this.state.turn === this.state.chu) { // start of a new trick, reset plays
             for (const player of this.state.players){
                 const pInfo = this.state.info.get(player);
-                if (pInfo) pInfo.play = null;
+                if (pInfo) {pInfo.play = null;}
             }
         }
 
@@ -343,13 +343,13 @@ export class Game {
         const ilead : IPlay = SJComp.playToInfo(lead, this.state.trump);
         const ihand : IHand = SJComp.handToInfo(hand, this.state.trump);
 
-        if (!SJComp.isPlayValid(iplay, ilead, ihand, this.state.trump)) return false;
+        if (!SJComp.isPlayValid(iplay, ilead, ihand, this.state.trump)) {return false;}
 
         // console.log(`Player ${player} plays ${SJCore.playToString(play)}`);
 
         playerInfo.play = play;
 
-        if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) this.state.lead = playerInfo.index;
+        if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) {this.state.lead = playerInfo.index;}
 
         for (const card of play.cards) {
             hand.removeCard(card);
@@ -358,28 +358,28 @@ export class Game {
 
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
 
-        if (this.state.turn === this.state.chu) this.endTrick();
+        if (this.state.turn === this.state.chu) {this.endTrick();}
 
         return true;
     }
 
     tryShuai(player: string, play: Play) : boolean {
         
-        if (this.state.over || this.state.draw || this.state.dip) return false; // this.state is already over
+        if (this.state.over || this.state.draw || this.state.dip) {return false;} // this.state is already over
         const playerInfo = this.state.info.get(player);
-        if (!playerInfo || playerInfo.index !== this.state.turn) return false;
+        if (!playerInfo || playerInfo.index !== this.state.turn) {return false;}
 
         // console.log(hand);
 
-        if (play.cards.length === 0) return false; // must play at least one card
+        if (play.cards.length === 0) {return false;} // must play at least one card
 
         const hand = this.hands.get(player);
-        if (!hand) return false; // should never happen
+        if (!hand) {return false;} // should never happen
 
         if (this.state.turn === this.state.chu) {
             for (const player of this.state.players){
                 const pInfo = this.state.info.get(player);
-                if (pInfo) pInfo.play = null;
+                if (pInfo) {pInfo.play = null;}
             }
         }
 
@@ -388,7 +388,7 @@ export class Game {
         const hands : Hand[] = [];
         
         for (const [key, value] of this.hands){
-            if (key === player) continue;
+            if (key === player) {continue;}
             hands.push(value);
         }
 
@@ -398,13 +398,13 @@ export class Game {
         const ilead : IPlay = SJComp.playToInfo(lead, this.state.trump);
         const ihand : IHand = SJComp.handToInfo(hand, this.state.trump);
 
-        if (!SJComp.isShuaiValid(iplay, ilead, ihand, hands, this.state.trump)) return false;
+        if (!SJComp.isShuaiValid(iplay, ilead, ihand, hands, this.state.trump)) {return false;}
 
-        if (this.state.turn === this.state.chu) this.state.shuai = true;
+        if (this.state.turn === this.state.chu) {this.state.shuai = true;}
 
         playerInfo.play = play;
 
-        if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) this.state.lead = playerInfo.index;
+        if (SJComp.isPlayBigger(iplay, ilead, this.state.trump)) {this.state.lead = playerInfo.index;}
 
         for (const card of play.cards) {
             hand.removeCard(card);
@@ -413,7 +413,7 @@ export class Game {
 
         this.state.turn = (this.state.turn + 1) % this.state.players.length;
 
-        if (this.state.turn === this.state.chu) this.endTrick();
+        if (this.state.turn === this.state.chu) {this.endTrick();}
 
         return true;
     }
@@ -424,7 +424,7 @@ export class Game {
 
         const team: number = this.state.lead % 2;
         
-        if (team === this.state.atk) this.state.score += this.state.points; // attacking team wins the trick, add points to score
+        if (team === this.state.atk) {this.state.score += this.state.points;} // attacking team wins the trick, add points to score
 
         this.state.points = 0;
 
@@ -432,12 +432,12 @@ export class Game {
 
         this.state.count -= lead.cards.length;
 
-        if (this.state.count === 0) this.endRound(team === this.state.atk ? lead.cards.length * 2 : 0);
+        if (this.state.count === 0) {this.endRound(team === this.state.atk ? lead.cards.length * 2 : 0);}
 
         for (const player of this.state.players){
             const pInfo = this.state.info.get(player);
-            if (!pInfo) continue;
-            for (const card of pInfo?.play?.cards || []) this.state.discard.push(card);
+            if (!pInfo) {continue;}
+            for (const card of pInfo?.play?.cards || []) {this.state.discard.push(card);}
         }
 
         this.state.chu = this.state.lead; // winner of the trick starts the next trick
@@ -468,18 +468,18 @@ export class Game {
 
         if (this.state.score >= mult * 40) { // attacker win
             this.swapTeams();
-            if (this.state.score >= mult * 60) this.state.trump.rank++;
-            if (this.state.score >= mult * 80) this.state.trump.rank++;
-            if (this.state.score >= mult * 100) this.state.trump.rank++;
+            if (this.state.score >= mult * 60) {this.state.trump.rank++;}
+            if (this.state.score >= mult * 80) {this.state.trump.rank++;}
+            if (this.state.score >= mult * 100) {this.state.trump.rank++;}
             this.state.zhuang++;
         } else { // defender win
             this.state.trump.rank++;
-            if (this.state.score < mult * 20) this.state.trump.rank++;
-            if (this.state.score === 0) this.state.trump.rank++;
+            if (this.state.score < mult * 20) {this.state.trump.rank++;}
+            if (this.state.score === 0) {this.state.trump.rank++;}
             this.state.zhuang += 2;
         }
 
-        if (this.state.trump.rank > 14) this.endGame();
+        if (this.state.trump.rank > 14) {this.endGame();}
 
         this.state.round++;
 
@@ -489,7 +489,7 @@ export class Game {
 
         this.deck = new Deck(this.state.players.length / 2); // reset deck
 
-        for (const player of this.state.players) this.hands.set(player, new Hand()); // reset hands
+        for (const player of this.state.players) {this.hands.set(player, new Hand());} // reset hands
 
         this.dipai = [];
 
@@ -525,7 +525,7 @@ export class Game {
     
     getDipai(player: string) : Card[] | null {
 
-        if (this.state.players[this.state.zhuang] !== player) return null; // not allowed to view cards
+        if (this.state.players[this.state.zhuang] !== player) {return null;} // not allowed to view cards
         return this.dipai;
     }
 }

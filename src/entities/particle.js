@@ -5,7 +5,7 @@ function calc(coord, max, off, v){
     v = Number(v);
     coord -= off;
     coord %= (2 * max); 
-    if (coord < 0) coord = coord + 2 * max;
+    if (coord < 0) {coord = coord + 2 * max;}
     if (coord > max) {
         coord = 2 * max - coord;
         v *= -1;
@@ -32,13 +32,13 @@ export class Particle {
         this.vy *= factor;
     }
     move(dt, canvas) {
-        if (this.freeze > Date.now()) return;
+        if (this.freeze > Date.now()) {return;}
 
         this.x += this.vx * dt / 16;
         this.y += this.vy * dt / 16;
 
-        if (this.x <= this.radius || this.x >= canvas.clientWidth - this.radius) [this.x, this.vx] = calc(this.x, canvas.clientWidth - 2 * this.radius, this.radius, this.vx);
-        if (this.y <= this.radius || this.y >= canvas.clientHeight - this.radius) [this.y, this.vy] = calc(this.y, canvas.clientHeight - 2 * this.radius, this.radius, this.vy);
+        if (this.x <= this.radius || this.x >= canvas.clientWidth - this.radius) {[this.x, this.vx] = calc(this.x, canvas.clientWidth - 2 * this.radius, this.radius, this.vx);}
+        if (this.y <= this.radius || this.y >= canvas.clientHeight - this.radius) {[this.y, this.vy] = calc(this.y, canvas.clientHeight - 2 * this.radius, this.radius, this.vy);}
 
         this.adjustSpeed();
 

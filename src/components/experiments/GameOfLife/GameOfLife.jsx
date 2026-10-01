@@ -42,9 +42,9 @@ export default memo(forwardRef(function GameOfLife(
 	const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
-        if (!canvas || !wrapper) return;
-        if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
-        if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
+        if (!canvas || !wrapper) {return;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
 
 		const rect = wrapper.getBoundingClientRect();
 
@@ -57,8 +57,8 @@ export default memo(forwardRef(function GameOfLife(
 		// Prevent showing more cells than the simulation grid supports
 		const intendedCols = Math.floor(cssW / cellSize);
 		const intendedRows = Math.floor(cssH / cellSize);
-		if (intendedCols > MAX) cssW = MAX * cellSize;
-		if (intendedRows > MAX) cssH = MAX * cellSize;
+		if (intendedCols > MAX) {cssW = MAX * cellSize;}
+		if (intendedRows > MAX) {cssH = MAX * cellSize;}
 
 		setCalcWidth(cssW);
 		setCalcHeight(cssH);
@@ -69,8 +69,8 @@ export default memo(forwardRef(function GameOfLife(
 		const dpr = window.devicePixelRatio || 1;
 		canvas.width = cssW * dpr;
 		canvas.height = cssH * dpr;
-		canvas.style.width = cssW + "px";
-		canvas.style.height = cssH + "px";
+		canvas.style.width = `${cssW  }px`;
+		canvas.style.height = `${cssH  }px`;
         const ctx = canvas.getContext("2d");
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height, cellSize]);
@@ -99,7 +99,7 @@ export default memo(forwardRef(function GameOfLife(
 		targetSecondary.current = rgb[1];
 		transitionProgressRef.current = 1;
 
-		if (!showGrid) opacityProgressRef.current = 0;
+		if (!showGrid) {opacityProgressRef.current = 0;}
 
 		const onStorage = () => {
 			const rgb = readColor();
@@ -108,7 +108,7 @@ export default memo(forwardRef(function GameOfLife(
 			transitionProgressRef.current = 0;
 		};
 		window.addEventListener("themeStorage", onStorage);
-		return () => window.removeEventListener("themeStorage", onStorage);
+		return () => { window.removeEventListener("themeStorage", onStorage); };
 
 	}, []);
 
@@ -168,10 +168,10 @@ export default memo(forwardRef(function GameOfLife(
 				let n = 0;
 				for (let dr = -1; dr <= 1; dr++) {
 					for (let dc = -1; dc <= 1; dc++) {
-						if (dr === 0 && dc === 0) continue;
-						let rr = r + dr;
-						let cc = c + dc;
-						if (rr < 0 || rr >= MAX || cc < 0 || cc >= MAX) continue;
+						if (dr === 0 && dc === 0) {continue;}
+						const rr = r + dr;
+						const cc = c + dc;
+						if (rr < 0 || rr >= MAX || cc < 0 || cc >= MAX) {continue;}
 						n += grid[rr * MAX + cc];
 					}
 				}
@@ -187,7 +187,7 @@ export default memo(forwardRef(function GameOfLife(
 
 	const draw = useCallback(() => {
 		const canvas = canvasRef.current;
-		if (!canvas) return;
+		if (!canvas) {return;}
 		const ctx = canvas.getContext("2d");
 
 		ctx.clearRect(0, 0, canvas.clientWidth + borderWidth.current, canvas.clientHeight + borderWidth.current);
@@ -279,11 +279,11 @@ export default memo(forwardRef(function GameOfLife(
 			rafRef.current = requestAnimationFrame(loop);
 		}
 
-		if (rafRef.current) cancelAnimationFrame(rafRef.current);
+		if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 		rafRef.current = requestAnimationFrame(loop);
 
 		return () => {
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+			if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 			rafRef.current = null;
 		};
 	}, [speed, showGrid, stepGeneration, draw]);
@@ -297,9 +297,9 @@ export default memo(forwardRef(function GameOfLife(
 
 	const toggleCellAt = useCallback(
 		(clientX, clientY, isSet = null) => {
-			if (!interactive) return;
+			if (!interactive) {return;}
 			const canvas = canvasRef.current;
-			if (!canvas) return;
+			if (!canvas) {return;}
 			const rect = canvas.getBoundingClientRect();
 			const scaleX = rect.width / cols;
 			const scaleY = rect.height / rows;
@@ -307,14 +307,14 @@ export default memo(forwardRef(function GameOfLife(
 			const y = clientY - rect.top;
 			const c = Math.floor(x / scaleX);
 			const r = Math.floor(y / scaleY);
-			if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+			if (r < 0 || r >= rows || c < 0 || c >= cols) {return;}
 			const xDiff = Math.max(0, Math.floor((MAX - cols) / 2));
 			const yDiff = Math.max(0, Math.floor((MAX - rows) / 2));
 			setGrid((prev) => {
 				const next = new Uint8Array(prev);
 				const coord = (r + yDiff) * MAX + (c + xDiff);
-				if (isSet === null) next[coord] = 1 - next[coord];
-				else next[coord] = isSet ? 1 : 0;
+				if (isSet === null) {next[coord] = 1 - next[coord];}
+				else {next[coord] = isSet ? 1 : 0;}
 				return next;
 			});
 		},
@@ -324,7 +324,7 @@ export default memo(forwardRef(function GameOfLife(
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
-		if (!canvas) return;
+		if (!canvas) {return;}
 
 		const debouncedResize = debounce(resizeCanvas, 150);
 
@@ -334,7 +334,7 @@ export default memo(forwardRef(function GameOfLife(
 		};
 
 		const handlePointerMove = (e) => {
-			if (!pointerDownRef.current) return;
+			if (!pointerDownRef.current) {return;}
 			toggleCellAt(e.clientX, e.clientY, true);
 		};
 		const handlePointerUp = () => {
@@ -384,25 +384,23 @@ export default memo(forwardRef(function GameOfLife(
 	}, [calcWidth, calcHeight, cellSize]);
 
 	useEffect(() => {
-		if (initialRandom) randomizeGrid(randomProbability);
+		if (initialRandom) {randomizeGrid(randomProbability);}
 	}, [initialRandom, randomProbability, randomizeGrid]);
 
 	// Exposed Functions
 
-	useImperativeHandle(ref, () => {
-		return {
+	useImperativeHandle(ref, () => ({
 			clear() {
 				clearGrid();
 			},
 			step() {
-				if (runningRef.current) return; //duplicate
+				if (runningRef.current) {return;} //duplicate
 				setGrid(stepGeneration());
 			},
 			randomize() {
 				randomizeGrid(randomProbability);
 			}
-		}
-	}, [clearGrid, stepGeneration]);
+		}), [clearGrid, stepGeneration]);
 
 	// Return
 

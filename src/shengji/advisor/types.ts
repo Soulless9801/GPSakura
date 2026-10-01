@@ -1,4 +1,4 @@
-import * as SJCore from "/src/shengji/core/entities";
+import type * as SJCore from "/src/shengji/core/entities";
 
 export type Card = SJCore.Card;
 export type Suit = SJCore.Suit;

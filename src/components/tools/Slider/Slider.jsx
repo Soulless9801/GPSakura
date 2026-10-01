@@ -30,11 +30,11 @@ export default function Slider({ min, max, value, onChange, label, unit, step=1,
     }, [internalValue]);
 
     const handleMove = useCallback((e) => {
-        if (disabled) return;
+        if (disabled) {return;}
         const rect = trackRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
-        let newPercent = Math.min(Math.max(x / rect.width, 0), 1);
-        let newValue = min + newPercent * (max - min);
+        const newPercent = Math.min(Math.max(x / rect.width, 0), 1);
+        const newValue = min + newPercent * (max - min);
         updateValue(newValue);
         setPercent(newPercent * 100);
     }, [disabled, min, max, updateValue]);
@@ -43,7 +43,7 @@ export default function Slider({ min, max, value, onChange, label, unit, step=1,
         e.preventDefault();
         handleMove(e);
 
-        const move = (ev) => handleMove(ev);
+        const move = (ev) => { handleMove(ev); };
         const stop = () => {
             window.removeEventListener("pointermove", move);
             window.removeEventListener("pointerup", stop);
@@ -60,7 +60,7 @@ export default function Slider({ min, max, value, onChange, label, unit, step=1,
                     {form && (
                         <div className="customSliderLabel">
                             <span>{label}</span>
-                            <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => setInternalValue(e)} />
+                            <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => { setInternalValue(e); }} />
                             <span>{unit ? unit : ""}</span>
                         </div>
                     )}

@@ -25,11 +25,11 @@ export default function Navbar() {
         if (theme === 'dark') {
             icon.classList.replace('fa-sun', 'fa-moon');
             setBrand(darkImage);
-            if (websiteIcon) websiteIcon.href = darkImage;
+            if (websiteIcon) {websiteIcon.href = darkImage;}
         } else {
             icon.classList.replace('fa-moon', 'fa-sun');
             setBrand(lightImage);
-            if (websiteIcon) websiteIcon.href = lightImage;
+            if (websiteIcon) {websiteIcon.href = lightImage;}
         }
     }, [theme]);
 
@@ -69,10 +69,10 @@ export default function Navbar() {
         };
 
         items.forEach(el => {
-            const clickHandler = ev => onToggleClick(el, ev);
+            const clickHandler = ev => { onToggleClick(el, ev); };
 
-            el.addEventListener('mouseenter', () => onEnter(el));
-            el.addEventListener('mouseleave', () => onLeave(el));
+            el.addEventListener('mouseenter', () => { onEnter(el); });
+            el.addEventListener('mouseleave', () => { onLeave(el); });
             el.addEventListener('click', clickHandler);
 
             el._clickHandler = clickHandler;
@@ -81,8 +81,8 @@ export default function Navbar() {
 
         return () => {
             items.forEach(el => {
-                el.removeEventListener('mouseenter', () => onEnter(el));
-                el.removeEventListener('mouseleave', () => onLeave(el));
+                el.removeEventListener('mouseenter', () => { onEnter(el); });
+                el.removeEventListener('mouseleave', () => { onLeave(el); });
                 el.removeEventListener('click', el._clickHandler);
             });
             document.removeEventListener('click', onDocClick);
@@ -155,7 +155,7 @@ export default function Navbar() {
                         <button
                             id="darkModeToggle"
                             className="btn"
-                            onClick={() => setTheme((curr) => (curr === 'light' ? 'dark' : 'light'))}
+                            onClick={() => { setTheme((curr) => (curr === 'light' ? 'dark' : 'light')); }}
                             onMouseDown={e => e.preventDefault()}
                         >
                             <i id="darkModeIcon" className={`navbar-icon fa-regular ${theme === 'dark' ? 'fa-moon' : 'fa-sun'}`}/>

@@ -1,4 +1,4 @@
-import { Identity } from "/src/utils/verify";
+import type { Identity } from "/src/utils/verify";
 
 export interface ClientRequest {
     payload?: any;
@@ -43,7 +43,7 @@ export async function clientRequest(request: ClientRequest, className: string, f
         body: JSON.stringify(request),
     });
 
-    if (!res || !res.ok) return null;
+    if (!res || !res.ok) {return null;}
 
     const data = await res.text();
 

@@ -5,7 +5,7 @@ import Card from '/src/components/tools/Card/Card';
 
 import './Hand.css';
 
-import * as CardCore from "/src/entities/card";
+import type * as CardCore from "/src/entities/card";
 
 interface CardLayout {
     x: number;
@@ -17,7 +17,7 @@ interface CardLayout {
 
 function computeLayout(cards: CardCore.Card[]): CardLayout[] | null {
 
-    if (!cards || cards.length === 0) return null;
+    if (!cards || cards.length === 0) {return null;}
 
     const overlap = 24;
 
@@ -47,7 +47,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
     const [bactive, setBactive] = useState<boolean[]>([]);
 
     const computeActiveCards = () => {
-        if (bactive.length !== cards.length) return [];
+        if (bactive.length !== cards.length) {return [];}
         // console.log("Active: ", cards.filter((_, index) => bactive[index]));
         return cards.filter((_, index) => bactive[index]);
     }
@@ -64,7 +64,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
 
     const handleClick = useCallback((index: number, active: boolean) => {
         setBactive(prev => {
-            if (index < 0 || index >= prev.length) return prev;
+            if (index < 0 || index >= prev.length) {return prev;}
             prev[index] = active;
             return [...prev];
         });
@@ -74,7 +74,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
         <div className={`card-hand__wrapper${className}`.trim()}>
             <div className="card-hand">
                 {cards.map((card, index) => {
-                    if (!layout || !layout[index]) return null;
+                    if (!layout || !layout[index]) {return null;}
                     return (
                         <motion.div
                             key={index}

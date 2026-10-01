@@ -51,10 +51,10 @@ export default function FractalDemo() {
     const [speed, setSpeed] = useState(() => loadValue(speedKey, 100));
     const [angle, setAngle] = useState(() => loadValue(angleKey, 90));
 
-    useEffect(() => localStorage.setItem(typeKey, JSON.stringify(type)), [type]);
-    useEffect(() => localStorage.setItem(depthKey, JSON.stringify(depth)), [depth]);
-    useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
-    useEffect(() => localStorage.setItem(angleKey, JSON.stringify(angle)), [angle]);
+    useEffect(() => { localStorage.setItem(typeKey, JSON.stringify(type)); }, [type]);
+    useEffect(() => { localStorage.setItem(depthKey, JSON.stringify(depth)); }, [depth]);
+    useEffect(() => { localStorage.setItem(speedKey, JSON.stringify(speed)); }, [speed]);
+    useEffect(() => { localStorage.setItem(angleKey, JSON.stringify(angle)); }, [angle]);
 
     const display = (
         <Fractal
@@ -78,14 +78,12 @@ export default function FractalDemo() {
                         onChange={e => {
                             const value = e.value;
                             setType(value);
-                            if (depthFractals.findIndex(item => item === value) === -1) return;
+                            if (depthFractals.findIndex(item => item === value) === -1) {return;}
 
                             const newMaxDepth = depthMax[value];
 
                             setMaxDepth(newMaxDepth);
-                            setDepth(prev => {
-                                return Math.min(prev, newMaxDepth);
-                            });
+                            setDepth(prev => Math.min(prev, newMaxDepth));
                         }}
                         labelL={"Type"}
                         id="fractalDemoSelect"
@@ -97,7 +95,7 @@ export default function FractalDemo() {
                         min={1} 
                         max={maxDepth} 
                         value={depth} 
-                        onChange={e => setDepth(e)} 
+                        onChange={e => { setDepth(e); }} 
                         label="Depth"
                         disabled={depthFractals.findIndex(item => item === type) === -1}
                     />
@@ -107,7 +105,7 @@ export default function FractalDemo() {
                         min={10} 
                         max={1000} 
                         value={speed} 
-                        onChange={e => setSpeed(e)} 
+                        onChange={e => { setSpeed(e); }} 
                         label="Speed"
                         disabled={speedFractals.findIndex(item => item === type) === -1}
                     />
@@ -117,7 +115,7 @@ export default function FractalDemo() {
                         min={0} 
                         max={180} 
                         value={angle} 
-                        onChange={e => setAngle(e)} 
+                        onChange={e => { setAngle(e); }} 
                         label="Angle"
                         disabled={angleFractals.findIndex(item => item === type) === -1}
                     />

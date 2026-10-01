@@ -54,7 +54,7 @@ export class Game {
 
         while (rem_player > 0 || rem_dealer > 0) {
             const card = this.deck.draw();
-            if (!card) break; // should never happen
+            if (!card) {break;} // should never happen
             if (rem_player > 0) {
                 this.playerHand.addCard(card);
                 rem_player--;
@@ -64,32 +64,32 @@ export class Game {
             }
         }
 
-        if (!Game.dealerCondition(this.dealerHand)) this.dealerFinished = true;
+        if (!Game.dealerCondition(this.dealerHand)) {this.dealerFinished = true;}
     }
 
     playerHit(): boolean {
-        if (this.playerFinished || this.checkNotLoser()) return false;
+        if (this.playerFinished || this.checkNotLoser()) {return false;}
         const card = this.deck.draw();
-        if (!card) return false; // should never happen
+        if (!card) {return false;} // should never happen
         this.playerHand.addCard(card);
         return true;
     }
 
     playerStand(): boolean {
-        if (this.playerFinished || this.checkNotLoser()) return false;
+        if (this.playerFinished || this.checkNotLoser()) {return false;}
         this.playerFinished = true;
         this.dealerHand.addCard(this.purgatory);
-        while (this.dealerPlay()) continue; // continuous dealer play
+        while (this.dealerPlay()) {continue;} // continuous dealer play
         return true;
     }
 
     dealerPlay(): boolean {
-        if (!this.playerFinished || this.dealerFinished || this.checkNotLoser()) return false;
+        if (!this.playerFinished || this.dealerFinished || this.checkNotLoser()) {return false;}
         if (Game.dealerCondition(this.dealerHand)) {
             const card = this.deck.draw();
-            if (!card) return false; // should never happen
+            if (!card) {return false;} // should never happen
             this.dealerHand.addCard(card);
-        } else this.dealerFinished = true; // dealer stands
+        } else {this.dealerFinished = true;} // dealer stands
         return true;
     }
 
@@ -102,8 +102,8 @@ export class Game {
         const playerValue = this.playerHand.getHandValue();
         const dealerValue = this.dealerHand.getHandValue();
         
-        if (playerValue > 21) return "dealer";
-        if (dealerValue > 21) return "player";
+        if (playerValue > 21) {return "dealer";}
+        if (dealerValue > 21) {return "player";}
 
         return null;
     }
@@ -117,11 +117,11 @@ export class Game {
         const playerValue = this.playerHand.getHandValue();
         const dealerValue = this.dealerHand.getHandValue();
 
-        if (playerValue > 21) return "dealer";
-        if (dealerValue > 21) return "player";
+        if (playerValue > 21) {return "dealer";}
+        if (dealerValue > 21) {return "player";}
 
-        if (playerValue > dealerValue) return "player";
-        if (dealerValue > playerValue) return "dealer";
+        if (playerValue > dealerValue) {return "player";}
+        if (dealerValue > playerValue) {return "dealer";}
         
         return "tie";
     }

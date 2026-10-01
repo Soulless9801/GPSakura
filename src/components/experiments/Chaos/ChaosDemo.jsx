@@ -95,15 +95,15 @@ export default function ChaosDemo() {
 
     const [refresh, setRefresh] = useState(false);
 
-    useEffect(() => localStorage.setItem(typeKey, JSON.stringify(type)), [type]);
-    useEffect(() => localStorage.setItem(speedKey, JSON.stringify(speed)), [speed]);
-    useEffect(() => localStorage.setItem(pitchKey, JSON.stringify(pitch)), [pitch]);
-    useEffect(() => localStorage.setItem(yawKey, JSON.stringify(yaw)), [yaw]);
-    useEffect(() => localStorage.setItem(dimKey, JSON.stringify(dim)), [dim]);
-    useEffect(() => localStorage.setItem(depthKey, JSON.stringify(depth)), [depth]);
+    useEffect(() => { localStorage.setItem(typeKey, JSON.stringify(type)); }, [type]);
+    useEffect(() => { localStorage.setItem(speedKey, JSON.stringify(speed)); }, [speed]);
+    useEffect(() => { localStorage.setItem(pitchKey, JSON.stringify(pitch)); }, [pitch]);
+    useEffect(() => { localStorage.setItem(yawKey, JSON.stringify(yaw)); }, [yaw]);
+    useEffect(() => { localStorage.setItem(dimKey, JSON.stringify(dim)); }, [dim]);
+    useEffect(() => { localStorage.setItem(depthKey, JSON.stringify(depth)); }, [depth]);
 
-    useEffect(() => localStorage.setItem(scKey, JSON.stringify(sc)), [sc]);
-    useEffect(() => localStorage.setItem(ecKey, JSON.stringify(ec)), [ec]);
+    useEffect(() => { localStorage.setItem(scKey, JSON.stringify(sc)); }, [sc]);
+    useEffect(() => { localStorage.setItem(ecKey, JSON.stringify(ec)); }, [ec]);
 
     const display = (
         <>
@@ -139,7 +139,7 @@ export default function ChaosDemo() {
             <div className='row g-3'>
                 <div className='col-12 chaosDemoSelects'>
                     <button
-                        onClick={() => setRefresh(!refresh)}
+                        onClick={() => { setRefresh(!refresh); }}
                     >
                         Refresh
                     </button>
@@ -177,7 +177,7 @@ export default function ChaosDemo() {
                         value={speed}
                         step={0.01}
                         places={2}
-                        onChange={e => setSpeed(e)} 
+                        onChange={e => { setSpeed(e); }} 
                         label="Speed"
                     />
                 </div>
@@ -188,7 +188,7 @@ export default function ChaosDemo() {
                                 min={-180} 
                                 max={180} 
                                 value={pitch}
-                                onChange={e => setPitch(e)} 
+                                onChange={e => { setPitch(e); }} 
                                 label="Pitch"
                             />
                         </div>
@@ -197,7 +197,7 @@ export default function ChaosDemo() {
                                 min={-180} 
                                 max={180} 
                                 value={yaw}
-                                onChange={e => setYaw(e)} 
+                                onChange={e => { setYaw(e); }} 
                                 label="Yaw"
                             />
                         </div>
@@ -212,13 +212,13 @@ export default function ChaosDemo() {
                                 max={50000} 
                                 value={depth}
                                 step={1000}
-                                onChange={e => setDepth(e)} 
+                                onChange={e => { setDepth(e); }} 
                                 label="Max Points"
                             />
                         </div>
                         <div className='chaosDemoColors col-12'>
-                            <ColorSelector value={sc} onChange={(newColor) => setSc(newColor)} label="Gradient Start"/>
-                            <ColorSelector value={ec} onChange={(newColor) => setEc(newColor)} label="Gradient End"/>
+                            <ColorSelector value={sc} onChange={(newColor) => { setSc(newColor); }} label="Gradient Start"/>
+                            <ColorSelector value={ec} onChange={(newColor) => { setEc(newColor); }} label="Gradient End"/>
                         </div>
                     </>
                 )}

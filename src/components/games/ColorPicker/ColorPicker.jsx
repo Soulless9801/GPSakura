@@ -14,9 +14,9 @@ export default function ColorPicker({ width, height, color, style = {}, classNam
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
-        if (!canvas || !wrapper) return;
-        if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
-        if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
+        if (!canvas || !wrapper) {return;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
 
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;

@@ -79,16 +79,16 @@ export const PARAMETERS: Record<string, number> = {
 
 /** True when nothing still unaccounted for can beat this play. */
 function isBoss(ctx: Ctx): boolean {
-    if (ctx.move.length === 0) return false;
+    if (ctx.move.length === 0) {return false;}
     const ranked: Card[] = [...ctx.move].sort((a, b) => {
         const mainA: number = SJComp.isMainLine(a, ctx.trump) ? 1 : 0;
         const mainB: number = SJComp.isMainLine(b, ctx.trump) ? 1 : 0;
-        if (mainA !== mainB) return mainA - mainB;
+        if (mainA !== mainB) {return mainA - mainB;}
         return a.rank - b.rank;
     });
     const top: Card = ranked[ranked.length - 1];
     for (const [card, n] of ctx.unseen) {
-        if (n > 0 && SJComp.isCardBigger(card, top, ctx.trump)) return false;
+        if (n > 0 && SJComp.isCardBigger(card, top, ctx.trump)) {return false;}
     }
     return true;
 }
@@ -97,30 +97,30 @@ function isBoss(ctx: Ctx): boolean {
 function createsVoid(ctx: Ctx): number {
     const left: Map<string, number> = new Map<string, number>();
     for (const [card, n] of distinctCounts(ctx.hand)) {
-        if (SJComp.isMainLine(card, ctx.trump)) continue;
+        if (SJComp.isMainLine(card, ctx.trump)) {continue;}
         left.set(card.suit, (left.get(card.suit) || 0) + n);
     }
 
     const spent: Map<string, number> = new Map<string, number>();
     for (const card of ctx.move) {
-        if (SJComp.isMainLine(card, ctx.trump)) continue;
+        if (SJComp.isMainLine(card, ctx.trump)) {continue;}
         spent.set(card.suit, (spent.get(card.suit) || 0) + 1);
     }
 
     let voids: number = 0;
-    for (const [suit, used] of spent) if ((left.get(suit) || 0) === used) voids += 1;
+    for (const [suit, used] of spent) {if ((left.get(suit) || 0) === used) {voids += 1;}}
     return voids;
 }
 
 /** The play currently winning the trick, or null when you are leading. */
 function winningPlay(ctx: Ctx): Move | null {
-    if (ctx.winningPosition === null) return null;
+    if (ctx.winningPosition === null) {return null;}
     return ctx.trick[ctx.winningPosition] || null;
 }
 
 function takesTrick(ctx: Ctx): boolean {
     const winning: Move | null = winningPlay(ctx);
-    if (!winning) return true;
+    if (!winning) {return true;}
     return SJComp.isPlayBigger(
         playInfo(ctx.move, ctx.trump),
         playInfo(winning, ctx.trump),
@@ -131,7 +131,7 @@ function takesTrick(ctx: Ctx): boolean {
 export const FEATURES: Record<string, (ctx: Ctx) => number> = {
     structure_run_extra: (ctx) => {
         const struct = playInfo(ctx.move, ctx.trump).struct;
-        if (!struct.cards.length) return 0;
+        if (!struct.cards.length) {return 0;}
         return Math.max(0, struct.cards[0].length - 1);
     },
     structure_multiplicity_extra: (ctx) => {
@@ -145,7 +145,7 @@ export const FEATURES: Record<string, (ctx: Ctx) => number> = {
     led_suit_length: (ctx) => {
         const suit = ctx.move[0].suit;
         let total: number = 0;
-        for (const [card, n] of distinctCounts(ctx.hand)) if (card.suit === suit) total += n;
+        for (const [card, n] of distinctCounts(ctx.hand)) {if (card.suit === suit) {total += n;}}
         return total;
     },
     points_in_move: (ctx) => ctx.move.reduce((sum, card) => sum + pointValue(card), 0),
@@ -164,7 +164,7 @@ export const FEATURES: Record<string, (ctx: Ctx) => number> = {
         for (const card of ctx.move) {
             const inHand: number = ctx.handCounts.get(cardKey(card)) || 0;
             const inMove: number = ctx.move.filter((other) => cardKey(other) === cardKey(card)).length;
-            if (inHand >= 2 && inMove === 1) broken += 1;
+            if (inHand >= 2 && inMove === 1) {broken += 1;}
         }
         return broken;
     },

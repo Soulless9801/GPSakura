@@ -55,12 +55,12 @@ export default function USACOTable() {
             .then(res => res.text())
             .then(json => {
 
-                let rows = [];
+                const rows = [];
                 const data = deserialize(json);
 
                 for (let i = 0; i < data.length; i++) {
 
-                    let div = data[i].division;
+                    const div = data[i].division;
 
                     rows.push([
                         div.charAt(0).toUpperCase() + div.slice(1),
@@ -77,7 +77,7 @@ export default function USACOTable() {
     useEffect(() => {
         const handler = async (e) => {
             const btn = e.target.closest(".view-btn");
-            if (!btn) return;
+            if (!btn) {return;}
 
             const id = btn.dataset.id;
 
@@ -91,7 +91,7 @@ export default function USACOTable() {
                 body: JSON.stringify({
                     col: "problems",
                     loc: "firebaseProblemData",
-                    id: id,
+                    id,
                 }),
             });
 
@@ -104,7 +104,7 @@ export default function USACOTable() {
         };
 
         document.addEventListener("click", handler);
-        return () => document.removeEventListener("click", handler);
+        return () => { document.removeEventListener("click", handler); };
     }, []);
 
     const options = {

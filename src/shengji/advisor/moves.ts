@@ -40,7 +40,7 @@ export function moveKey(move: Move): string {
 export function allCards(): Card[] {
     const out: Card[] = [];
     for (const suit of SUITS) {
-        for (let rank = 2; rank <= 14; rank++) out.push({ suit: suit, rank: rank as Rank });
+        for (let rank = 2; rank <= 14; rank++) {out.push({ suit, rank: rank as Rank });}
     }
     out.push({ suit: "jokers", rank: 1 });
     out.push({ suit: "jokers", rank: 2 });
@@ -49,7 +49,7 @@ export function allCards(): Card[] {
 
 export function toHand(cards: Card[]): Hand {
     const hand: Hand = new Hand();
-    for (const card of cards) hand.addCard(card);
+    for (const card of cards) {hand.addCard(card);}
     return hand;
 }
 
@@ -66,11 +66,11 @@ export function distinctCounts(cards: Card[]): Array<[Card, number]> {
     const counts: Map<string, [Card, number]> = new Map<string, [Card, number]>();
     for (const card of cards) {
         const entry = counts.get(cardKey(card));
-        if (entry) entry[1] += 1;
-        else counts.set(cardKey(card), [{ suit: card.suit, rank: card.rank }, 1]);
+        if (entry) {entry[1] += 1;}
+        else {counts.set(cardKey(card), [{ suit: card.suit, rank: card.rank }, 1]);}
     }
     return [...counts.values()].sort((a, b) => {
-        if (a[0].suit !== b[0].suit) return a[0].suit < b[0].suit ? -1 : 1;
+        if (a[0].suit !== b[0].suit) {return a[0].suit < b[0].suit ? -1 : 1;}
         return a[0].rank - b[0].rank;
     });
 }
@@ -99,7 +99,7 @@ function dedupe(moves: Move[]): Move[] {
     const out: Move[] = [];
     for (const move of moves) {
         const key: string = moveKey(move);
-        if (seen.has(key)) continue;
+        if (seen.has(key)) {continue;}
         seen.add(key);
         out.push(move);
     }
@@ -124,8 +124,8 @@ function generateLeads(hand: Card[], trump: Trump): Move[] {
         const chains: Card[][] = [];
         for (const card of eligible) {
             const last: Card[] | undefined = chains[chains.length - 1];
-            if (last && SJComp.isCardNext(card, last[last.length - 1], trump)) last.push(card);
-            else chains.push([card]);
+            if (last && SJComp.isCardNext(card, last[last.length - 1], trump)) {last.push(card);}
+            else {chains.push([card]);}
         }
 
         for (const chain of chains) {
@@ -133,7 +133,7 @@ function generateLeads(hand: Card[], trump: Trump): Move[] {
                 for (let end = start; end < chain.length; end++) {
                     const move: Move = [];
                     for (const card of chain.slice(start, end + 1)) {
-                        for (let copy = 0; copy < m; copy++) move.push(card);
+                        for (let copy = 0; copy < m; copy++) {move.push(card);}
                     }
                     moves.push(move);
                 }
@@ -147,14 +147,14 @@ function generateLeads(hand: Card[], trump: Trump): Move[] {
 /** Cheap cards first, so a trimmed follow list still holds the ordinary "follow small" plays. */
 function followPreference(line: Array<[Card, number]>): Map<string, number> {
     const pref: Map<string, number> = new Map<string, number>();
-    for (const [card] of line) pref.set(cardKey(card), pointValue(card) * 2.0 + card.rank * 0.1);
+    for (const [card] of line) {pref.set(cardKey(card), pointValue(card) * 2.0 + card.rank * 0.1);}
     return pref;
 }
 
 /** Lower is a more natural discard: cheap, off-trump, from a short suit. */
 function discardPreference(off: Array<[Card, number]>, trump: Trump): Map<string, number> {
     const suitLength: Map<Suit, number> = new Map<Suit, number>();
-    for (const [card, n] of off) suitLength.set(card.suit, (suitLength.get(card.suit) || 0) + n);
+    for (const [card, n] of off) {suitLength.set(card.suit, (suitLength.get(card.suit) || 0) + n);}
 
     const pref: Map<string, number> = new Map<string, number>();
     for (const [card] of off) {
@@ -181,8 +181,8 @@ function multisetCombinations(
     budget: number | null,
     prefer: Map<string, number> | null,
 ): Move[] {
-    if (size <= 0) return [[]];
-    if (items.length === 0) return [];
+    if (size <= 0) {return [[]];}
+    if (items.length === 0) {return [];}
 
     const ordered: Array<[Card, number]> = [...items];
     if (prefer) {
@@ -191,26 +191,26 @@ function multisetCombinations(
 
     // how many cards are left from index i onwards, to prune hopeless branches
     const suffix: number[] = new Array(ordered.length + 1).fill(0);
-    for (let i = ordered.length - 1; i >= 0; i--) suffix[i] = suffix[i + 1] + ordered[i][1];
+    for (let i = ordered.length - 1; i >= 0; i--) {suffix[i] = suffix[i + 1] + ordered[i][1];}
 
     const out: Move[] = [];
     const acc: Card[] = [];
 
     const rec = (idx: number, left: number): void => {
-        if (budget !== null && out.length >= budget) return;
+        if (budget !== null && out.length >= budget) {return;}
         if (left === 0) {
             out.push([...acc]);
             return;
         }
-        if (idx >= ordered.length) return;
-        if (suffix[idx] < left) return;
+        if (idx >= ordered.length) {return;}
+        if (suffix[idx] < left) {return;}
 
         const [card, avail] = ordered[idx];
         for (let take = Math.min(avail, left); take >= 0; take--) {
-            for (let i = 0; i < take; i++) acc.push(card);
+            for (let i = 0; i < take; i++) {acc.push(card);}
             rec(idx + 1, left - take);
-            for (let i = 0; i < take; i++) acc.pop();
-            if (budget !== null && out.length >= budget) return;
+            for (let i = 0; i < take; i++) {acc.pop();}
+            if (budget !== null && out.length >= budget) {return;}
         }
     };
 
@@ -226,8 +226,8 @@ function generateFollows(hand: Card[], lead: Move, trump: Trump, maxCandidates: 
     const line: Array<[Card, number]> = [];
     const off: Array<[Card, number]> = [];
     for (const entry of distinctCounts(hand)) {
-        if (SJComp.checkInline(entry[0], leadCard, trump)) line.push(entry);
-        else off.push(entry);
+        if (SJComp.checkInline(entry[0], leadCard, trump)) {line.push(entry);}
+        else {off.push(entry);}
     }
     const lineTotal: number = line.reduce((sum, [, n]) => sum + n, 0);
 
@@ -242,7 +242,7 @@ function generateFollows(hand: Card[], lead: Move, trump: Trump, maxCandidates: 
         } else {
             // dump everything you hold in the line, then fill from anything else
             const forced: Card[] = [];
-            for (const [card, n] of line) for (let i = 0; i < n; i++) forced.push(card);
+            for (const [card, n] of line) {for (let i = 0; i < n; i++) {forced.push(card);}}
             const fills: Move[] = multisetCombinations(
                 off,
                 need - lineTotal,
@@ -256,9 +256,9 @@ function generateFollows(hand: Card[], lead: Move, trump: Trump, maxCandidates: 
         const out: Move[] = [];
         for (const cand of cands) {
             const iplay: SJComp.IPlay = playInfo(cand, trump);
-            if (!SJComp.isPlayValid(iplay, ilead, ihand, trump)) continue;
+            if (!SJComp.isPlayValid(iplay, ilead, ihand, trump)) {continue;}
             const key: string = moveKey(iplay.play.cards);
-            if (seen.has(key)) continue;
+            if (seen.has(key)) {continue;}
             seen.add(key);
             out.push([...iplay.play.cards]);
         }
@@ -277,7 +277,7 @@ export function legalMoves(
     trump: Trump,
     maxCandidates: number = 512,
 ): Move[] {
-    if (hand.length === 0) return [];
-    if (!lead || lead.length === 0) return generateLeads(hand, trump);
+    if (hand.length === 0) {return [];}
+    if (!lead || lead.length === 0) {return generateLeads(hand, trump);}
     return generateFollows(hand, lead, trump, maxCandidates);
 }

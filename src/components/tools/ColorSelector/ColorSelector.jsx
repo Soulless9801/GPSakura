@@ -20,7 +20,7 @@ function HSVInput({ value, onChange, disabled = false }) {
 	const hueDragRef = useRef(false);
 
 	const applyHSV = useCallback((nextHSV) => {
-		if (disabled) return;
+		if (disabled) {return;}
 		const [nextH, nextS, nextV] = nextHSV;
 		const normalized = [
 			Math.min(359.999, Math.max(0, nextH)),
@@ -33,7 +33,7 @@ function HSVInput({ value, onChange, disabled = false }) {
 	}, [disabled, onChange]);
 
 	const updateFromPickerEvent = useCallback((event) => {
-		if (!pickerRef.current) return;
+		if (!pickerRef.current) {return;}
 		const rect = pickerRef.current.getBoundingClientRect();
 		const x = clamp((event.clientX - rect.left) / rect.width);
 		const y = clamp((event.clientY - rect.top) / rect.height);
@@ -41,7 +41,7 @@ function HSVInput({ value, onChange, disabled = false }) {
 	}, [applyHSV, hsv]);
 
 	const updateFromHueEvent = useCallback((event) => {
-		if (!hueRef.current) return;
+		if (!hueRef.current) {return;}
 		const rect = hueRef.current.getBoundingClientRect();
 		const x = clamp((event.clientX - rect.left) / rect.width);
 		applyHSV([x * 359.999, hsv[1], hsv[2]]);
@@ -59,8 +59,8 @@ function HSVInput({ value, onChange, disabled = false }) {
 
 	useEffect(() => {
 		const next = hexToHsv(value);
-		if (!next) return;
-		if (pickerDragRef.current || hueDragRef.current) return;
+		if (!next) {return;}
+		if (pickerDragRef.current || hueDragRef.current) {return;}
 		setHSV(next);
 	}, [value]);
 
@@ -72,20 +72,20 @@ function HSVInput({ value, onChange, disabled = false }) {
 				ref={pickerRef}
 				style={{ backgroundColor: hueColor }}
 				onPointerDown={(event) => {
-					if (disabled) return;
+					if (disabled) {return;}
 					pickerDragRef.current = true;
 					event.currentTarget.setPointerCapture(event.pointerId);
 					updateFromPickerEvent(event);
 				}}
 				onPointerMove={(event) => {
-					if (!pickerDragRef.current || disabled) return;
+					if (!pickerDragRef.current || disabled) {return;}
 					updateFromPickerEvent(event);
 				}}
 				onPointerUp={(event) => {
 					pickerDragRef.current = false;
 					event.currentTarget.releasePointerCapture(event.pointerId);
 					// compute final hsv from the pointer position and commit
-					if (!pickerRef.current) return;
+					if (!pickerRef.current) {return;}
 					const rect = pickerRef.current.getBoundingClientRect();
 					const x = clamp((event.clientX - rect.left) / rect.width);
 					const y = clamp((event.clientY - rect.top) / rect.height);
@@ -107,19 +107,19 @@ function HSVInput({ value, onChange, disabled = false }) {
 				className="colorSelectorHueSlider"
 				ref={hueRef}
 				onPointerDown={(event) => {
-					if (disabled) return;
+					if (disabled) {return;}
 					hueDragRef.current = true;
 					event.currentTarget.setPointerCapture(event.pointerId);
 					updateFromHueEvent(event);
 				}}
 				onPointerMove={(event) => {
-					if (!hueDragRef.current || disabled) return;
+					if (!hueDragRef.current || disabled) {return;}
 					updateFromHueEvent(event);
 				}}
 				onPointerUp={(event) => {
 					hueDragRef.current = false;
 					event.currentTarget.releasePointerCapture(event.pointerId);
-					if (!hueRef.current) return;
+					if (!hueRef.current) {return;}
 					const rect = hueRef.current.getBoundingClientRect();
 					const x = clamp((event.clientX - rect.left) / rect.width);
 					const final = [x * 359.999, hsv[1], hsv[2]];
@@ -147,7 +147,7 @@ function HexInput({ value, onSubmit, disabled = false }) {
 
 	const handleSubmit = () => {
 		const normalized = normalizeHex(draftHex);
-		if (!normalized || disabled) return;
+		if (!normalized || disabled) {return;}
 		onSubmit?.(normalized);
 	};
 
@@ -158,9 +158,9 @@ function HexInput({ value, onSubmit, disabled = false }) {
 					<input
 						type="text"
 						value={draftHex}
-						onChange={(event) => setDraftHex(event.target.value)}
+						onChange={(event) => { setDraftHex(event.target.value); }}
 						onKeyDown={(event) => {
-							if (event.key === "Enter") handleSubmit();
+							if (event.key === "Enter") {handleSubmit();}
 						}}
 						onBlur={handleSubmit}
 						placeholder="#3b82f6"
@@ -177,7 +177,7 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 
 	useEffect(() => {
 		const next = Array.isArray(value) ? value : hexToRGB(value);
-		if (next) setRGB(next);
+		if (next) {setRGB(next);}
 	}, [value]);
 
 	const channels = [
@@ -190,8 +190,8 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 		const nextRGB = [...rgb];
 		nextRGB[index] = Math.min(255, Math.max(0, parseInt(rawValue, 10) || 0));
 		setRGB(nextRGB);
-		if (onSubmit) onSubmit?.(rgbToHex(nextRGB));
-		if (onChange) onChange?.(index, nextRGB[index]);
+		if (onSubmit) {onSubmit?.(rgbToHex(nextRGB));}
+		if (onChange) {onChange?.(index, nextRGB[index]);}
 	};
 
 	return (
@@ -206,7 +206,7 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 								min={0}
 								max={255}
 								step={1}
-								onChange={(val) => updateChannel(index, val)}
+								onChange={(val) => { updateChannel(index, val); }}
 								disabled={disabled}
 								notifyOnInitChange={false}
 							/>
@@ -258,11 +258,11 @@ export default function ColorSelector({
 	const [hexState, setHexState] = useState(initialHex);
 
 	useEffect(() => {
-		if (value === undefined) return;
+		if (value === undefined) {return;}
 		const parsed = hexToRGB(value);
 		if (parsed) {
 			const normalized = normalizeHex(value);
-			if (normalized) setHexState(normalized);
+			if (normalized) {setHexState(normalized);}
 		}
 	}, [value]);
 

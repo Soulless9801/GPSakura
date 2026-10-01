@@ -1,5 +1,5 @@
 export function hexToRGB(value) {
-    if (typeof value !== 'string') return null;
+    if (typeof value !== 'string') {return null;}
 
     const parsed = value.trim().replace(/^#/, '');
 
@@ -9,7 +9,7 @@ export function hexToRGB(value) {
             .map(channel => parseInt(`${channel}${channel}`, 16));
     }
 
-    if (!/^[0-9a-fA-F]{6}$/.test(parsed)) return null;
+    if (!/^[0-9a-fA-F]{6}$/.test(parsed)) {return null;}
 
     return [
         parseInt(parsed.slice(0, 2), 16),
@@ -22,7 +22,7 @@ const toHex = (value) => value.toString(16).padStart(2, "0");
 
 export function clampRGB(value) {
 	const numeric = Number(value);
-	if (Number.isNaN(numeric)) return 0;
+	if (Number.isNaN(numeric)) {return 0;}
 	return Math.max(0, Math.min(255, Math.round(numeric)));
 };
 
@@ -37,9 +37,9 @@ export function rgbToHex(rgb) {
 }
 
 export function normalizeHex(value) {
-	if (typeof value !== "string") return null;
+	if (typeof value !== "string") {return null;}
 	const parsed = value.trim().replace(/^#/, "").toLowerCase();
-	if (!/^[0-9a-f]{6}$/.test(parsed)) return null;
+	if (!/^[0-9a-f]{6}$/.test(parsed)) {return null;}
 	return `#${parsed}`;
 }
 
@@ -95,9 +95,9 @@ export function rgbToHsv([r, g, b]) {
 
     let h = 0;
     if (delta !== 0) {
-        if (max === rn) h = 60 * (((gn - bn) / delta) % 6);
-        else if (max === gn) h = 60 * ((bn - rn) / delta + 2);
-        else h = 60 * ((rn - gn) / delta + 4);
+        if (max === rn) {h = 60 * (((gn - bn) / delta) % 6);}
+        else if (max === gn) {h = 60 * ((bn - rn) / delta + 2);}
+        else {h = 60 * ((rn - gn) / delta + 4);}
     }
 
     const normalizedHue = (h + 360) % 360;
@@ -109,12 +109,12 @@ export function rgbToHsv([r, g, b]) {
 
 export function hexToHsv(hex) {
     const rgb = hexToRGB(hex);
-    if (!rgb) return [210, 0.76, 0.96];
+    if (!rgb) {return [210, 0.76, 0.96];}
     return rgbToHsv(rgb);
 }
 
 function ensure(rgb, fallbackColor = [0, 0, 0]) {
-    if (!Array.isArray(rgb)) return fallbackColor;
+    if (!Array.isArray(rgb)) {return fallbackColor;}
 
     if (
         rgb.length < 3 ||

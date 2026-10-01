@@ -25,9 +25,9 @@ export default function Chaos({
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
-        if (!canvas || !wrapper) return;
-        if (width) wrapper.style.width = typeof width === "number" ? `${width}px` : width;
-        if (height) wrapper.style.height = typeof height === "number" ? `${height}px` : height;
+        if (!canvas || !wrapper) {return;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
 
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;
@@ -67,7 +67,7 @@ export default function Chaos({
             transitionProgressRef.current = 0;
         };
         window.addEventListener("themeStorage", onStorage);
-        return () => window.removeEventListener("themeStorage", onStorage);
+        return () => { window.removeEventListener("themeStorage", onStorage); };
 
     }, [readColor]);
 
@@ -92,7 +92,7 @@ export default function Chaos({
 
     const getCTX = () => {
         const canvas = canvasRef.current;
-        if (!canvas) return null;
+        if (!canvas) {return null;}
 
         const ctx = canvas.getContext("2d");
 
@@ -127,7 +127,7 @@ export default function Chaos({
 
     const drawChaos = useCallback(() => {
 
-        if (!attractor) return;
+        if (!attractor) {return;}
 
         const [ctx, W, H] = setupChaos();
 
@@ -148,13 +148,13 @@ export default function Chaos({
 
             let { x, y, z } = pointRef.current;
 
-            let [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
+            const [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
 
             ctx.beginPath();
             ctx.strokeStyle = rgbToCss(currentColorRef.current);
 
-            let sx = W / 2 + cx * attractor.scaleFactor;
-            let sy = H / 2 + cy * attractor.scaleFactor;
+            const sx = W / 2 + cx * attractor.scaleFactor;
+            const sy = H / 2 + cy * attractor.scaleFactor;
 
             ctx.moveTo(sx, sy);
 
@@ -166,11 +166,11 @@ export default function Chaos({
 
                 x += d[0] * dt;
                 y += d[1] * dt;
-                if (dims === 3) z += d[2] * dt;
+                if (dims === 3) {z += d[2] * dt;}
 
                 pointRef.current = { x, y, z };
 
-                let [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
+                const [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
 
                 const nx = W / 2 + cx * attractor.scaleFactor;
                 const ny = H / 2 + cy * attractor.scaleFactor;
@@ -192,7 +192,7 @@ export default function Chaos({
     useEffect(() => {
         
         const cut = () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
             drawChaos();
         };
 
@@ -207,7 +207,7 @@ export default function Chaos({
 
 		return () => {
 			window.removeEventListener("resize", handleResize);
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+			if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 		};
 
 	}, [drawChaos, resizeCanvas]);
@@ -244,7 +244,7 @@ export default function Chaos({
         colorRafRef.current = requestAnimationFrame(loop);
 
         return () => {
-            if (colorRafRef.current) cancelAnimationFrame(colorRafRef.current);
+            if (colorRafRef.current) {cancelAnimationFrame(colorRafRef.current);}
         };
 
     }, [colorTransition]);

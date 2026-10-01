@@ -105,26 +105,52 @@ export default defineConfig([
     globalIgnores(['dist', 'scripts', '.netlify', 'node_modules']),
     {
         files: ['**/*.{js,jsx,ts,tsx}'],
-        extends: [
-            tseslint.configs.recommended,
-        ],
         plugins: {
             'react-refresh': reactRefresh,
         },
+        extends: [
+            tseslint.configs.recommended,
+            tseslint.configs.strictTypeChecked,
+        ],
         languageOptions: {
             globals: {
                 ...globals.browser,
                 ...globals.node,
             },
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
         },
         rules: {
             ...naming_rules,
             ...reactRefresh.configs.vite.rules,
-            '@typescript-eslint/no-explicit-any': 'off',
+
+            '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/no-unused-vars': [
                 'error',
                 { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
             ],
+            '@typescript-eslint/consistent-type-imports': 'error',
+            '@typescript-eslint/no-floating-promises': 'error',
+            '@typescript-eslint/no-misused-promises': 'error',
+            '@typescript-eslint/no-unnecessary-condition': 'error',
+            '@typescript-eslint/no-unsafe-argument': 'error',
+            '@typescript-eslint/no-unsafe-assignment': 'error',
+            '@typescript-eslint/no-unsafe-call': 'error',
+            '@typescript-eslint/no-unsafe-member-access': 'error',
+            '@typescript-eslint/no-unsafe-return': 'error',
+
+            'arrow-body-style': ['error', 'as-needed'],
+            curly: ['error', 'all'],
+            eqeqeq: ['error', 'always'],
+            'no-console': 'error',
+            'no-debugger': 'error',
+            'no-implicit-coercion': 'error',
+            'no-var': 'error',
+            'object-shorthand': 'error',
+            'prefer-const': 'error',
+            'prefer-template': 'error',
         },
     },
 ])

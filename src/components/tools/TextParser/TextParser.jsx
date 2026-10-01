@@ -13,7 +13,7 @@ export default forwardRef(function TextParser({ text, className="" }, ref){
     useImperativeHandle(ref, () => containerRef.current);
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        if (!containerRef.current) {return;}
 
         containerRef.current.innerHTML = parseMarkdown(text);
 

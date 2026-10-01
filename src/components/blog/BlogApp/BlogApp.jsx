@@ -49,14 +49,14 @@ export default function BlogApp() {
     const cmp = useCallback((a, b) => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
         const bPinned = localStorage.getItem(`pin_${b.id}`) === 'true';
-        if (aPinned ^ bPinned) return bPinned - aPinned;
+        if (aPinned ^ bPinned) {return bPinned - aPinned;}
         const aDate = new Date(a.updated);
         const bDate = new Date(b.updated);
         return bDate - aDate;
     }, []);
 
     const sortPosts = useCallback((posts, sortBy) => {
-        let sorted = [...posts];
+        const sorted = [...posts];
         if (sortBy === "pinned") {
             sorted.sort(cmp);
         } else if (sortBy === "updated") {
@@ -67,7 +67,7 @@ export default function BlogApp() {
             sorted.sort((a, b) => a.title.localeCompare(b.title));
         }
 
-        if (order) sorted.reverse();
+        if (order) {sorted.reverse();}
 
         return sorted;
     }, [cmp, order]);
@@ -102,9 +102,9 @@ export default function BlogApp() {
         setWindow(posts.slice(page * length, (page + 1) * length));
     }, [posts, page, length]);
 
-    useEffect(() => localStorage.setItem(lengthKey, JSON.stringify(length)), [length]);
-    useEffect(() => localStorage.setItem(orderKey, JSON.stringify(order)), [order]);
-    useEffect(() => localStorage.setItem(sortByKey, JSON.stringify(sortBy)), [sortBy]);
+    useEffect(() => { localStorage.setItem(lengthKey, JSON.stringify(length)); }, [length]);
+    useEffect(() => { localStorage.setItem(orderKey, JSON.stringify(order)); }, [order]);
+    useEffect(() => { localStorage.setItem(sortByKey, JSON.stringify(sortBy)); }, [sortBy]);
 
     const blogMenu = (
         <div className="blogHeader">
@@ -135,7 +135,7 @@ export default function BlogApp() {
                 <button
                     id="blogSortDirection"
                     className="blogSortDirectionButton"
-                    onClick={() => reverseOrder()}
+                    onClick={() => { reverseOrder(); }}
                 >
                     {order ? 'Reverse Alphabetical / Oldest' : 'Alphabetical / Newest'} <i className={`fa fa-arrow-${order ? "down-z-a" : "down-a-z"}`}></i>
                 </button>

@@ -63,10 +63,10 @@ const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] as Rank[];
 
 // get card from data, return null if invalid
 function getCardFromData(data: number[], suit: Suit, trump: Trump): Card | null {
-    const card : Card = { suit: suit, rank: data[3] as Rank };
+    const card : Card = { suit, rank: data[3] as Rank };
 
-    if (data[1] === 1) card.rank = trump.rank;
-    if (trump.suit && data[2] === 1) card.suit = trump.suit;
+    if (data[1] === 1) {card.rank = trump.rank;}
+    if (trump.suit && data[2] === 1) {card.suit = trump.suit;}
 
     if (data[1] === 1 && data[2] === 0) { // randomly pick a small trump suit that is not the trump suit
         if (card.suit === trump.suit) {
@@ -78,17 +78,17 @@ function getCardFromData(data: number[], suit: Suit, trump: Trump): Card | null 
         }
     }
 
-    if (data[0] === 1) card.suit = "jokers";
+    if (data[0] === 1) {card.suit = "jokers";}
 
-    if (SJCore.validateCard(card)) return card;
+    if (SJCore.validateCard(card)) {return card;}
     return null;
 }
 
 // get next card
 function getNextCard(card: Card | null, trump: Trump): Card | null {
-    if (!card) return null;
+    if (!card) {return null;}
     const data : number[] | null = SJComp.getNextCardData(card, trump);
-    if (!data) return null;
+    if (!data) {return null;}
     return getCardFromData(data, card.suit, trump);
 }
 
@@ -151,8 +151,8 @@ function randomTrick(rng: RNG, suit: Suit | null): Play {
 
     const play: Play = { cards: [card], suit: card.suit };
 
-    if (kindroll > 0.2) play.cards.push(card);    
-    if (kindroll > 0.5) play.cards.push(card);
+    if (kindroll > 0.2) {play.cards.push(card);}    
+    if (kindroll > 0.5) {play.cards.push(card);}
 
     return play;
 }
@@ -162,15 +162,15 @@ function randomLeadPlay(rng: RNG, trump: Trump): Play {
 
     const trick : Play = randomTrick(rng, null);
 
-    if (trick.cards.length === 1) return trick;
+    if (trick.cards.length === 1) {return trick;}
 
     let trick_count : number = 1;
     const trick_rng = rng.next();
 
-    if (trick_rng > 0.2) trick_count++;
-    if (trick_rng > 0.5) trick_count++;
+    if (trick_rng > 0.2) {trick_count++;}
+    if (trick_rng > 0.5) {trick_count++;}
 
-    if (trick_count === 1) return trick;
+    if (trick_count === 1) {return trick;}
 
     const play: Play = { cards: [], suit: trick.suit };
 
@@ -179,7 +179,7 @@ function randomLeadPlay(rng: RNG, trump: Trump): Play {
         let nxt : Card | null = card;
         for (let i = 1; i < trick_count; i++) {
             nxt = getNextCard(nxt, trump); // just in case
-            if (!nxt) break;
+            if (!nxt) {break;}
             play.cards.push(nxt);
         }
     }
@@ -200,8 +200,8 @@ function randomFollowPlay(rng: RNG, ilead: IPlay, trump: Trump): { play: Play, h
         const card_rng = rng.next();
         if (card) {
             hand.addCard(card);
-            if (card_rng > 0.5) hand.addCard(card);
-            if (card_rng > 0.8) hand.addCard(card);
+            if (card_rng > 0.5) {hand.addCard(card);}
+            if (card_rng > 0.8) {hand.addCard(card);}
         }
     }
 
@@ -280,10 +280,10 @@ export function genTestCase(): TestCase {
     const ihand = SJComp.handToInfo(play_hand.hand, trump);
 
     return {
-        ihand: ihand,
-        ilead: ilead,
-        iplay: iplay,
-        trump: trump
+        ihand,
+        ilead,
+        iplay,
+        trump
     }
 
 }

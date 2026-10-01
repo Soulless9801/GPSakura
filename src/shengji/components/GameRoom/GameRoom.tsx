@@ -3,23 +3,26 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { deserialize } from "/src/utils/serial";
 
 import { useAbly } from "/src/shengji/server/ably";
-import { GameRequest, clientRequest } from "/src/services/request";
+import type { GameRequest} from "/src/services/request";
+import { clientRequest } from "/src/services/request";
 
-import * as SJGame from "/src/shengji/core/game";
+import type * as SJGame from "/src/shengji/core/game";
 import * as SJCore from "/src/shengji/core/entities";
 import * as SJComp from "/src/shengji/core/comparison";
 import * as SJConv from "/src/shengji/core/convert";
 
-import * as SJAdvt from "/src/shengji/advisor/types";
+import type * as SJAdvt from "/src/shengji/advisor/types";
 import * as SJAdvr from "/src/shengji/advisor/advisor";
 
-import Ably from "ably";
+import type Ably from "ably";
 
-import Hand, { HandRef } from "/src/components/tools/Hand/Hand";
+import type { HandRef } from "/src/components/tools/Hand/Hand";
+import Hand from "/src/components/tools/Hand/Hand";
 import Card from "/src/components/tools/Card/Card";
 
 import './GameRoom.css';
-import { Identity, getIdentity } from "/src/utils/verify";
+import type { Identity} from "/src/utils/verify";
+import { getIdentity } from "/src/utils/verify";
 
 // Specific Request
 
@@ -53,7 +56,7 @@ function PlayerList({ players, teams }: { players: string[], teams: number[] }) 
 
 function CardAdvice({ cards }: { cards: SJCore.Card[] | undefined }) {
 
-    if (!cards || cards.length === 0) return <p>No advice available</p>;
+    if (!cards || cards.length === 0) {return <p>No advice available</p>;}
 
     return (
         <div className="sjg-advice__wrapper">
@@ -76,17 +79,17 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     const parseRes = (res: any): void => {
 
         const des_data = deserialize(res);
-        if (!des_data || typeof des_data !== "object") return;
+        if (!des_data || typeof des_data !== "object") {return;}
 
         const data = des_data as { 
             hand?: SJCore.HandData, 
             dipai?: SJCore.Card[]
         };
 
-        if (!data) return;
+        if (!data) {return;}
 
-        if (data.hand) setHand(SJCore.Hand.deserialize(data.hand));
-        if (data.dipai) setDipai(data.dipai || null);
+        if (data.hand) {setHand(SJCore.Hand.deserialize(data.hand));}
+        if (data.dipai) {setDipai(data.dipai || null);}
     }
 
     async function drawCard() {
@@ -111,8 +114,8 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
 
     async function callTrump() {
         const cards = handRef.current?.getActiveCards() || [];
-        if (cards.length === 0) return; // must select cards to call trump
-        if (!SJComp.isAllSame(cards) && !SJComp.isAllJokers(cards)) return; // must be all same card or jokers to call trump
+        if (cards.length === 0) {return;} // must select cards to call trump
+        if (!SJComp.isAllSame(cards) && !SJComp.isAllJokers(cards)) {return;} // must be all same card or jokers to call trump
         return SJRequest({
             roomId,
             action: "trump",
@@ -128,7 +131,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
 
     async function playCards() {
         const cards = handRef.current?.getActiveCards() || [];
-        if (cards.length === 0) return; // must select cards to play
+        if (cards.length === 0) {return;} // must select cards to play
         const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
         const res = await SJRequest({
             roomId,
@@ -144,7 +147,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
 
     async function shuaiCards() {
         const cards = handRef.current?.getActiveCards() || [];
-        if (cards.length === 0) return; // must select cards to shuai
+        if (cards.length === 0) {return;} // must select cards to shuai
         const play = { cards: cards.map(c => ({ suit: c.suit, rank: c.rank })) }; // assert type
         const res = await SJRequest({
             roomId,
@@ -169,8 +172,8 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     }
 
     async function speedDraw() {
-        if (phase !== "draw") return;
-        if (!window.confirm("Are you sure you want to speed draw?")) return;
+        if (phase !== "draw") {return;}
+        if (!window.confirm("Are you sure you want to speed draw?")) {return;}
         await SJRequest({
             roomId,
             action: "speed",
@@ -200,17 +203,17 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     const [advice, setAdvice] = useState<SJAdvt.Advice | null>(null);
 
     const getAdvice = useCallback(() => {
-        if (!game || !hand) return;
+        if (!game || !hand) {return;}
         let i = game.lead;
         const tricks : SJAdvt.Move[] = [];
         while (true) {
             const play = game.info.get(game.players[i])?.play;
-            if (!play) break;
+            if (!play) {break;}
             tricks.push(play.cards);
             i = (i + 1) % game.players.length;
-            if (i === game.lead) break;
+            if (i === game.lead) {break;}
         }
-        if (i === game.lead) tricks.length = 0; // no tricks played yet
+        if (i === game.lead) {tricks.length = 0;} // no tricks played yet
         if (game.players[game.turn] === identity?.clientId || !help) {
             const pos: SJAdvt.Position = {
                 numPlayers: game.players.length,
@@ -223,7 +226,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
             const adv = SJAdvr.analyse(pos);
             // console.log(adv);
             setAdvice(adv);
-        } else setAdvice(null);
+        } else {setAdvice(null);}
     }, [game, hand, help]);
 
     useEffect(() => {
@@ -235,11 +238,11 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
         }
 
         // phase update
-        if (game.over) setPhase("over");
-        else if (game.draw) setPhase("draw");
+        if (game.over) {setPhase("over");}
+        else if (game.draw) {setPhase("draw");}
         else if (game.dip) {
             setPhase("dipai");
-            if (game.players[game.zhuang] !== identity?.clientId) return;
+            if (game.players[game.zhuang] !== identity?.clientId) {return;}
             getDipai();
         } else {
             getAdvice();
@@ -248,14 +251,14 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     }, [game]);
 
     useEffect(() => {
-        if (!phase || phase === "over") setHand(null);
+        if (!phase || phase === "over") {setHand(null);}
         else {
-            if (phase !== "dipai") setDipai([]);
-            else getHand();
+            if (phase !== "dipai") {setDipai([]);}
+            else {getHand();}
         }
     }, [phase]);
 
-    if (!game) return null;
+    if (!game) {return null;}
 
     const actionDisabled = Boolean(game.paused);
 
@@ -267,7 +270,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                         <div className="sjg-status__banner" role="status" aria-live="polite">
                             <span style={{ fontWeight: 'bold', padding: '0 5px 0 0' }}>Awaiting Reconnection:</span>
                             {missing.map((p, i) => (
-                                <span key={i} style={{ padding: '0 3px 0 0' }}>{`${p}`}{i < missing.length - 1 ? "," : ""}</span>
+                                <span key={i} style={{ padding: '0 3px 0 0' }}>{p}{i < missing.length - 1 ? "," : ""}</span>
                             ))}
                         </div>
                     )}
@@ -353,7 +356,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                     )}
                     <div className="sjg-button__group">
                         <button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
-                        <button className="sjg-button__game" onClick={() => setHelp(help => !help)}>Toggle Help</button>
+                        <button className="sjg-button__game" onClick={() => { setHelp(help => !help); }}>Toggle Help</button>
                     </div>
                 </div>
             )}
@@ -376,7 +379,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
         const identify = async () => {
             await getIdentity("create-session", "ablyClientId", "ablySignature", gen, false).then((id) => {
-                if (!id) return;
+                if (!id) {return;}
                 setIdentity(id);
             });
         }
@@ -401,7 +404,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     // Game actions
 
     async function startGame() {
-        if (team < 0) return false;
+        if (team < 0) {return false;}
         return SJRequest({
             roomId,
             action: "start",
@@ -441,8 +444,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     }
 
     async function endGame() {
-        if (team < 0) return false;
-        if (!window.confirm("Are you sure you want to end the current game?")) return false;
+        if (team < 0) {return false;}
+        if (!window.confirm("Are you sure you want to end the current game?")) {return false;}
         return SJRequest({
             roomId,
             action: "end",
@@ -456,8 +459,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     useEffect(() => {
         const channel = channelRef.current;
-        if (!channel) return;
-        channel.presence.update({ username: username, team: team });
+        if (!channel) {return;}
+        channel.presence.update({ username, team });
         changeUsername(username);
     }, [username, team]);
 
@@ -468,7 +471,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     const [connectionState, setConnectionState] = useState<string>("");
 
     useEffect(() => {
-        if (!ably) return;
+        if (!ably) {return;}
         const onConnectionStateChange = (state: Ably.ConnectionStateChange) => {
             setConnectionState(state.current);
         };
@@ -484,7 +487,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     useEffect(() => {
 
-        if (!ably) return;
+        if (!ably) {return;}
         const options: Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
         const channel = ably.channels.get(`room_${roomId}`, options);
         channelRef.current = channel;
@@ -495,14 +498,14 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             if (ably.connection.state !== "connected") {
                 await new Promise<void>(resolve =>
-                    ably.connection.once("connected", () => resolve())
+                    ably.connection.once("connected", () => { resolve(); })
                 );
             }
 
             await channel.attach();
 
             channel.presence.subscribe((_msg) => {
-                if (cancelled) return;
+                if (cancelled) {return;}
                 channel.presence.get().then(presence => {
                     setIds(presence.map(p => p.clientId));
                     setPlayers(presence.map(p => p.data.username));
@@ -510,16 +513,16 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 });
             });
 
-            await channel.presence.enter({ username: username, team: team });
+            await channel.presence.enter({ username, team });
 
             // console.log(`Joined room_${roomId} as ${username} on team ${team ? "1" : "2"}`);
 
             channel.subscribe('state_change', (msg) => { // game state updated
-                if (cancelled) return;
+                if (cancelled) {return;}
                 const des_data = deserialize(msg.data.game);
                 if (!des_data || typeof des_data !== "object") { setGame(null); return; } // corrupted game state
                 const state = des_data as SJGame.GameState;
-                if (state) setGame(state);
+                if (state) {setGame(state);}
                 // console.log("Updated:", state);
             });
 
@@ -543,12 +546,12 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     const [missing, setMissing] = useState<string[] | null>(null);
 
     useEffect(() => {
-        if (!game) return;
+        if (!game) {return;}
         // adjust team
         const idx = game.info.get(identity?.clientId || "")?.index;
         // console.log(idx);
-        if (idx === undefined) setTeam(-1);
-        else setTeam(idx % 2);
+        if (idx === undefined) {setTeam(-1);}
+        else {setTeam(idx % 2);}
 
     }, [game]);
 
@@ -556,18 +559,18 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     useEffect(() => {
 
-        if (!game) return;
+        if (!game) {return;}
 
         const miss : string[] = [];
 
-        for (let i = 0; i < game.players.length; i++) if (!ids.find(id => id === game.players[i])) miss.push(game.info.get(game.players[i])?.username || game.players[i]);
+        for (let i = 0; i < game.players.length; i++) {if (!ids.find(id => id === game.players[i])) {miss.push(game.info.get(game.players[i])?.username || game.players[i]);}}
 
-        const connection = async () => await connectionUpdate();
+        const connection = async () => { await connectionUpdate(); };
 
         if (miss.length > 0) {
             connection();
             setMissing(miss);
-        } else setMissing(null);
+        } else {setMissing(null);}
 
         // console.log("Players in game:", cnt, "/", game.players.length);
 
@@ -586,7 +589,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 <div className="sjg-lobby">
                     <PlayerList players={players} teams={teams} />
                     <div className="sjg-button__group">
-                        <button onClick={() => setTeam(p => 1 - Math.abs(p))}>{team === -1 ? `Join Game` : `Switch Team`}</button>
+                        <button onClick={() => { setTeam(p => 1 - Math.abs(p)); }}>{team === -1 ? `Join Game` : `Switch Team`}</button>
                         <button onClick={() => startGame()}>Start Game</button>
                     </div>
                 </div>
