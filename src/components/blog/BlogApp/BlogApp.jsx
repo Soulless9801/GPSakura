@@ -5,7 +5,7 @@ import { loadValue } from '/src/utils/storage.js';
 import { deserialize } from '/src/utils/serial';
 
 import BlogPost from '/src/components/blog/BlogPost/BlogPost.jsx';
-import Select from '/src/components/tools/Select/Select.jsx';
+import Select from '/src/components/tools/Select/Select';
 import Pagination from '/src/components/tools/Pagination/Pagination.jsx';
 import Modal from '/src/components/tools/Modal/Modal.jsx';
 

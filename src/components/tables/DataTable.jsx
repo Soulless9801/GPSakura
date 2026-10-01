@@ -7,7 +7,7 @@ import DT from 'datatables.net-dt';
 
 DataTable.use(DT);
 
-import Select from '/src/components/tools/Select/Select.jsx';
+import Select from '/src/components/tools/Select/Select';
 
 import '/src/components/tables/DataTable.css'
 

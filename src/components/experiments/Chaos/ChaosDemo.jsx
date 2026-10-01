@@ -5,7 +5,7 @@ import ExperimentDemo from "/src/components/experiments/ExperimentDemo.jsx";
 
 import Chaos from "./Chaos.jsx";
 import { Chaos3D } from "/src/components/experiments/ThreeD/ThreeD.jsx";
-import Select from "/src/components/tools/Select/Select.jsx";
+import Select from "/src/components/tools/Select/Select";
 import Slider from "/src/components/tools/Slider/Slider.jsx";
 
 import ColorSelector from "/src/components/tools/ColorSelector/ColorSelector.jsx";

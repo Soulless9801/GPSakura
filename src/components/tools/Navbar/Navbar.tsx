@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import lightImage from '/favicon.png';
 import darkImage from '/favicom.png';
 
-import Select from '/src/components/tools/Select/Select.jsx'
+import Select, { type SelectOption } from '/src/components/tools/Select/Select';
 
 import './Navbar.css';
 
@@ -23,31 +23,31 @@ export default function Navbar() {
         const websiteIcon = document.getElementById('websiteIcon');
 
         if (theme === 'dark') {
-            icon.classList.replace('fa-sun', 'fa-moon');
+            icon?.classList.replace('fa-sun', 'fa-moon');
             setBrand(darkImage);
             if (websiteIcon) {websiteIcon.href = darkImage;}
         } else {
-            icon.classList.replace('fa-moon', 'fa-sun');
+            icon?.classList.replace('fa-moon', 'fa-sun');
             setBrand(lightImage);
             if (websiteIcon) {websiteIcon.href = lightImage;}
         }
     }, [theme]);
 
     useEffect(() => {
-        const items = document.querySelectorAll('.nav-item.dropdown');
+        const items = document.querySelectorAll<HTMLElement>('.nav-item.dropdown');
 
-        const onEnter = (el) => {
+        const onEnter = (el: HTMLElement) => {
             el.classList.add('show');
             el.querySelector('.dropdown-menu')?.classList.add('show');
         };
-        const onLeave = (el) => {
+        const onLeave = (el: HTMLElement) => {
             if (!el.dataset.openLocked) {
                 el.classList.remove('show');
                 el.querySelector('.dropdown-menu')?.classList.remove('show');
             }
         };
 
-        const onToggleClick = (el, ev) => {
+        const onToggleClick = (el: HTMLElement, ev: MouseEvent) => {
             ev.stopPropagation();
             const locked = el.dataset.openLocked === 'true';
             if (locked) {
@@ -69,7 +69,7 @@ export default function Navbar() {
         };
 
         items.forEach(el => {
-            const clickHandler = ev => { onToggleClick(el, ev); };
+            const clickHandler = (ev: MouseEvent) => { onToggleClick(el, ev); };
 
             el.addEventListener('mouseenter', () => { onEnter(el); });
             el.addEventListener('mouseleave', () => { onLeave(el); });
@@ -113,7 +113,7 @@ export default function Navbar() {
                                         { value: 'USACO', label: 'USACO', to: '/usaco' },
                                         { value: 'Codeforces', label: 'Codeforces', to: '/cf' },
                                     ]}
-                                    onChange={e => navigate(e.to)}
+                                    onChange={(option: SelectOption) => { if (option.to) { navigate(option.to); } }}
                                     fixedSelect={true}
                                     placeholder="Coding"
                                     className="nav-dropdown"
@@ -129,7 +129,7 @@ export default function Navbar() {
                                         { value: 'Chaos', label: 'Chaotic Attractors', to: '/chaos' },
                                         { value: '3D', label: '3D Graphics', to: '/3d' },
                                     ]}
-                                    onChange={e => navigate(e.to)}
+                                    onChange={(option: SelectOption) => { if (option.to) { navigate(option.to); } }}
                                     fixedSelect={true}
                                     placeholder="Experiments"
                                     className="nav-dropdown"
@@ -145,7 +145,7 @@ export default function Navbar() {
                                         { value: 'Freq', label: 'Frequency Guesser', to: '/freq' },
                                         { value: 'BlackJack', label: 'Black Jack', to: '/blackjack' },
                                     ]}
-                                    onChange={e => navigate(e.to)}
+                                    onChange={(option: SelectOption) => { if (option.to) { navigate(option.to); } }}
                                     fixedSelect={true}
                                     placeholder="Games"
                                     className="nav-dropdown"

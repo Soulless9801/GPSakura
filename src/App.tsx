@@ -1,34 +1,33 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ComponentType } from 'react';
 import { HashRouter, Routes, Route } from 'react-router';
 
-import AppLayout from '/src/layouts/AppLayout.jsx';
-import PageLoader from '/src/components/tools/PageLoader/PageLoader.jsx';
+import AppLayout from '/src/layouts/AppLayout';
+import PageLoader from '/src/components/tools/PageLoader/PageLoader';
 
 // Lazy load all page components for route-based code splitting
-const Home = lazy(() => import('/src/pages/Home.jsx'));
-const Codeforces = lazy(() => import('/src/pages/Coding/Codeforces.jsx'));
-const USACO = lazy(() => import('/src/pages/Coding/USACO.jsx'));
-const Blog = lazy(() => import('/src/pages/Blog.jsx'));
-const Particle = lazy(() => import('/src/pages/Experiments/Particle.jsx'));
-const CellAutomata = lazy(() => import('/src/pages/Experiments/CellAutomata.jsx'));
-const Fractals = lazy(() => import('/src/pages/Experiments/Fractals.jsx'));
-const Chaos = lazy(() => import('/src/pages/Experiments/Chaos.jsx'));
-const Color = lazy(() => import('/src/pages/Games/Color.jsx'));
-const Freq = lazy(() => import('/src/pages/Games/Freq.jsx'));
-const ShengJi = lazy(() => import('/src/pages/Games/ShengJi.jsx'));
-const ShengJiAdvisor = lazy(() => import('/src/pages/Games/ShengJiAdvisor.jsx'));
-const TriD = lazy(() => import('/src/pages/Experiments/ThreeD.jsx'));
-const BlackJack = lazy(() => import('/src/pages/Games/BJ.jsx'));
+const Home = lazy(() => import('/src/pages/Home'));
+const Codeforces = lazy(() => import('/src/pages/Coding/Codeforces'));
+const USACO = lazy(() => import('/src/pages/Coding/USACO'));
+const Blog = lazy(() => import('/src/pages/Blog'));
+const Particle = lazy(() => import('/src/pages/Experiments/Particle'));
+const CellAutomata = lazy(() => import('/src/pages/Experiments/CellAutomata'));
+const Fractals = lazy(() => import('/src/pages/Experiments/Fractals'));
+const Chaos = lazy(() => import('/src/pages/Experiments/Chaos'));
+const Color = lazy(() => import('/src/pages/Games/Color'));
+const Freq = lazy(() => import('/src/pages/Games/Freq'));
+const ShengJi = lazy(() => import('/src/pages/Games/ShengJi'));
+const ShengJiAdvisor = lazy(() => import('/src/pages/Games/ShengJiAdvisor'));
+const TriD = lazy(() => import('/src/pages/Experiments/ThreeD'));
+const BlackJack = lazy(() => import('/src/pages/Games/BJ'));
 
-function lazyPage(Page) {
-    const PageComponent = Page;
+function lazyPage(Page: ComponentType) {
     return (
         <Suspense fallback={<PageLoader />}>
-            <PageComponent />
+            <Page />
         </Suspense>
     );
 }
-    
+
 export default function App() {
     return (
         <HashRouter>

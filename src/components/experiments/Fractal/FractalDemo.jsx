@@ -4,7 +4,7 @@ import { loadValue } from "/src/utils/storage.js";
 import ExperimentDemo from "/src/components/experiments/ExperimentDemo.jsx";
 
 import Fractal from "./Fractal.jsx";
-import Select from "/src/components/tools/Select/Select.jsx";
+import Select from "/src/components/tools/Select/Select";
 import Slider from "/src/components/tools/Slider/Slider.jsx";
 
 import "./FractalDemo.css";

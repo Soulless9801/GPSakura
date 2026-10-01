@@ -3,12 +3,32 @@ import { findIndex } from "/src/utils/list.js";
 
 import "./Select.css";
 
-export default function Select({ options = [], defaultValue, onChange, defaultIndex=0, fixedSelect=false, align="left", labelR=null, labelL=null, placeholder="" }) {
+export interface SelectOption {
+    value: string;
+    label: string;
+    to?: string;
+}
+
+interface SelectProps {
+    options?: SelectOption[];
+    defaultValue?: string;
+    onChange: (option: SelectOption) => void;
+    defaultIndex?: number;
+    fixedSelect?: boolean;
+    align?: "left" | "right";
+    labelR?: string | null;
+    labelL?: string | null;
+    placeholder?: string;
+    id?: string;
+    className?: string;
+}
+
+export default function Select({ options = [], defaultValue, onChange, defaultIndex = 0, fixedSelect = false, align = "left", labelR = null, labelL = null, placeholder = "" }: SelectProps) {
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState({ value: '1', label: '1' });
 
-    const ref = useRef();
-    const menuRef = useRef();
+    const ref = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const [hover, setHover] = useState(false);
     const [closed, setClosed] = useState(false);
@@ -24,7 +44,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     useEffect(() => {
         // console.log(defaultValue);
         if (!fixedSelect) {handleSelect(options[findIndex(defaultValue, options, defaultIndex)]);}
-        const handleClickOutside = (event) => {
+        const handleClickOutside = (event: PointerEvent) => {
             if (ref.current && !ref.current.contains(event.target)) {
                 setOpen(false);
                 setClosed(false);
