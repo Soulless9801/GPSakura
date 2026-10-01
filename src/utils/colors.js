@@ -1,11 +1,21 @@
-export function hexToRGB(hex) {
-    const parsed = hex.replace("#", "");
-	if (!/^[0-9a-fA-F]{6}$/.test(parsed)) return null;
-    const bigint = parseInt(parsed, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return [r, g, b];
+export function hexToRGB(value) {
+    if (typeof value !== 'string') return null;
+
+    const parsed = value.trim().replace(/^#/, '');
+
+    if (/^[0-9a-fA-F]{3}$/.test(parsed)) {
+        return parsed
+            .split('')
+            .map(channel => parseInt(`${channel}${channel}`, 16));
+    }
+
+    if (!/^[0-9a-fA-F]{6}$/.test(parsed)) return null;
+
+    return [
+        parseInt(parsed.slice(0, 2), 16),
+        parseInt(parsed.slice(2, 4), 16),
+        parseInt(parsed.slice(4, 6), 16),
+    ];
 }
 
 const toHex = (value) => value.toString(16).padStart(2, "0");
@@ -103,9 +113,31 @@ export function hexToHsv(hex) {
     return rgbToHsv(rgb);
 }
 
+function ensure(rgb, fallbackColor = [0, 0, 0]) {
+    if (!Array.isArray(rgb)) return fallbackColor;
+
+    if (
+        rgb.length < 3 ||
+        !rgb.slice(0, 3).every(value => typeof value === "number")
+    ) {
+        return fallbackColor;
+    }
+
+    return rgb.slice(0, 3);
+}
+
+const FALLBACK_RGB = [255, 255, 255];
+
 export function readColor() {
-	return [
-		hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--primary-color").trim()),
-		hexToRGB(getComputedStyle(document.documentElement).getPropertyValue("--secondary-color").trim())
-	];
+    const styles = getComputedStyle(document.documentElement);
+
+    const primaryColor = hexToRGB(styles.getPropertyValue("--primary-color"));
+    const secondaryColor = hexToRGB(styles.getPropertyValue("--secondary-color"));
+
+    console.log("Read colors:", primaryColor, secondaryColor);
+
+    return [
+        primaryColor ?? [...FALLBACK_RGB],
+        secondaryColor ?? [...FALLBACK_RGB],
+    ];
 }
