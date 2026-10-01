@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import $ from 'jquery';
 
 import CustomDataTable from '/src/components/tables/DataTable.jsx';

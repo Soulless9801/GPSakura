@@ -251,10 +251,11 @@ export async function handler(event: any) {
             return retJSON(game);
         }
 
-        return errorJSON("Invalid action");
+        console.error(`blackjack-game-room: Invalid action ${action} received from clientId ${clientId} for roomId ${roomId}`);
+        return errorJSON(`blackjack-game-room: Invalid action ${action}`, 400);
 
     } catch (error: any) {
-        console.log("Error in handler:", error);
-        return errorJSON(error.message, 500);
+        console.error("blackjack-game-room: Internal server error:", error.message);
+        return errorJSON(`blackjack-game-room: Internal server error ${error.message}`, 500);
     }
 }

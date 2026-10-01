@@ -234,10 +234,6 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
             return; 
         }
 
-        const refresh = async () => {
-            await getHand();
-        }
-
         // phase update
         if (game.over) setPhase("over");
         else if (game.draw) setPhase("draw");
@@ -505,7 +501,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             await channel.attach();
 
-            channel.presence.subscribe((msg) => {
+            channel.presence.subscribe((_msg) => {
                 if (cancelled) return;
                 channel.presence.get().then(presence => {
                     setIds(presence.map(p => p.clientId));

@@ -5,10 +5,10 @@ export interface Identity {
     signature: string;
 }
 
-export async function getIdentity(function_name: string, clientId_loc: string, signature_loc: string, gen: () => Promise<string | null>, forceNew: boolean = false): Promise<Identity | null> {
+export async function getIdentity(functionName: string, clidntIdLoc: string, sigLoc: string, gen: () => Promise<string | null>, forceNew: boolean = false): Promise<Identity | null> {
 
-    let clientId = localStorage.getItem(clientId_loc);
-    let signature = localStorage.getItem(signature_loc);
+    let clientId = localStorage.getItem(clidntIdLoc);
+    let signature = localStorage.getItem(sigLoc);
 
     const ver = await fetch("/.netlify/functions/create-session", {
         method: "POST",
@@ -26,9 +26,9 @@ export async function getIdentity(function_name: string, clientId_loc: string, s
 
         clientId = await gen();
         if (!clientId) return null;
-        localStorage.setItem(clientId_loc, clientId);
+        localStorage.setItem(clidntIdLoc, clientId);
 
-        const res = await fetch(`/.netlify/functions/${function_name}`, {
+        const res = await fetch(`/.netlify/functions/${functionName}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -48,7 +48,7 @@ export async function getIdentity(function_name: string, clientId_loc: string, s
 
         const ret = des_data as { signature: string | null };
         signature = ret.signature;
-        localStorage.setItem(signature_loc, signature || "");
+        localStorage.setItem(sigLoc, signature || "");
     }
 
     return { clientId: clientId || "", signature: signature || "" };

@@ -52,8 +52,9 @@ export const handler = async (event: any) => {
             return successJSON({ valid: isValid });
         }
 
-    } catch (error) {
-        // console.error("Error in create-session handler:", error);
-        return errorJSON("Internal server error", 500);
+
+    } catch (error: any) {
+        console.error("create-session: Internal server error:", error.message);
+        return errorJSON(`create-session: Internal server error ${error.message}`, 500);
     }
 };

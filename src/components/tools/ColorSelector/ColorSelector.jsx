@@ -268,13 +268,13 @@ export default function ColorSelector({
 
 	const hex_color = useMemo(() => hexState, [hexState]); 
 
-	const emitImmediate = (next_hex) => {
-		onChange?.(next_hex);
+	const emitImmediate = (nextHex) => {
+		onChange?.(nextHex);
 	};
 
-	const commitUpdateHex = (next_hex) => {
-		setHexState(next_hex);
-		emitImmediate(next_hex);
+	const commitUpdateHex = (nextHex) => {
+		setHexState(nextHex);
+		emitImmediate(nextHex);
 	};
 
 	const handleMenuSelect = (nextHex) => {

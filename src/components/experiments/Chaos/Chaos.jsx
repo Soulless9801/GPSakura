@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { rgbToCss, readColor } from "/src/utils/colors.js"
 
 export default function Chaos({

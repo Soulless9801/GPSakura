@@ -33,8 +33,8 @@ export const handler = async (event: any) => {
 
         return successJSON(tokenRequest);
 
-    } catch (error) {
-        // console.log("Error generating Ably token request:", error);
-        return errorJSON("Internal server error", 500);
+    } catch (error: any) {
+        console.error("ably-auth: Internal server error:", error.message);
+        return errorJSON(`ably-auth: Internal server error ${error.message}`, 500);
     }
 };

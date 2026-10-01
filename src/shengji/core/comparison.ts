@@ -243,17 +243,17 @@ function isAllMainLine(cards: Card[], trump: Trump): boolean {
 
 
 // CARD FUNCTIONS
-export function isCardEqual(card_a: Card, card_b: Card): boolean {
-    return card_a.suit === card_b.suit && card_a.rank === card_b.rank;
+export function isCardEqual(cardA: Card, cardB: Card): boolean {
+    return cardA.suit === cardB.suit && cardA.rank === cardB.rank;
 }
 
-// check if card_a = card_b + 1
-export function isCardNext(card_a: Card, card_b: Card, trump: Trump): boolean {
+// check if cardA = cardB + 1
+export function isCardNext(cardA: Card, cardB: Card, trump: Trump): boolean {
 
-    if (!isMainLine(card_a, trump) && card_a.suit !== card_b.suit) return false;
+    if (!isMainLine(cardA, trump) && cardA.suit !== cardB.suit) return false;
     
-    const val_a : number[] = getCardData(card_a, trump);
-    const val_b : number[] | null = getNextCardData(card_b, trump);
+    const val_a : number[] = getCardData(cardA, trump);
+    const val_b : number[] | null = getNextCardData(cardB, trump);
 
     if (!val_b) return false;
 
@@ -275,13 +275,13 @@ export function checkInline(card: Card, lead: Card, trump: Trump): boolean {
     return true;
 }
 
-// check if card_a > card_b, assuming card_b was played first (trumps in the case of equality)
-export function isCardBigger(card_a: Card, card_b: Card, trump: Trump): boolean {
+// check if cardA > cardB, assuming cardB was played first (trumps in the case of equality)
+export function isCardBigger(cardA: Card, cardB: Card, trump: Trump): boolean {
 
-    if (!checkInline(card_a, card_b, trump)) return isMainLine(card_a, trump); // check same suit / mainline status
+    if (!checkInline(cardA, cardB, trump)) return isMainLine(cardA, trump); // check same suit / mainline status
 
-    const val_a : number[] = getCardData(card_a, trump);
-    const val_b : number[] = getCardData(card_b, trump);
+    const val_a : number[] = getCardData(cardA, trump);
+    const val_b : number[] = getCardData(cardB, trump);
 
     for (let i = 0; i < 4; i++) {
         if (val_a[i] > val_b[i]) return true;
@@ -487,10 +487,10 @@ export function isPlayValid(iplay: IPlay, ilead: IPlay, ihand: IHand, trump: Tru
 // COMPARISON
 
 // check if play_a and play_b have the same format
-function isFormatted(iplay_a: IPlay, iplay_b: IPlay): boolean {
+function isFormatted(iplayA: IPlay, iplayB: IPlay): boolean {
     
-    const struct_a = iplay_a.struct;
-    const struct_b = iplay_b.struct;
+    const struct_a = iplayA.struct;
+    const struct_b = iplayB.struct;
 
     const struct_a_simp : number[][] = [];
     const struct_b_simp : number[][] = [];
@@ -518,15 +518,15 @@ function isFormatted(iplay_a: IPlay, iplay_b: IPlay): boolean {
 }
 
 //check if play_a "kills" play_b
-export function isPlayBigger(iplay_a: IPlay, iplay_b: IPlay, trump: Trump): boolean { // assumes same kind of play, both plays are valid
+export function isPlayBigger(iplayA: IPlay, iplayB: IPlay, trump: Trump): boolean { // assumes same kind of play, both plays are valid
 
-    if (iplay_b.play.cards.length === 0) return true; // if no cards played, any play is bigger
+    if (iplayB.play.cards.length === 0) return true; // if no cards played, any play is bigger
 
-    // console.log("Play A:", playToString(iplay_a.play));
-    // console.log("Play B:", playToString(iplay_b.play));
-    if (!isFormatted(iplay_a, iplay_b)) return false;
+    // console.log("Play A:", playToString(iplayA.play));
+    // console.log("Play B:", playToString(iplayB.play));
+    if (!isFormatted(iplayA, iplayB)) return false;
 
-    for (let i = iplay_b.play.cards.length - 1; i >= 0; i--) if (!isCardBigger(iplay_a.play.cards[i], iplay_b.play.cards[i], trump)) return false;
+    for (let i = iplayB.play.cards.length - 1; i >= 0; i--) if (!isCardBigger(iplayA.play.cards[i], iplayB.play.cards[i], trump)) return false;
     
     return true;
 }

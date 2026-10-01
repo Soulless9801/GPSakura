@@ -6,7 +6,7 @@ dotenv.config();
 
 const { SPREADSHEET_ID } = process.env;
 
-export const handler = async (event: any) => {
+export const handler = async (_event: any) => {
 
     let csv;
 
@@ -24,16 +24,17 @@ export const handler = async (event: any) => {
 
         console.log(`codeforces-sheet-data: Fetched ${csv.length} rows from Google Sheets`);
         
-    } catch (error) {
-        console.error(`codeforces-sheet-data: Error fetching data from Google Sheets`, error);
+    } catch (error: any) {
+        console.error(`codeforces-sheet-data: Error fetching data from Google Sheets`, error.message);
         try {
             const filePath = path.resolve('./netlify/functions/data/cfProblems.csv');
             csv = fs.readFileSync(filePath, 'utf8');
-        } catch (error) {
+        } catch (error: any) {
+            console.error(`codeforces-sheet-data: Error reading local file`, error.message);
             return {
                 statusCode: 500,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ error: "Error fetching data from Google Sheets and local fallback" }),
+                body: JSON.stringify({ error: `codeforces-sheet-data: Internal server error ${error.message}` }),
             };
         }
     }

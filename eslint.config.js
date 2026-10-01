@@ -1,6 +1,4 @@
-import js from '@eslint/js'
 import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
@@ -89,7 +87,7 @@ const naming_rules = {
         },
         {
             selector: 'parameter',
-            format: ['snake_case'],
+            format: ['camelCase'],
             leadingUnderscore: 'allow',
         },
         {
@@ -106,40 +104,27 @@ const naming_rules = {
 export default defineConfig([
     globalIgnores(['dist', 'scripts', '.netlify', 'node_modules']),
     {
-        files: ['**/*.{js,jsx}'],
+        files: ['**/*.{js,jsx,ts,tsx}'],
         extends: [
-            js.configs.recommended,
-            reactHooks.configs['recommended-latest'],
-            reactRefresh.configs.vite,
+            tseslint.configs.recommended,
         ],
+        plugins: {
+            'react-refresh': reactRefresh,
+        },
         languageOptions: {
-            ecmaVersion: 2020,
-            globals: globals.browser,
-            parserOptions: {
-                ecmaVersion: 'latest',
-                ecmaFeatures: { jsx: true },
-                sourceType: 'module',
+            globals: {
+                ...globals.browser,
+                ...globals.node,
             },
         },
         rules: {
-            'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+            ...naming_rules,
+            ...reactRefresh.configs.vite.rules,
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+            ],
         },
     },
-    ...tseslint.config(
-        {
-            files: ['**/*.{js,jsx,ts,tsx}'],
-            extends: [tseslint.configs.recommended],
-            languageOptions: {
-                globals: {
-                    ...globals.browser,
-                    ...globals.node,
-                },
-            },
-            rules: {
-                ...naming_rules,
-                '@typescript-eslint/no-explicit-any': 'off',
-                '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-            },
-        },
-    ),
 ])

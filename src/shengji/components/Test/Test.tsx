@@ -23,7 +23,7 @@ export default function Test() {
         setCards(SJConv.handToCards(testCase?.ihand.hand || new SJCore.Hand(), testCase?.trump || null));
     }, [testCase]);
 
-    const checkSelected = () => testCardRef.current?.getActiveCards();
+    // const checkSelected = () => testCardRef.current?.getActiveCards();
 
     return (
         <div className="sjTest">

@@ -70,14 +70,14 @@ export async function handler(event: any) {
             });
         });
 
-    } catch (error) {
-        console.log(`firebase-collection-query: Error fetching collection from Firestore, falling back to local file ${loc}.json`, error);
+    } catch (error: any) {
+        console.log(`firebase-collection-query: Error fetching collection from Firestore, falling back to local file ${loc}.json`, error.message);
         try {
             const filePath = path.resolve(`./netlify/functions/data/${loc}.json`);
             collection = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             // Timestamps should already be in ISO format
-        } catch (error) {
-            return errorJSON("Error fetching collection from Firestore and local fallback", 500);
+        } catch (error: any) {
+            return errorJSON(`firebase-collection-query: Error fetching collection from Firestore and local fallback: ${error.message}`, 500);
         }   
     }
 

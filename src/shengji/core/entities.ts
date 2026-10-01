@@ -7,7 +7,7 @@ export type Card = CardModule.Card;
 
 export { validateCard, Deck } from '/src/entities/card';
 
-export interface DeckData extends CardModule.DeckData {}
+export type { DeckData } from '/src/entities/card';
 
 export interface Trump {
     suit: Suit | null;

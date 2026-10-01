@@ -5,7 +5,6 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
 
-// eslint-disable-next-line react-hooks/rules-of-hooks
 DataTable.use(DT);
 
 import Select from '/src/components/tools/Select/Select.jsx';

@@ -53,9 +53,9 @@ async function loadGame(redis: Redis, roomId: string) {
     return typeof res === "string" ? res : JSON.stringify(res);
 }
 
-async function saveGame(redis: Redis, roomId: string, ser_game: string) {
+async function saveGame(redis: Redis, roomId: string, serGame: string) {
     // store as JSON string
-    await redis.set(GAME_KEY_PREFIX + roomId, ser_game);
+    await redis.set(GAME_KEY_PREFIX + roomId, serGame);
 }
 
 const RATE_LIMIT_RULES: Record<string, [number, number]> = { // TODO: fine-tune these rules based on actual usage patterns
@@ -108,9 +108,9 @@ export const handler = async(event: any) => {
 
         // helper function to get game state
         async function getGame() {
-            const ser_game: string | null = await loadGame(redis, roomId);
-            if (!ser_game) return null;
-            return SJGame.Game.deserializeGame(ser_game);
+            const serGame: string | null = await loadGame(redis, roomId);
+            if (!serGame) return null;
+            return SJGame.Game.deserializeGame(serGame);
         }
 
         const allowedWhenPaused = new Set(["state", "hand", "username", "connection", "end"]);
@@ -118,8 +118,8 @@ export const handler = async(event: any) => {
         if (currentGame instanceof SJGame.Game && currentGame.getState().paused && !allowedWhenPaused.has(action)) return errorJSON("Game is paused", 423);
 
         async function savePublish(game: SJGame.Game) {
-            const ser_game : string = game.serializeGame();
-            await saveGame(redis, roomId, ser_game);
+            const serGame : string = game.serializeGame();
+            await saveGame(redis, roomId, serGame);
             await publish(channel, "state_change", { game: serialize(game.getState()) });
         }
 
@@ -364,11 +364,11 @@ export const handler = async(event: any) => {
             return successJSON({ msg: "Speed draw executed" });
         }
 
-        return errorJSON("Invalid action");
+        return errorJSON(`shengji-game-room: Invalid action`, 400);
 
     } catch (error: any) {
         // catch and return any errors
-        console.error("Error handling request:", error);
-        return errorJSON(error.message, 500);
+        console.error("shengji-game-room: Error handling request:", error.message);
+        return errorJSON(`shengji-game-room: Internal server error ${error.message}`, 500);
     }
 }

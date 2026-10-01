@@ -14,7 +14,7 @@ const db = drizzle(sql);
 
 // request a new entry in player schema to be created
 
-export async function handler(event: any) {
+export async function handler(_event: any) {
 
     try {
 
@@ -39,8 +39,8 @@ export async function handler(event: any) {
             money: ret.money,
         });
         
-    } catch (error) {
-        // console.error("Error creating player:", error);
-        return errorJSON("Internal server error", 500);
+    } catch (error: any) {
+        console.error("neon-create-user: Error creating player:", error.message);
+        return errorJSON(`neon-create-user: Internal server error ${error.message}`, 500);
     }
 }

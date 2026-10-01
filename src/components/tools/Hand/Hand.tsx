@@ -90,7 +90,6 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
                             style={{ zIndex: layout[index].z }}
                             
                         >
-                            {/* @ts-ignore - Card is JSX without proper types */}
                             <Card card={card} pos={index} onClick={handleClick}/>
 
                         </motion.div>
