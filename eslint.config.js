@@ -169,7 +169,7 @@ export default defineConfig([
         files: [
             'db/**/*.{js,jsx,ts,tsx}',
             'netlify/**/*.{js,jsx,ts,tsx}',
-            'vite.config.js',
+            'vite.config.{js,ts}',
             'eslint.config.js',
         ],
         extends: [tseslint.configs.disableTypeChecked],

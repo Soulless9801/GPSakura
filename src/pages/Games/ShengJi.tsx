@@ -1,0 +1,11 @@
+import PageTitle from '/src/components/tools/PageTitle/PageTitle';
+import ShengJiApp from '/src/components/games/ShengJi/ShengJiApp.tsx';
+
+export default function ShengJi() {
+    return (
+        <>
+            <PageTitle title="升级" description="Tractor"/>
+            <ShengJiApp />
+        </>
+    );
+}

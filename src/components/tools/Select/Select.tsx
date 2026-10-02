@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { findIndex } from "/src/utils/list.js";
+import { findIndex } from "/src/utils/list";
 
 import "./Select.css";
 
