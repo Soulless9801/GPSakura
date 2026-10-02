@@ -1,7 +1,30 @@
-import { useRef, useEffect, useCallback, memo } from "react";
-import { rgbToCss, readColor } from "/src/utils/colors";
+import { useRef, useEffect, useCallback, memo, type CSSProperties } from "react";
+import { rgbToCss, readColor, type RGB } from "/src/utils/colors";
 import { debounce } from "/src/utils/debounce";
 import { Particle } from "/src/entities/particle";
+
+interface ParticleNetworkProps {
+    numParticles: number;
+    connectionDistance: number;
+    width?: number | string;
+    height?: number | string;
+    particleRadius?: number;
+    speed?: number;
+    pointerRadius?: number;
+    pointerStrength?: number;
+    interactive?: boolean;
+    maxAccel?: number;
+    pointerEvents?: boolean;
+    colorTransition?: number;
+    style?: CSSProperties;
+    className?: string;
+}
+
+interface PointerState {
+    x: number;
+    y: number;
+    active: boolean;
+}
 
 export default memo(function ParticleNetwork({
     numParticles,
@@ -18,15 +41,15 @@ export default memo(function ParticleNetwork({
     colorTransition = 300,
     style = {},
     className = "",
-}) {
+}: ParticleNetworkProps) {
 
     // Wrapper
 
-    const wrapperRef = useRef(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     // Canvas 
 
-    const canvasRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -41,7 +64,7 @@ export default memo(function ParticleNetwork({
         canvas.width = Math.floor(cssW * dpr);
         canvas.height = Math.floor(cssH * dpr);
         const ctx = canvas.getContext("2d");
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height]);
 
     useEffect(() => {
@@ -50,15 +73,15 @@ export default memo(function ParticleNetwork({
 
     // Render Refs
 
-    const particlesRef = useRef([]);
-    const rafRef = useRef(null);
-    const pointerRef = useRef({ x: 0, y: 0, active: false });
+    const particlesRef = useRef<Particle[]>([]);
+    const rafRef = useRef<number | null>(null);
+    const pointerRef = useRef<PointerState>({ x: 0, y: 0, active: false });
     const pointerDown = useRef(false);
 
     // Color Refs
 
-    const currentColorRef = useRef([0, 0, 0]);
-    const targetColorRef = useRef([0, 0, 0]);
+    const currentColorRef = useRef<RGB>([0, 0, 0]);
+    const targetColorRef = useRef<RGB>([0, 0, 0]);
     const transitionProgressRef = useRef(1);
 
     // Theme
@@ -126,7 +149,7 @@ export default memo(function ParticleNetwork({
         // Debounce resize handler to avoid excessive redraws
         const debouncedResize = debounce(resizeCanvas, 150);
         
-        const handlePointerMove = (ev) => {
+        const handlePointerMove = (ev: PointerEvent): void => {
         if (!interactive) {return;}
             const rect = wrapper.getBoundingClientRect();
             pointerRef.current.x = ev.clientX - rect.left;
@@ -138,8 +161,8 @@ export default memo(function ParticleNetwork({
             pointerRef.current.active = false;
         };
 
-        const handlePointerDown = () => pointerDown.current = true;
-        const handlePointerUp = () => pointerDown.current = false;
+        const handlePointerDown = (): void => { pointerDown.current = true; };
+        const handlePointerUp = (): void => { pointerDown.current = false; };
 
         window.addEventListener("resize", debouncedResize);
         wrapper.addEventListener("pointermove", handlePointerMove);
@@ -164,7 +187,10 @@ export default memo(function ParticleNetwork({
         const canvas = canvasRef.current;
         if (!canvas) {return;}
 
-        const ctx = canvas.getContext("2d");
+        const canvasElement: HTMLCanvasElement = canvas;
+        const context = canvasElement.getContext("2d");
+        if (!context) {return;}
+        const ctx: CanvasRenderingContext2D = context;
 
         const localPointer = pointerRef;
         const localParticles = particlesRef;
@@ -174,10 +200,10 @@ export default memo(function ParticleNetwork({
         
         const lastTimeRef = { current: performance.now() };
 
-        function step(dt) {
+        function step(dt: number): void {
 
-            const w = canvas.clientWidth;
-            const h = canvas.clientHeight;
+            const w = canvasElement.clientWidth;
+            const h = canvasElement.clientHeight;
             ctx.clearRect(0, 0, w, h);
 
             // Transition Color
@@ -226,7 +252,7 @@ export default memo(function ParticleNetwork({
                     p.vy = p.vy * scale;
                 }
 
-                p.move(dt, canvas);
+                p.move(dt, canvasElement);
                 p.draw(ctx, fillCss);
             }
 
@@ -236,7 +262,7 @@ export default memo(function ParticleNetwork({
             const gridSize = Math.max(10, Math.ceil(connectionDistance * 1.5));
             const gridCols = Math.ceil(w / gridSize);
             const gridRows = Math.ceil(h / gridSize);
-            const grid = Array(gridCols * gridRows);
+            const grid: Array<Array<Particle> | undefined> = Array.from({ length: gridCols * gridRows });
             for (const p of localParticles.current) {
                 const gx = Math.min(gridCols - 1, Math.max(0, Math.floor(p.x / gridSize)));
                 const gy = Math.min(gridRows - 1, Math.max(0, Math.floor(p.y / gridSize)));
@@ -280,18 +306,18 @@ export default memo(function ParticleNetwork({
             }
         }
 
-        function run(now) {
+        function run(now: number): void {
             const last = lastTimeRef.current || now;
             const dt = now - last;
             lastTimeRef.current = now;
             step(dt);
-            rafRef.current = requestAnimationFrame(run);
+            rafRef.current = window.requestAnimationFrame(run);
         }
 
-        rafRef.current = requestAnimationFrame(run);
+        rafRef.current = window.requestAnimationFrame(run);
 
         return () => {
-            if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
+            if (rafRef.current !== null) {window.cancelAnimationFrame(rafRef.current);}
         };
     }, [interactive, pointerEvents, colorTransition, connectionDistance, pointerRadius, pointerStrength, particleRadius, numParticles, speed, maxAccel]);
 

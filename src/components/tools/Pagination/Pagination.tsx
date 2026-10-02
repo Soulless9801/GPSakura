@@ -1,6 +1,14 @@
 import './Pagination.css';
+import type { Dispatch, SetStateAction } from 'react';
 
-export default function Pagination({ page, setPage, postsLength, pageSize }) {
+interface PaginationProps {
+    page: number;
+    setPage: Dispatch<SetStateAction<number>>;
+    postsLength: number;
+    pageSize: number;
+}
+
+export default function Pagination({ page, setPage, postsLength, pageSize }: PaginationProps) {
     const pageCount = Math.ceil(postsLength / pageSize);
     const maxButtons = 3;
 
@@ -8,7 +16,7 @@ export default function Pagination({ page, setPage, postsLength, pageSize }) {
         if (pageCount <= maxButtons + 2) {
             return Array.from({ length: pageCount }, (_, i) => i);
         }
-        const pages = [];
+        const pages: Array<number | "ellipsis"> = [];
         const left = Math.max(1, page - 1);
         const right = Math.min(pageCount - 2, page + 1);
 
@@ -32,14 +40,14 @@ export default function Pagination({ page, setPage, postsLength, pageSize }) {
     return (
         <div className="pagination">
             <button
-                onClick={() => setPage(0)}
+                onClick={() => { setPage(0); }}
                 disabled={page <= 0}
                 className={`paginationButton${page <= 0 ? " disabled" : ""}`}
             >
                 &#8606;
             </button>
             <button
-                onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                onClick={() => { setPage(prev => Math.max(0, prev - 1)); }}
                 disabled={page <= 0}
                 className={`paginationButton${page <= 0 ? " disabled" : ""}`}
             >
@@ -48,21 +56,21 @@ export default function Pagination({ page, setPage, postsLength, pageSize }) {
             {pageNumbers.map((num, idx) => (
                 <button
                     key={idx}
-                    onClick={() => setPage(num)}
+                    onClick={() => { if (num !== "ellipsis") { setPage(num); } }}
                     className={`paginationButton${page === num ? " active" : ""} ${num === "ellipsis" ? " disabled" : ""}`}
                 >
                     {num === "ellipsis" ? "…" : num + 1}
                 </button>
             ))}
             <button
-                onClick={() => setPage(prev => Math.min(pageCount - 1, prev + 1))}
+                onClick={() => { setPage(prev => Math.min(pageCount - 1, prev + 1)); }}
                 disabled={page >= pageCount - 1}
                 className={`paginationButton${page >= pageCount - 1 ? " disabled" : ""}`}
             >
                 &#8594;
             </button>
             <button
-                onClick={() => setPage(pageCount - 1)}
+                onClick={() => { setPage(pageCount - 1); }}
                 disabled={page >= pageCount - 1}
                 className={`paginationButton${page >= pageCount - 1 ? " disabled" : ""}`}
             >

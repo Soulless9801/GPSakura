@@ -4,6 +4,7 @@ import { loadValue } from "/src/utils/storage";
 import ExperimentDemo from "/src/components/experiments/ExperimentDemo";
 
 import Chaos from "./Chaos";
+import type { ChaosAttractor } from "./Chaos";
 import { Chaos3D } from "/src/components/experiments/ThreeD/ThreeD";
 import Select from "/src/components/tools/Select/Select";
 import Slider from "/src/components/tools/Slider/Slider";
@@ -14,7 +15,8 @@ import "./ChaosDemo.css";
 
 export default function ChaosDemo() {
 
-    const attractors = {
+    type ChaosType = "lorenz" | "aizawa" | "halvorsen";
+    const attractors: Record<ChaosType, ChaosAttractor> = {
 
         "lorenz" : {
             dims: 3,
@@ -67,6 +69,8 @@ export default function ChaosDemo() {
         }
     };
 
+    const isChaosType = (value: string): value is ChaosType => value in attractors;
+
     const chaosOptions = [
         { value: 'lorenz', label: 'Lorenz' },
         { value: 'aizawa', label: 'Aizawa' },
@@ -83,12 +87,12 @@ export default function ChaosDemo() {
     const scKey = 'chaosDemoStartColor';
     const ecKey = 'chaosDemoEndColor';
 
-    const [type, setType] = useState(() => loadValue(typeKey, 'lorenz'));
-    const [speed, setSpeed] = useState(() => loadValue(speedKey, 10));
-    const [pitch, setPitch] = useState(() => loadValue(pitchKey, 0));
-    const [yaw, setYaw] = useState(() => loadValue(yawKey, 0));
-    const [dim, setDim] = useState(() => loadValue(dimKey, 2));
-    const [depth, setDepth] = useState(() => loadValue(depthKey, 10000));
+    const [type, setType] = useState<ChaosType>(() => loadValue<ChaosType>(typeKey, 'lorenz'));
+    const [speed, setSpeed] = useState<number>(() => loadValue(speedKey, 10));
+    const [pitch, setPitch] = useState<number>(() => loadValue(pitchKey, 0));
+    const [yaw, setYaw] = useState<number>(() => loadValue(yawKey, 0));
+    const [dim, setDim] = useState<number>(() => loadValue(dimKey, 2));
+    const [depth, setDepth] = useState<number>(() => loadValue(depthKey, 10000));
 
     const [sc, setSc] = useState(() => loadValue(scKey, "#0000ff"));
     const [ec, setEc] = useState(() => loadValue(ecKey, "#ff0000"));
@@ -148,7 +152,7 @@ export default function ChaosDemo() {
                         defaultValue={type}
                         onChange={e => {
                             const value = e.value;
-                            setType(value);
+                            if (typeof value === "string" && isChaosType(value)) {setType(value);}
                         }}
                         className="chaosDemoSelect"
                         labelL="Type"
@@ -162,7 +166,7 @@ export default function ChaosDemo() {
                         defaultValue={dim}
                         onChange={e => {
                             const value = e.value;
-                            setDim(value);
+                            if (typeof value === "number") {setDim(value);}
                         }}
                         className="chaosDemoSelect"
                         labelL="Dimensions"

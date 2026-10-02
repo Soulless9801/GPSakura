@@ -1,5 +1,5 @@
 import PageTitle from '/src/components/tools/PageTitle/PageTitle';
-import ShengJiApp from '/src/components/games/ShengJi/ShengJiApp.tsx';
+import ShengJiApp from '/src/components/games/ShengJi/ShengJiApp';
 
 export default function ShengJi() {
     return (

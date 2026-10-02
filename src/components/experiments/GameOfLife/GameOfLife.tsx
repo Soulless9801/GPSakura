@@ -1,10 +1,36 @@
-import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle, memo } from "react";
-import { rgbToCss, readColor } from "/src/utils/colors";
+import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle, memo, type CSSProperties } from "react";
+import { rgbToCss, readColor, type RGB } from "/src/utils/colors";
 import { debounce } from "/src/utils/debounce";
 
-// Component
+interface GameRules {
+	survive: number[];
+	birth: number[];
+}
 
-export default memo(forwardRef(function GameOfLife(
+interface GameOfLifeProps {
+	width?: number | string;
+	height?: number | string;
+	speed: number;
+	zoom: number;
+	rules: GameRules;
+	initCellSize?: number;
+	running?: boolean;
+	showGrid?: boolean;
+	interactive?: boolean;
+	initialRandom?: boolean;
+	randomProbability?: number;
+	colorTransition?: number;
+	style?: CSSProperties;
+	className?: string;
+}
+
+export interface GameOfLifeRef {
+	clear: () => void;
+	step: () => void;
+	randomize: () => void;
+}
+
+export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLife(
 	{
 		width,
 		height,
@@ -20,22 +46,22 @@ export default memo(forwardRef(function GameOfLife(
 		colorTransition = 300,
 		style = {},
 		className = "",
-	},
+	}: GameOfLifeProps,
 	ref
 ) {
 
 	// Wrapper
 
-	const wrapperRef = useRef(null);
+	const wrapperRef = useRef<HTMLDivElement>(null);
 
 	// Canvas
 
-	const canvasRef = useRef(null);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
 
 	// Sizing
 
-	const [calcWidth, setCalcWidth] = useState(width);
-	const [calcHeight, setCalcHeight] = useState(height);
+	const [calcWidth, setCalcWidth] = useState<number>(typeof width === "number" ? width : 0);
+	const [calcHeight, setCalcHeight] = useState<number>(typeof height === "number" ? height : 0);
 
 	const [cellSize, setCellSize] = useState(initCellSize);
 
@@ -72,7 +98,7 @@ export default memo(forwardRef(function GameOfLife(
 		canvas.style.width = `${cssW  }px`;
 		canvas.style.height = `${cssH  }px`;
         const ctx = canvas.getContext("2d");
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height, cellSize]);
 
 	useEffect(() => {
@@ -81,10 +107,10 @@ export default memo(forwardRef(function GameOfLife(
 
 	// Color Refs
 
-	const currentPrimary = useRef([0, 0, 0]);
-	const targetPrimary = useRef([0, 0, 0]);
-	const currentSecondary = useRef([0, 0, 0]);
-	const targetSecondary = useRef([0, 0, 0]);
+	const currentPrimary = useRef<RGB>([0, 0, 0]);
+	const targetPrimary = useRef<RGB>([0, 0, 0]);
+	const currentSecondary = useRef<RGB>([0, 0, 0]);
+	const targetSecondary = useRef<RGB>([0, 0, 0]);
 
 	const transitionProgressRef = useRef(1);
 	const opacityProgressRef = useRef(1);
@@ -115,7 +141,7 @@ export default memo(forwardRef(function GameOfLife(
 
 	// Render Refs
 
-	const rafRef = useRef(null);
+	const rafRef = useRef<number | null>(null);
 	const lastTimeRef = useRef(performance.now());
 	const accRef = useRef(0);
 
@@ -130,24 +156,24 @@ export default memo(forwardRef(function GameOfLife(
 	// Display + Grid
 
 	const MAX = 200
+	const createGrid = (size: number): Uint8Array<ArrayBuffer> => new Uint8Array(new ArrayBuffer(size));
+	type CellGrid = ReturnType<typeof createGrid>;
 
 	const [cols, setCols] = useState(() => Math.min(Math.floor(calcWidth / cellSize), MAX));
 	const [rows, setRows] = useState(() => Math.min(Math.floor(calcHeight / cellSize), MAX));
 
-	const [grid, setGrid] = useState(
-		() => new Uint8Array(MAX * MAX)
-	);
+	const initialGrid: CellGrid = createGrid(MAX * MAX);
+	const [grid, setGrid] = useState<CellGrid>(initialGrid);
 	const gridRef = useRef(grid);
 	gridRef.current = grid;
 
-	const [display, setDisplay] = useState(
-		() => new Uint8Array(rows * cols)
-	);
+	const initialDisplay: CellGrid = createGrid(rows * cols);
+	const [display, setDisplay] = useState<CellGrid>(initialDisplay);
 	const displayRef = useRef(display);
 	displayRef.current = display;
 
 	useEffect(() => {
-		const newDisplay = new Uint8Array(rows * cols);
+		const newDisplay = createGrid(rows * cols);
 		const xDiff = Math.max(0, Math.floor((MAX - cols) / 2));
 		const yDiff = Math.max(0, Math.floor((MAX - rows) / 2));
 		for (let i = 0; i < rows; i++) {
@@ -160,8 +186,8 @@ export default memo(forwardRef(function GameOfLife(
 
 	// Step Generation
 
-	const stepGeneration = useCallback(() => {
-		const out = new Uint8Array(MAX * MAX);
+	const stepGeneration = useCallback((): CellGrid => {
+		const out = createGrid(MAX * MAX);
 		
 		for (let r = 0; r < MAX; r++) {
 			for (let c = 0; c < MAX; c++) {
@@ -189,6 +215,7 @@ export default memo(forwardRef(function GameOfLife(
 		const canvas = canvasRef.current;
 		if (!canvas) {return;}
 		const ctx = canvas.getContext("2d");
+		if (!ctx) {return;}
 
 		ctx.clearRect(0, 0, canvas.clientWidth + borderWidth.current, canvas.clientHeight + borderWidth.current);
 
@@ -233,7 +260,7 @@ export default memo(forwardRef(function GameOfLife(
 		lastTimeRef.current = performance.now();
 		accRef.current = 0;
 
-		function loop(now) {
+		function loop(now: number): void {
 			const last = lastTimeRef.current || now;
 			const dt = Math.min(now - last, stepInterval); // stop lag
 			lastTimeRef.current = now;
@@ -296,7 +323,7 @@ export default memo(forwardRef(function GameOfLife(
 	// Interaction
 
 	const toggleCellAt = useCallback(
-		(clientX, clientY, isSet = null) => {
+		(clientX: number, clientY: number, isSet: boolean | null = null): void => {
 			if (!interactive) {return;}
 			const canvas = canvasRef.current;
 			if (!canvas) {return;}
@@ -311,7 +338,8 @@ export default memo(forwardRef(function GameOfLife(
 			const xDiff = Math.max(0, Math.floor((MAX - cols) / 2));
 			const yDiff = Math.max(0, Math.floor((MAX - rows) / 2));
 			setGrid((prev) => {
-				const next = new Uint8Array(prev);
+					const next = createGrid(prev.length);
+					next.set(prev);
 				const coord = (r + yDiff) * MAX + (c + xDiff);
 				if (isSet === null) {next[coord] = 1 - next[coord];}
 				else {next[coord] = isSet ? 1 : 0;}
@@ -328,12 +356,12 @@ export default memo(forwardRef(function GameOfLife(
 
 		const debouncedResize = debounce(resizeCanvas, 150);
 
-		const handlePointerDown = (e) => {
+		const handlePointerDown = (e: PointerEvent): void => {
 			pointerDownRef.current = true;
 			toggleCellAt(e.clientX, e.clientY, null);
 		};
 
-		const handlePointerMove = (e) => {
+		const handlePointerMove = (e: PointerEvent): void => {
 			if (!pointerDownRef.current) {return;}
 			toggleCellAt(e.clientX, e.clientY, true);
 		};
@@ -358,12 +386,12 @@ export default memo(forwardRef(function GameOfLife(
 	// Grid Functions
 
 	const clearGrid = useCallback(() => {
-		const g = new Uint8Array(MAX * MAX);
+		const g = createGrid(MAX * MAX);
 		setGrid(g);
 	}, []);
 
 	const randomizeGrid = useCallback((prob = randomProbability) => {
-		const g = new Uint8Array(MAX * MAX);
+		const g = createGrid(MAX * MAX);
 		for (let i = 0; i < g.length; i++) {
 			g[i] = Math.random() < prob ? 1 : 0;
 		}

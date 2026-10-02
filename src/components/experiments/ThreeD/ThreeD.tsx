@@ -1,21 +1,34 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { useState, useEffect, useRef } from 'react';
 
 import './ThreeD.css';
 
 import ColorSelector from '/src/components/tools/ColorSelector/ColorSelector';
+import type { ChaosAttractor } from '/src/components/experiments/Chaos/Chaos';
+
+interface Chaos3DProps {
+    attractor: ChaosAttractor;
+    width?: number | string;
+    height?: number | string;
+    refresh?: boolean;
+    speed?: number;
+    maxdepth?: number;
+    startColor?: string;
+    endColor?: string;
+}
 
 export default function ThreeD() {
 
-    const canvasRef = useRef(null);
-    const materialRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const materialRef = useRef<THREE.MeshBasicMaterial | null>(null);
 
     const [color, setColor] = useState("#3b82f6");
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) {return;}
+        const canvasElement = canvas;
 
         const scene = new THREE.Scene();
         
@@ -28,8 +41,8 @@ export default function ThreeD() {
         const renderer_size = new THREE.Vector2();
 
         function syncRendererSize() {
-            const nextWidth = Math.max(1, Math.floor(canvas.clientWidth));
-            const nextHeight = Math.max(1, Math.floor(canvas.clientHeight));
+            const nextWidth = Math.max(1, Math.floor(canvasElement.clientWidth));
+            const nextHeight = Math.max(1, Math.floor(canvasElement.clientHeight));
 
             renderer.getSize(renderer_size);
 
@@ -58,10 +71,10 @@ export default function ThreeD() {
         
         camera.lookAt(0, 0, 0);
 
-        let frame;
+        let frame: number | null = null;
 
-        function animate() {
-            frame = requestAnimationFrame(animate);
+        function animate(): void {
+            frame = window.requestAnimationFrame(animate);
             syncRendererSize();
 
             cube.rotation.x += 0.01;
@@ -75,7 +88,7 @@ export default function ThreeD() {
 
         return () => {
             window.removeEventListener('resize', syncRendererSize);
-            cancelAnimationFrame(frame);
+            if (frame !== null) {window.cancelAnimationFrame(frame);}
             controls.dispose();
             geometry.dispose();
             material.dispose();
@@ -106,11 +119,11 @@ export function Chaos3D({
     maxdepth = 10000,
     startColor = "#0000ff",
     endColor = "#ff0000",
-}) {
+}: Chaos3DProps) {
 
-    const canvasRef = useRef(null);
-    const startColorRef = useRef(null);
-    const endColorRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const startColorRef = useRef<THREE.Color | null>(null);
+    const endColorRef = useRef<THREE.Color | null>(null);
     const startColorValueRef = useRef(startColor);
     const endColorValueRef = useRef(endColor);
 
@@ -118,6 +131,7 @@ export function Chaos3D({
         const canvas = canvasRef.current;
 
         if (!canvas || !attractor) {return;}
+        const canvasElement = canvas;
 
         const scene = new THREE.Scene();
 
@@ -130,8 +144,8 @@ export function Chaos3D({
         const renderer_size = new THREE.Vector2();
 
         function syncRendererSize() {
-            const nextWidth = Math.max(1, Math.floor(canvas.clientWidth));
-            const nextHeight = Math.max(1, Math.floor(canvas.clientHeight));
+            const nextWidth = Math.max(1, Math.floor(canvasElement.clientWidth));
+            const nextHeight = Math.max(1, Math.floor(canvasElement.clientHeight));
 
             renderer.getSize(renderer_size);
 
@@ -190,12 +204,12 @@ export function Chaos3D({
         
         camera.lookAt(0, 0, 0);
 
-        let frame;
+        let frame: number | null = null;
         let count_points = 1;
         let total_points = 1;
         let write_idx = 1 % max_points;
 
-        function drawA() {
+        function drawA(): void {
             const active = Math.min(count_points, max_points);
             if (active <= 0) {return;}
 
@@ -208,7 +222,7 @@ export function Chaos3D({
             }
         }
 
-        function drawB() {
+        function drawB(): void {
             const active = Math.min(count_points, max_points);
             if (active <= 0) {return;}
 
@@ -219,7 +233,7 @@ export function Chaos3D({
             }
         }
 
-        function advanceAttractor() {
+        function advanceAttractor(): void {
             const { x, y, z } = state;
             const [dx, dy, dz] = attractor.step(x, y, z, attractor.params);
 
@@ -241,8 +255,8 @@ export function Chaos3D({
             total_points += 1;
         }
 
-        function animate() {
-            frame = requestAnimationFrame(animate);
+        function animate(): void {
+            frame = window.requestAnimationFrame(animate);
 
             const steps_per_frame = Math.max(1, Math.floor(1000 * speed));
             for (let i = 0; i < steps_per_frame; i += 1) {advanceAttractor();}
@@ -261,7 +275,7 @@ export function Chaos3D({
 
         return () => {
             window.removeEventListener('resize', syncRendererSize);
-            cancelAnimationFrame(frame);
+            if (frame !== null) {window.cancelAnimationFrame(frame);}
             controls.dispose();
             geometry_a.dispose();
             geometry_b.dispose();

@@ -11,6 +11,16 @@ import Modal from '/src/components/tools/Modal/Modal';
 
 import './BlogApp.css';
 
+interface BlogPostData {
+    id: string | number;
+    title: string;
+    body: string;
+    created: string;
+    updated: string;
+}
+
+type SortBy = 'updated' | 'created' | 'title' | 'pinned';
+
 export default function BlogApp() {
 
     const lengthOptions = [
@@ -29,41 +39,41 @@ export default function BlogApp() {
         { value: 'pinned', label: 'Pinned' },
     ];
 
-    const [posts, setPosts] = useState([]);
-    const [window, setWindow] = useState([]);
+    const [posts, setPosts] = useState<BlogPostData[]>([]);
+    const [visiblePosts, setVisiblePosts] = useState<BlogPostData[]>([]);
     const [page, setPage] = useState(0);
 
     const lengthKey = 'blogLength';
     const orderKey = 'blogOrder';
     const sortByKey = 'blogSortBy';
 
-    const [length, setLength] = useState(() => loadValue(lengthKey, 5));
-    const [order, setOrder] = useState(() => loadValue(orderKey, 0));
-    const [sortBy, setSortBy] = useState(() => loadValue(sortByKey, 'updated'));
+    const [length, setLength] = useState<number>(() => loadValue(lengthKey, 5));
+    const [order, setOrder] = useState<number>(() => loadValue(orderKey, 0));
+    const [sortBy, setSortBy] = useState<SortBy>(() => loadValue<SortBy>(sortByKey, 'updated'));
 
     const reverseOrder = useCallback(() => {
         setOrder(prev => 1 - prev);
         setPosts(prev => [...prev].reverse());
     }, []);
 
-    const cmp = useCallback((a, b) => {
+    const cmp = useCallback((a: BlogPostData, b: BlogPostData): number => {
         const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
         const bPinned = localStorage.getItem(`pin_${b.id}`) === 'true';
-        if (aPinned ^ bPinned) {return bPinned - aPinned;}
+        if (aPinned !== bPinned) {return bPinned ? 1 : -1;}
         const aDate = new Date(a.updated);
         const bDate = new Date(b.updated);
-        return bDate - aDate;
+        return bDate.getTime() - aDate.getTime();
     }, []);
 
-    const sortPosts = useCallback((posts, sortBy) => {
-        const sorted = [...posts];
-        if (sortBy === "pinned") {
+    const sortPosts = useCallback((postsToSort: BlogPostData[], sortByValue: SortBy): BlogPostData[] => {
+        const sorted = [...postsToSort];
+        if (sortByValue === "pinned") {
             sorted.sort(cmp);
-        } else if (sortBy === "updated") {
-            sorted.sort((a, b) => new Date(b.updated) - new Date(a.updated));
-        } else if (sortBy === "created") {
-            sorted.sort((a, b) => new Date(b.created) - new Date(a.created));
-        } else if (sortBy === "title") {
+        } else if (sortByValue === "updated") {
+            sorted.sort((a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime());
+        } else if (sortByValue === "created") {
+            sorted.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+        } else if (sortByValue === "title") {
             sorted.sort((a, b) => a.title.localeCompare(b.title));
         }
 
@@ -88,7 +98,7 @@ export default function BlogApp() {
 
             // const res = await fetch('/.netlify/functions/firebase-blog-posts');
 
-            const blogPosts = deserialize(await res.text());
+            const blogPosts = deserialize<BlogPostData[]>(await res.text());
 
             setPosts(sortPosts(blogPosts, sortBy));
             
@@ -99,7 +109,7 @@ export default function BlogApp() {
     }, []);
 
     useEffect(() => {
-        setWindow(posts.slice(page * length, (page + 1) * length));
+        setVisiblePosts(posts.slice(page * length, (page + 1) * length));
     }, [posts, page, length]);
 
     useEffect(() => { localStorage.setItem(lengthKey, JSON.stringify(length)); }, [length]);
@@ -147,8 +157,9 @@ export default function BlogApp() {
                     defaultValue={sortBy}
                     onChange={e => {
                         const value = e.value;
-                        setSortBy(value);
-                        setPosts(prev => sortPosts(prev, value));
+                        if (typeof value !== "string" || !['updated', 'created', 'title', 'pinned'].includes(value)) {return;}
+                        setSortBy(value as SortBy);
+                        setPosts(prev => sortPosts(prev, value as SortBy));
                         setPage(0);
                     }}
                     align='right'
@@ -165,9 +176,9 @@ export default function BlogApp() {
                 <Modal id="blogMenuModal" title="Blog Menu" description={blogMenu} buttonText="Blog Menu" scrollable={false}/>
             </div>
             <AnimatePresence mode="wait">
-                <motion.div key={JSON.stringify(window.map(p => p.id))} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <motion.div key={JSON.stringify(visiblePosts.map(p => p.id))} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                     <div className="row">
-                        {window.map(post => (
+                        {visiblePosts.map(post => (
                             <div key={post.id} className="col-12">
                                 <BlogPost title={post.title} body={post.body} creationTime={post.created} updateTime={post.updated} postId={post.id}/>
                             </div>

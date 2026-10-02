@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef } from 'react';
 import { parseMarkdown } from '/src/utils/parse';
 
 import renderMathInElement from 'katex/contrib/auto-render';
@@ -6,11 +6,14 @@ import renderMathInElement from 'katex/contrib/auto-render';
 import 'katex/dist/katex.min.css';
 import './TextParser.css';
 
-export default forwardRef(function TextParser({ text, className="" }, ref){
+interface TextParserProps {
+    text: string;
+    className?: string;
+}
 
-    const containerRef = useRef(null);
+export default forwardRef<HTMLDivElement, TextParserProps>(function TextParser({ text, className = "" }, ref){
 
-    useImperativeHandle(ref, () => containerRef.current);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!containerRef.current) {return;}
@@ -26,7 +29,14 @@ export default forwardRef(function TextParser({ text, className="" }, ref){
     }, [text]);
 
     return (
-        <div ref={containerRef} className={`textParserContainer ${className}`} />
+        <div
+            ref={(node) => {
+                containerRef.current = node;
+                if (typeof ref === 'function') {ref(node);}
+                else if (ref) {ref.current = node;}
+            }}
+            className={`textParserContainer ${className}`}
+        />
     );
 
 });

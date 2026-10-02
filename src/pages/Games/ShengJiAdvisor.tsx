@@ -1,5 +1,5 @@
 import PageTitle from '/src/components/tools/PageTitle/PageTitle';
-import Advisor from '/src/components/games/ShengJi/Advisor/Advisor.tsx';
+import Advisor from '/src/components/games/ShengJi/Advisor/Advisor';
 
 export default function ShengJiAdvisor() {
     return (

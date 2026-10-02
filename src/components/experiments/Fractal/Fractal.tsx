@@ -1,6 +1,25 @@
-import { useRef, useEffect, useCallback, memo } from "react";
-import { rgbToCss, readColor } from "/src/utils/colors";
+import { useRef, useEffect, useCallback, memo, type CSSProperties } from "react";
+import { rgbToCss, readColor, type RGB } from "/src/utils/colors";
 import { debounce } from "/src/utils/debounce";
+
+export type FractalType = "koch" | "sierpinski" | "fern" | "dragon" | "pythagoras";
+
+interface FractalProps {
+	type: FractalType;
+	width?: number | string;
+	height?: number | string;
+	depth: number;
+	speed: number;
+	angle: number;
+	lineWidth?: number;
+	colorTransition?: number;
+	className?: string;
+	style?: CSSProperties;
+}
+
+interface Point { x: number; y: number; }
+interface Square extends Point { size: number; angle: number; d: number; }
+interface CanvasState { ctx: CanvasRenderingContext2D; width: number; height: number; }
 
 export default memo(function Fractal({
 	type,
@@ -13,15 +32,15 @@ export default memo(function Fractal({
 	colorTransition = 300,
 	className = "",
 	style = {},
-}) {
+}: FractalProps) {
 
 	// Wrapper
 
-	const wrapperRef = useRef(null);
+	const wrapperRef = useRef<HTMLDivElement>(null);
 
 	// Canvas
 
-	const canvasRef = useRef(null);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
 
 	const resizeCanvas = useCallback(() => {
 		const canvas = canvasRef.current;
@@ -36,7 +55,7 @@ export default memo(function Fractal({
 		canvas.width = Math.floor(cssW * dpr);
         canvas.height = Math.floor(cssH * dpr);
 		const ctx = canvas.getContext("2d");
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
 	}, [width, height]);
 
 	useEffect(() => {
@@ -45,15 +64,15 @@ export default memo(function Fractal({
 
 	// Render Refs
 
-	const rafRef = useRef(null);
+	const rafRef = useRef<number | null>(null);
 	const lastTimeRef = useRef(performance.now());
 
 	// Color Refs
 
-	const colorRafRef = useRef(null);
+	const colorRafRef = useRef<number | null>(null);
 
-	const currentColorRef = useRef([0, 0, 0]);
-	const targetColorRef = useRef([0, 0, 0]);
+	const currentColorRef = useRef<RGB>([0, 0, 0]);
+	const targetColorRef = useRef<RGB>([0, 0, 0]);
 	const transitionProgressRef = useRef(1);
 
 	useEffect(() => {
@@ -71,21 +90,24 @@ export default memo(function Fractal({
 
 	}, [readColor]);
 
-	const getCTX = () => {
+	const getCTX = (): CanvasState | null => {
         const canvas = canvasRef.current;
         if (!canvas) {return null;}
 
-        const ctx = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {return null;}
 
         const W = ctx.canvas.clientWidth;
         const H = ctx.canvas.clientHeight;
 
-        return [ctx, W, H];
+		return { ctx, width: W, height: H };
     }
 
 	const fillFractal = useCallback(() => {
 		
-		const [ctx, W, H] = getCTX();
+		const canvasState = getCTX();
+		if (!canvasState) {return;}
+		const { ctx, width: W, height: H } = canvasState;
 
 		ctx.globalCompositeOperation = "source-in";
 
@@ -95,21 +117,22 @@ export default memo(function Fractal({
 		ctx.globalCompositeOperation = "source-over";
 	}, []);
 
-	const setupFractal = () => {
-		
-		const [ctx, W, H] = getCTX();
+	const setupFractal = (): CanvasState => {
+		const canvasState = getCTX();
+		if (!canvasState) {throw new Error("Fractal canvas is unavailable");}
+		const { ctx, width: W, height: H } = canvasState;
 
 		ctx.clearRect(0, 0, W, H);
 
 		ctx.fillStyle = rgbToCss(currentColorRef.current);
 
-		return [ctx, W, H];
+		return canvasState;
 	};
 
 	// Koch Snowflake
 	const drawKoch = useCallback(() => {
 
-		const [ctx, W, H] = setupFractal();
+		const { ctx, width: W, height: H } = setupFractal();
 
 		const size = Math.min(W, H) * 0.8;
 		const cx = W / 2;
@@ -119,7 +142,7 @@ export default memo(function Fractal({
 		const p1 = { x: cx + size / 2, y: cy + (Math.sqrt(3) / 6) * size };
 		const p2 = { x: cx, y: cy - (Math.sqrt(3) / 3) * size };
 
-		const segment = (a, b, iter) => {
+		const segment = (a: Point, b: Point, iter: number): void => {
 
 			if (iter === 0) {
 				ctx.moveTo(a.x, a.y);
@@ -158,7 +181,7 @@ export default memo(function Fractal({
 	// Sierpinski Triangle
 	const drawSierpinski = useCallback(() => {
 
-		const [ctx, W, H] = setupFractal();
+			const { ctx, width: W, height: H } = setupFractal();
 
 		const size = Math.min(W, H) * 0.8;
 		const cx = W / 2;
@@ -198,7 +221,7 @@ export default memo(function Fractal({
 	// Barnsley Fern
 	const drawFern = useCallback(() => {
 
-		const [ctx, W, H] = setupFractal();
+			const { ctx, width: W, height: H } = setupFractal();
 
 		const size = Math.min(W, H) * 0.8;
 
@@ -215,8 +238,8 @@ export default memo(function Fractal({
 		const offsetY = (H - worldHeight * scaleY) / 2;
 
 		// Mapping functions
-		const sx = x => (x - world.minX) * scaleX + offsetX;
-		const sy = y => H - ((y - world.minY) * scaleY + offsetY);
+		const sx = (x: number): number => (x - world.minX) * scaleX + offsetX;
+		const sy = (y: number): number => H - ((y - world.minY) * scaleY + offsetY);
 
 		let x = 0, y = 0;
 
@@ -256,11 +279,11 @@ export default memo(function Fractal({
 	// Dragon Curve
 	const drawDragon = useCallback(() => {
 
-		const [ctx, W, H] = setupFractal();
+		const { ctx, width: W, height: H } = setupFractal();
 
     	const steps = 1 << depth; 
 
-		const dirs = [
+		const dirs: Array<[number, number]> = [
 			[1, 0],   // 0: right
 			[0, 1],   // 1: down
 			[-1, 0],  // 2: left
@@ -270,7 +293,7 @@ export default memo(function Fractal({
 		let x = 0, y = 0;
 		let dir = 0;
 
-		const points = [];
+		const points: Array<[number, number]> = [];
 		points.push([x, y]);
 
 		for (let i = 0; i < steps; i++) {
@@ -322,20 +345,21 @@ export default memo(function Fractal({
 
 	const drawPythagoras = useCallback(() => {
 
-		const [ctx, W, H] = setupFractal();
+		const { ctx, width: W, height: H } = setupFractal();
 
 		const fractalAngle = angle / 180 * Math.PI;
 
 		const leftAngleOffset = Math.PI / 2 - fractalAngle / 2;
 		const rightAngleOffset = fractalAngle / 2;
 
-		const squares = [];
+		const squares: Square[] = [];
 
-		const queue = [];
+		const queue: Square[] = [];
 		queue.push({ x: 0, y: 0, size: 1, angle: Math.PI, d: 0 });
 
 		while (queue.length > 0) {
 			const sq = queue.shift();
+			if (!sq) {break;}
 			squares.push(sq);
 
 			if (sq.d >= depth) {continue;}
@@ -416,7 +440,7 @@ export default memo(function Fractal({
 		const offsetX = (W - fw * scale) / 2 - minX * scale;
 		const offsetY = (H - fh * scale) / 2 - minY * scale;
 
-		const drawSquare = (sq) => {
+		const drawSquare = (sq: Square): void => {
 			const { x, y, size, angle } = sq;
 
 			const x0 = x, y0 = y;
@@ -496,7 +520,7 @@ export default memo(function Fractal({
 
 		lastTimeRef.current = performance.now();
 
-		const loop = (now) => {
+		const loop = (now: number): void => {
 			const last = lastTimeRef.current || now;
             const dt = now - last;
             lastTimeRef.current = now;

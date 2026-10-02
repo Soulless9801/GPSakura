@@ -1,28 +1,37 @@
 import { Fragment, useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { hexToRGB, rgbToHex, normalizeHex, hsvToRGB, hexToHsv } from "/src/utils/colors";
+import { hexToRGB, rgbToHex, normalizeHex, hsvToRGB, hexToHsv, type HSV, type RGB } from "/src/utils/colors";
+import type { CSSProperties } from "react";
 
 import "./ColorSelector.css";
 
 import Modal from "/src/components/tools/Modal/Modal";
 import Form from "/src/components/tools/Form/Form";
 
-function clamp(value) {
+function clamp(value: number): number {
 	return Math.min(1, Math.max(0, value));
 }
 
-function HSVInput({ value, onChange, disabled = false }) {
+type ColorChange = (value: string, committed?: boolean) => void;
 
-	const [hsv, setHSV] = useState(() => hexToHsv(value));
+interface HSVInputProps {
+    value: string;
+    onChange?: ColorChange;
+    disabled?: boolean;
+}
 
-	const pickerRef = useRef(null);
-	const hueRef = useRef(null);
+function HSVInput({ value, onChange, disabled = false }: HSVInputProps) {
+
+	const [hsv, setHSV] = useState<HSV>(() => hexToHsv(value));
+
+	const pickerRef = useRef<HTMLDivElement>(null);
+	const hueRef = useRef<HTMLDivElement>(null);
 	const pickerDragRef = useRef(false);
 	const hueDragRef = useRef(false);
 
-	const applyHSV = useCallback((nextHSV) => {
+	const applyHSV = useCallback((nextHSV: HSV): void => {
 		if (disabled) {return;}
 		const [nextH, nextS, nextV] = nextHSV;
-		const normalized = [
+		const normalized: HSV = [
 			Math.min(359.999, Math.max(0, nextH)),
 			clamp(nextS),
 			clamp(nextV),
@@ -32,7 +41,7 @@ function HSVInput({ value, onChange, disabled = false }) {
 		onChange?.(nextHex);
 	}, [disabled, onChange]);
 
-	const updateFromPickerEvent = useCallback((event) => {
+	const updateFromPickerEvent = useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
 		if (!pickerRef.current) {return;}
 		const rect = pickerRef.current.getBoundingClientRect();
 		const x = clamp((event.clientX - rect.left) / rect.width);
@@ -40,7 +49,7 @@ function HSVInput({ value, onChange, disabled = false }) {
 		applyHSV([hsv[0], x, 1 - y]);
 	}, [applyHSV, hsv]);
 
-	const updateFromHueEvent = useCallback((event) => {
+	const updateFromHueEvent = useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
 		if (!hueRef.current) {return;}
 		const rect = hueRef.current.getBoundingClientRect();
 		const x = clamp((event.clientX - rect.left) / rect.width);
@@ -89,7 +98,7 @@ function HSVInput({ value, onChange, disabled = false }) {
 					const rect = pickerRef.current.getBoundingClientRect();
 					const x = clamp((event.clientX - rect.left) / rect.width);
 					const y = clamp((event.clientY - rect.top) / rect.height);
-					const final = [hsv[0], x, 1 - y];
+					const final: HSV = [hsv[0], x, 1 - y];
 					const finalHex = rgbToHex(hsvToRGB(final[0], final[1], final[2]));
 					setHSV(final);
 					onChange?.(finalHex, true);
@@ -122,7 +131,7 @@ function HSVInput({ value, onChange, disabled = false }) {
 					if (!hueRef.current) {return;}
 					const rect = hueRef.current.getBoundingClientRect();
 					const x = clamp((event.clientX - rect.left) / rect.width);
-					const final = [x * 359.999, hsv[1], hsv[2]];
+					const final: HSV = [x * 359.999, hsv[1], hsv[2]];
 					const finalHex = rgbToHex(hsvToRGB(final[0], final[1], final[2]));
 					setHSV(final);
 					onChange?.(finalHex, true);
@@ -137,7 +146,13 @@ function HSVInput({ value, onChange, disabled = false }) {
 	);
 }
 
-function HexInput({ value, onSubmit, disabled = false }) {
+interface HexInputProps {
+	value: string;
+	onSubmit?: (value: string) => void;
+	disabled?: boolean;
+}
+
+function HexInput({ value, onSubmit, disabled = false }: HexInputProps) {
 
 	const [draftHex, setDraftHex] = useState(value);
 
@@ -172,11 +187,19 @@ function HexInput({ value, onSubmit, disabled = false }) {
 	);
 }
 
-export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
-	const [rgb, setRGB] = useState(() => hexToRGB(value) ?? [0, 0, 0]);
+interface RGBInputProps {
+	value: string | RGB;
+	onSubmit?: (value: string) => void;
+	onChange?: (index: number, value: number) => void;
+	getFieldStyle?: (index: number) => CSSProperties;
+	disabled?: boolean;
+}
+
+export function RGBInput({ value, onSubmit, onChange, getFieldStyle, disabled = false }: RGBInputProps) {
+	const [rgb, setRGB] = useState<RGB>(() => Array.isArray(value) ? [value[0], value[1], value[2]] : hexToRGB(value) ?? [0, 0, 0]);
 
 	useEffect(() => {
-		const next = Array.isArray(value) ? value : hexToRGB(value);
+		const next = Array.isArray(value) ? [value[0], value[1], value[2]] as RGB : hexToRGB(value);
 		if (next) {setRGB(next);}
 	}, [value]);
 
@@ -186,9 +209,9 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 		{ label: "B", index: 2 },
 	];
 
-	const updateChannel = (index, rawValue) => {
-		const nextRGB = [...rgb];
-		nextRGB[index] = Math.min(255, Math.max(0, parseInt(rawValue, 10) || 0));
+	const updateChannel = (index: number, rawValue: number): void => {
+		const nextRGB: RGB = [rgb[0], rgb[1], rgb[2]];
+		nextRGB[index] = Math.min(255, Math.max(0, rawValue));
 		setRGB(nextRGB);
 		if (onSubmit) {onSubmit?.(rgbToHex(nextRGB));}
 		if (onChange) {onChange?.(index, nextRGB[index]);}
@@ -201,12 +224,13 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 					{channels.map(({ label, index }) => (
 						<Fragment key={index}>
 							<label>{label}</label>
-							<Form
+								<Form
 								init={rgb[index]}
 								min={0}
 								max={255}
 								step={1}
-								onChange={(val) => { updateChannel(index, val); }}
+										onChange={(val) => { updateChannel(index, val); }}
+										style={getFieldStyle?.(index)}
 								disabled={disabled}
 								notifyOnInitChange={false}
 							/>
@@ -218,7 +242,13 @@ export function RGBInput({ value, onSubmit, onChange, disabled = false }) {
 	);
 }
 
-function ColorMenu({ value, onSelect, disabled = false }) {
+interface ColorMenuProps {
+	value: string;
+	onSelect: ColorChange;
+	disabled?: boolean;
+}
+
+function ColorMenu({ value, onSelect, disabled = false }: ColorMenuProps) {
 	return (
 		<div className="colorSelectorMenu">
 			<div className="colorSelectorMenuSection">
@@ -241,13 +271,21 @@ function ColorMenu({ value, onSelect, disabled = false }) {
 	);
 }
 
+interface ColorSelectorProps {
+	value?: string;
+	defaultValue?: string;
+	onChange?: (value: string) => void;
+	disabled?: boolean;
+	label?: string;
+}
+
 export default function ColorSelector({
 	value,
 	defaultValue = "#3b82f6",
 	onChange,
 	disabled = false,
 	label = "Color",
-}) {
+}: ColorSelectorProps) {
 
 	const initialHex = useMemo(() => {
 		const incoming = value ?? defaultValue;
@@ -268,16 +306,16 @@ export default function ColorSelector({
 
 	const hex_color = useMemo(() => hexState, [hexState]); 
 
-	const emitImmediate = (nextHex) => {
+	const emitImmediate = (nextHex: string): void => {
 		onChange?.(nextHex);
 	};
 
-	const commitUpdateHex = (nextHex) => {
+	const commitUpdateHex = (nextHex: string): void => {
 		setHexState(nextHex);
 		emitImmediate(nextHex);
 	};
 
-	const handleMenuSelect = (nextHex) => {
+	const handleMenuSelect = (nextHex: string): void => {
 		commitUpdateHex(nextHex);
 	};
 

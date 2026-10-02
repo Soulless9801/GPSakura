@@ -1,6 +1,11 @@
 import './PageTitle.css'
 
-export default function PageTitle({title, description}) {
+interface PageTitleProps {
+	title: string;
+	description: string;
+}
+
+export default function PageTitle({title, description}: PageTitleProps) {
 	return (
 		<section className="container-fluid pageIntroContainer">
 			<div className="pageTitle">{title}</div>

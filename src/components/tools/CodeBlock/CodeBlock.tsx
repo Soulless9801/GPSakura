@@ -2,7 +2,13 @@ import { ShikiHighlighter } from 'react-shiki';
 
 import './CodeBlock.css';
 
-export default function CodeBlock({ code, lang="cpp", theme="github-dark" }) {
+interface CodeBlockProps {
+    code?: string;
+    lang?: string;
+    theme?: string;
+}
+
+export default function CodeBlock({ code, lang = "cpp", theme = "github-dark" }: CodeBlockProps) {
 
     return (
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { loadValue } from '/src/utils/storage';
 import { rgbToCss, readColor } from '/src/utils/colors';
-import { generateTimeArray, composeSignal, randomComponent, defaultComponent } from "/src/entities/signal";
+import { generateTimeArray, composeSignal, randomComponent, defaultComponent, type SignalComponent } from "/src/entities/signal";
 
 import Form from '/src/components/tools/Form/Form';
 import Modal from '/src/components/tools/Modal/Modal';
@@ -116,7 +116,7 @@ export default function FreqGuesserDemo() {
         reset();
     }, [components]);
     
-    const update = (idx, key, value) => {
+    const update = (idx: number, key: keyof SignalComponent, value: number): void => {
         setCachedFreq(prev => {
             const next = [...prev];
             next[idx] = { ...next[idx], [key]: Number(value) };

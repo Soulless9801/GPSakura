@@ -1,10 +1,22 @@
 import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 
 import './GenericButton.css'
 
-export default function GenericButton({ postId, type, icon, fill }) {
+interface GenericButtonProps {
+    postId: string | number;
+    type: string;
+    icon: string;
+    fill: string;
+}
+
+export default function GenericButton({ postId, type, icon, fill }: GenericButtonProps) {
 
     const storageKey = `${type}_${postId}`;
+    const iconStyle = {
+        '--icon-hover-color': fill,
+        '--icon-active-color': fill,
+    } as CSSProperties;
 
     const [state, setState] = useState(false);
 
@@ -13,7 +25,7 @@ export default function GenericButton({ postId, type, icon, fill }) {
         setState(stored === 'true');
     }, []);
 
-    const handleClick = async () => {
+    const handleClick = () => {
         const newState = !state;
         setState(newState);
         localStorage.setItem(storageKey, newState.toString());
@@ -21,7 +33,7 @@ export default function GenericButton({ postId, type, icon, fill }) {
 
     return (
         <button onClick={handleClick} className="genericButton">
-            <i className={`genericIcon ${icon} ${state ? 'fa-solid' : 'fa-regular'}`} style={{ '--icon-hover-color': fill, '--icon-active-color': fill }}/>
+            <i className={`genericIcon ${icon} ${state ? 'fa-solid' : 'fa-regular'}`} style={iconStyle}/>
         </button>
     );
 }

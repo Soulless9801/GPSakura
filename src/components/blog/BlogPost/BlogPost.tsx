@@ -7,7 +7,15 @@ import TextParser from '/src/components/tools/TextParser/TextParser';
 
 import './BlogPost.css'
 
-export default function BlogPost({ title, body, creationTime, updateTime, postId}) {
+interface BlogPostProps {
+    title: string;
+    body: string;
+    creationTime: string | number | Date;
+    updateTime: string | number | Date;
+    postId: string | number;
+}
+
+export default function BlogPost({ title, body, creationTime, updateTime, postId }: BlogPostProps) {
 
     const collapsedKey = `blogPostCollapsed_${postId}`;
     const scrolledKey = `blogPostScrolled_${postId}`;
@@ -20,7 +28,7 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
         localStorage.setItem(scrolledKey, JSON.stringify(scrolled));
     }, [collapsed, scrolled]);
 
-    const bodyRef = useRef(null);
+    const bodyRef = useRef<HTMLDivElement>(null);
 
     const minHeight = 300;
 

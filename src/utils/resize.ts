@@ -1,8 +1,8 @@
-export function convertToPixels(input, context = document.body) {
+export function convertToPixels(input: number | string, context: HTMLElement = document.body): number {
     if (typeof input === "number") {return input;} // already px
 
     const value = parseFloat(input);
-    const unit = input.replace(value, "").trim();
+    const unit = input.replace(String(value), "").trim();
 
     switch (unit) {
         case "px":
@@ -15,8 +15,7 @@ export function convertToPixels(input, context = document.body) {
             return window.innerHeight * (value / 100);
 
         case "%":
-            const rect = context.getBoundingClientRect();
-            return rect.width * (value / 100);
+            return context.getBoundingClientRect().width * (value / 100);
 
         case "em":
             return value * parseFloat(getComputedStyle(context).fontSize);

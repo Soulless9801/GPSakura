@@ -7,6 +7,12 @@ import Select, { type SelectOption } from '/src/components/tools/Select/Select';
 
 import './Navbar.css';
 
+interface NavItem extends HTMLElement {
+    enterHandler?: () => void;
+    leaveHandler?: () => void;
+    clickHandler?: (event: MouseEvent) => void;
+}
+
 export default function Navbar() {
     const [theme, setTheme] = useState(localStorage.theme || 'light');
 
@@ -20,7 +26,7 @@ export default function Navbar() {
         localStorage.theme = theme;
 
         const icon = document.getElementById('darkModeIcon');
-        const websiteIcon = document.getElementById('websiteIcon');
+        const websiteIcon = document.getElementById('websiteIcon') as HTMLLinkElement | null;
 
         if (theme === 'dark') {
             icon?.classList.replace('fa-sun', 'fa-moon');
@@ -34,7 +40,7 @@ export default function Navbar() {
     }, [theme]);
 
     useEffect(() => {
-        const items = document.querySelectorAll<HTMLElement>('.nav-item.dropdown');
+        const items = document.querySelectorAll<NavItem>('.nav-item.dropdown');
 
         const onEnter = (el: HTMLElement) => {
             el.classList.add('show');
@@ -69,21 +75,25 @@ export default function Navbar() {
         };
 
         items.forEach(el => {
+            const enterHandler = () => { onEnter(el); };
+            const leaveHandler = () => { onLeave(el); };
             const clickHandler = (ev: MouseEvent) => { onToggleClick(el, ev); };
 
-            el.addEventListener('mouseenter', () => { onEnter(el); });
-            el.addEventListener('mouseleave', () => { onLeave(el); });
+            el.addEventListener('mouseenter', enterHandler);
+            el.addEventListener('mouseleave', leaveHandler);
             el.addEventListener('click', clickHandler);
 
-            el._clickHandler = clickHandler;
+            el.enterHandler = enterHandler;
+            el.leaveHandler = leaveHandler;
+            el.clickHandler = clickHandler;
         });
         document.addEventListener('click', onDocClick);
 
         return () => {
             items.forEach(el => {
-                el.removeEventListener('mouseenter', () => { onEnter(el); });
-                el.removeEventListener('mouseleave', () => { onLeave(el); });
-                el.removeEventListener('click', el._clickHandler);
+                if (el.enterHandler) {el.removeEventListener('mouseenter', el.enterHandler);}
+                if (el.leaveHandler) {el.removeEventListener('mouseleave', el.leaveHandler);}
+                if (el.clickHandler) {el.removeEventListener('click', el.clickHandler);}
             });
             document.removeEventListener('click', onDocClick);
             };
@@ -155,8 +165,8 @@ export default function Navbar() {
                         <button
                             id="darkModeToggle"
                             className="btn"
-                            onClick={() => { setTheme((curr) => (curr === 'light' ? 'dark' : 'light')); }}
-                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => { setTheme((curr: string) => (curr === 'light' ? 'dark' : 'light')); }}
+                            onMouseDown={e => { e.preventDefault(); }}
                         >
                             <i id="darkModeIcon" className={`navbar-icon fa-regular ${theme === 'dark' ? 'fa-moon' : 'fa-sun'}`}/>
                         </button>

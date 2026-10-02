@@ -4,7 +4,7 @@ import { toggleVal } from '/src/utils/list';
 
 import ExperimentDemo from "/src/components/experiments/ExperimentDemo";
 
-import GameOfLife from "./GameOfLife";
+import GameOfLife, { type GameOfLifeRef } from "./GameOfLife";
 import Slider from "/src/components/tools/Slider/Slider"
 
 import "./GameOfLifeDemo.css";
@@ -40,7 +40,7 @@ export default function GameOfLifeDemo() {
     useEffect(() => { localStorage.setItem(zoomKey, JSON.stringify(zoom)); }, [zoom]);
     useEffect(() => { localStorage.setItem(rulesKey, JSON.stringify(rules)); }, [rules]);
 
-    const gameRef = useRef(null);
+    const gameRef = useRef<GameOfLifeRef | null>(null);
 
     const display = (
         <GameOfLife

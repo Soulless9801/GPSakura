@@ -1,22 +1,26 @@
-function calc(coord, max, off, v){
-    coord = Number(coord);
-    max = Number(max);
-    off = Number(off);
-    v = Number(v);
+function calc(coord: number, max: number, off: number, velocity: number): [number, number] {
     coord -= off;
     coord %= (2 * max); 
     if (coord < 0) {coord = coord + 2 * max;}
     if (coord > max) {
         coord = 2 * max - coord;
-        v *= -1;
+        velocity *= -1;
     }
-    return [coord + off, v];
+    return [coord + off, velocity];
 }
 
 const freezeTimer = 300;
 
 export class Particle {
-    constructor(canvas, speed, particleRadius) {
+    x: number;
+    y: number;
+    s: number;
+    vx: number;
+    vy: number;
+    radius: number;
+    freeze: number;
+
+    constructor(canvas: HTMLCanvasElement, speed: number, particleRadius: number) {
         this.x = Math.random() * canvas.clientWidth;
         this.y = Math.random() * canvas.clientHeight;
         this.s = Math.random() * speed;
@@ -26,12 +30,12 @@ export class Particle {
         this.radius = particleRadius;
         this.freeze = Date.now() + freezeTimer;
     }
-    adjustSpeed(){
+    adjustSpeed(): void {
         const factor = Math.sqrt(this.s / Math.sqrt(this.vx ** 2 + this.vy ** 2));
         this.vx *= factor;
         this.vy *= factor;
     }
-    move(dt, canvas) {
+    move(dt: number, canvas: HTMLCanvasElement): void {
         if (this.freeze > Date.now()) {return;}
 
         this.x += this.vx * dt / 16;
@@ -43,13 +47,13 @@ export class Particle {
         this.adjustSpeed();
 
     }
-    draw(ctx, fillCss) {
+    draw(ctx: CanvasRenderingContext2D, fillCss: string): void {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = fillCss;
         ctx.fill();
     }
-    addFreeze() {
+    addFreeze(): void {
         this.freeze = Date.now() + freezeTimer;
     }
 }

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import $ from 'jquery';
+import 'datatables.net';
 
 import CustomDataTable from '/src/components/tables/DataTable';
 
-$.fn.dataTable.ext.oSort['rating-asc'] = (a, b) => {
+const sorters = $.fn.dataTable.ext.oSort as Record<string, (a: string, b: string) => number>;
+
+sorters['rating-asc'] = (a: string, b: string): number => {
     if (a === 'unrated') {a = '0';}
     if (b === 'unrated') {b = '0';}
     return parseFloat(a) - parseFloat(b);
 };
-$.fn.dataTable.ext.oSort['rating-desc'] = (a, b) => {
+sorters['rating-desc'] = (a: string, b: string): number => {
     if (a === 'unrated') {a = '0';}
     if (b === 'unrated') {b = '0';}
     return parseFloat(b) - parseFloat(a);
@@ -18,7 +21,7 @@ export default function CodeforcesTable() {
 
     const title = 'Codeforces Problem List';
 
-    const [rows, setRows] = useState([]);
+    const [rows, setRows] = useState<string[][]>([]);
 
     const columns = ['Rating', 'Problem Name', 'Submission'];
 
@@ -26,7 +29,7 @@ export default function CodeforcesTable() {
         fetch('/.netlify/functions/codeforces-sheet-data')
         .then(res=> res.text())
         .then(text => {
-            const data = text.split(/\r?\n/).slice(1).filter(Boolean).map(line => {
+            const data = text.split(/\r?\n/).slice(1).filter(Boolean).map((line: string): string[] => {
                 const [rating, name, cfLink, subLink] = line.split(';');
                 return [
                     rating,

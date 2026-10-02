@@ -1,9 +1,10 @@
-import { useRef } from 'react';
+import { useRef, type ReactNode } from 'react';
 import $ from 'jquery';
 
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
+import type { Config as DataTableConfig } from 'datatables.net';
 
 DataTable.use(DT);
 
@@ -11,7 +12,16 @@ import Select from '/src/components/tools/Select/Select';
 
 import '/src/components/tables/DataTable.css'
 
-export default function CustomDataTable({title, rows, columns, options, html, id}) {
+interface CustomDataTableProps {
+    title: string;
+    rows: string[][];
+    columns: string[];
+    options?: DataTableConfig;
+    html?: ReactNode;
+    id: string;
+}
+
+export default function CustomDataTable({ title, rows, columns, options = {}, html, id }: CustomDataTableProps) {
 
     const tableRef = useRef(null);
 
@@ -50,7 +60,7 @@ export default function CustomDataTable({title, rows, columns, options, html, id
                             { value: '50', label: '50' },
                             { value: '100', label: '100' },
                         ]}
-                        defaultIndex = '0' 
+                        defaultIndex={0}
                         onChange={e => {
                             const table = $(`#${id}`).DataTable();
                             table.page.len(Number(e.value)).draw();

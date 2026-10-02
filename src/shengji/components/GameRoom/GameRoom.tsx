@@ -497,9 +497,9 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         const connect = async () => {
 
             if (ably.connection.state !== "connected") {
-                await new Promise<void>(resolve =>
-                    ably.connection.once("connected", () => { resolve(); })
-                );
+                await new Promise<void>(resolve => {
+                    ably.connection.once("connected", () => { resolve(); });
+                });
             }
 
             await channel.attach();

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import $ from 'jquery';
+import 'datatables.net';
 
 import { formatDate } from '/src/utils/time';
 import { deserialize } from '/src/utils/serial';
@@ -16,27 +17,36 @@ const divisionOrder = {
     'bronze': 1,
 };
 
-$.fn.dataTable.ext.oSort['division-asc'] = (a, b) => {
-    a = divisionOrder[a.toLowerCase()] || 0;
-    b = divisionOrder[b.toLowerCase()] || 0;
-    return a - b;
+type Division = keyof typeof divisionOrder;
+const divisionRank = (value: string): number => {
+    if (!(value.toLowerCase() in divisionOrder)) {return 0;}
+    return divisionOrder[value.toLowerCase() as Division];
 };
 
-$.fn.dataTable.ext.oSort['division-desc'] = (a, b) => {
-    a = divisionOrder[a.toLowerCase()] || 0;
-    b = divisionOrder[b.toLowerCase()] || 0;
-    return b - a;
-};
+const sorters = $.fn.dataTable.ext.oSort as Record<string, (a: string, b: string) => number>;
+
+sorters['division-asc'] = (a: string, b: string): number => divisionRank(a) - divisionRank(b);
+
+sorters['division-desc'] = (a: string, b: string): number => divisionRank(b) - divisionRank(a);
 
 export default function USACOTable() {
 
     const title = "USACO Porblem List";
 
-    const bodyRef = useRef(null);
+    const bodyRef = useRef<HTMLDivElement>(null);
 
-    const [data, setData] = useState(null);
+    interface ProblemData {
+        title: string;
+        created: string;
+        body?: string;
+        submission: string;
+        language: string;
+        updated: string;
+    }
 
-    const [rows, setRows] = useState([]);
+    const [data, setData] = useState<ProblemData | null>(null);
+
+    const [rows, setRows] = useState<string[][]>([]);
 
     const columns = ['Division', 'Problem Name', 'Submission'];
 
@@ -55,8 +65,8 @@ export default function USACOTable() {
             .then(res => res.text())
             .then(json => {
 
-                const rows = [];
-                const data = deserialize(json);
+                const rows: string[][] = [];
+                const data = deserialize<Array<{ division: string; link: string; title: string; id: string }>>(json);
 
                 for (let i = 0; i < data.length; i++) {
 
@@ -75,11 +85,13 @@ export default function USACOTable() {
     }, []);
 
     useEffect(() => {
-        const handler = async (e) => {
+        const handler = async (e: MouseEvent): Promise<void> => {
+            if (!(e.target instanceof Element)) {return;}
             const btn = e.target.closest(".view-btn");
-            if (!btn) {return;}
+            if (!(btn instanceof HTMLElement)) {return;}
 
             const id = btn.dataset.id;
+            if (!id) {return;}
 
             // const res = await fetch(`/.netlify/functions/cp-problem-data?id=${id}`)
 
@@ -96,7 +108,7 @@ export default function USACOTable() {
             });
 
             const json = await res.text();
-            const data = deserialize(json);
+            const data = deserialize<ProblemData>(json);
 
             // console.log(data);
 

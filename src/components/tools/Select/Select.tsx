@@ -4,14 +4,14 @@ import { findIndex } from "/src/utils/list";
 import "./Select.css";
 
 export interface SelectOption {
-    value: string;
+    value: string | number;
     label: string;
     to?: string;
 }
 
 interface SelectProps {
     options?: SelectOption[];
-    defaultValue?: string;
+    defaultValue?: string | number;
     onChange: (option: SelectOption) => void;
     defaultIndex?: number;
     fixedSelect?: boolean;
@@ -25,7 +25,7 @@ interface SelectProps {
 
 export default function Select({ options = [], defaultValue, onChange, defaultIndex = 0, fixedSelect = false, align = "left", labelR = null, labelL = null, placeholder = "" }: SelectProps) {
     const [open, setOpen] = useState(false);
-    const [value, setValue] = useState({ value: '1', label: '1' });
+    const [value, setValue] = useState<SelectOption>({ value: '1', label: '1' });
 
     const ref = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -33,7 +33,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     const [hover, setHover] = useState(false);
     const [closed, setClosed] = useState(false);
 
-    const handleSelect = (option) => {
+    const handleSelect = (option: SelectOption): void => {
         onChange(option);
         setValue(option);
         setOpen(false);
@@ -43,9 +43,10 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
 
     useEffect(() => {
         // console.log(defaultValue);
-        if (!fixedSelect) {handleSelect(options[findIndex(defaultValue, options, defaultIndex)]);}
+        const initialOption = options[findIndex(defaultValue, options, defaultIndex)];
+        if (!fixedSelect && initialOption) {handleSelect(initialOption);}
         const handleClickOutside = (event: PointerEvent) => {
-            if (ref.current && !ref.current.contains(event.target)) {
+            if (ref.current && event.target instanceof Node && !ref.current.contains(event.target)) {
                 setOpen(false);
                 setClosed(false);
             }

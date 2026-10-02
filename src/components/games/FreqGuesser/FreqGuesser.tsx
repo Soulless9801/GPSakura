@@ -1,11 +1,23 @@
-import { useRef, useEffect, useCallback } from "react";
-import { readColor, rgbToCss } from "/src/utils/colors";
+import { useRef, useEffect, useCallback, type CSSProperties } from "react";
+import { readColor, rgbToCss, type RGB } from "/src/utils/colors";
 
-export default function FreqGuesser({signal, width, height, components, className="", style={}, colorTransition = 300}) {
+interface FreqGuesserProps {
+    signal: Float32Array;
+    width?: number | string;
+    height?: number | string;
+    components: number;
+    className?: string;
+    style?: CSSProperties;
+    colorTransition?: number;
+}
 
-    const wrapperRef = useRef(null);
+interface CanvasState { ctx: CanvasRenderingContext2D; width: number; height: number; }
 
-    const canvasRef = useRef(null);
+export default function FreqGuesser({ signal, width, height, components, className = "", style = {}, colorTransition = 300 }: FreqGuesserProps) {
+
+    const wrapperRef = useRef<HTMLDivElement>(null);
+
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -20,7 +32,7 @@ export default function FreqGuesser({signal, width, height, components, classNam
         canvas.width = Math.floor(cssW * dpr);
         canvas.height = Math.floor(cssH * dpr);
         const ctx = canvas.getContext("2d");
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height]);
 
     useEffect(() => {
@@ -29,12 +41,12 @@ export default function FreqGuesser({signal, width, height, components, classNam
 
     const lastTimeRef = useRef(performance.now());
 
-    const colorRafRef = useRef(null);
+    const colorRafRef = useRef<number | null>(null);
 
-	const currentColorRef = useRef([0, 0, 0]);
-    const secondaryColorRef = useRef([0, 0, 0]);
-	const targetCurrentColorRef = useRef([0, 0, 0]);
-    const targetSecondaryColorRef = useRef([0, 0, 0]);
+	const currentColorRef = useRef<RGB>([0, 0, 0]);
+    const secondaryColorRef = useRef<RGB>([0, 0, 0]);
+	const targetCurrentColorRef = useRef<RGB>([0, 0, 0]);
+    const targetSecondaryColorRef = useRef<RGB>([0, 0, 0]);
 	const transitionProgressRef = useRef(1);
 
 	useEffect(() => {
@@ -55,21 +67,24 @@ export default function FreqGuesser({signal, width, height, components, classNam
 
 	}, [readColor]);
 
-    const getCTX = () => {
+    const getCTX = (): CanvasState | null => {
         const canvas = canvasRef.current;
         if (!canvas) {return null;}
 
         const ctx = canvas.getContext("2d");
+        if (!ctx) {return null;}
 
         const W = ctx.canvas.clientWidth;
         const H = ctx.canvas.clientHeight;
 
-        return [ctx, W, H];
+        return { ctx, width: W, height: H };
     }
 
     const drawAxis = useCallback(() => {
         
-        const [ctx, W, H] = getCTX();
+        const state = getCTX();
+        if (!state) {return;}
+        const { ctx, width: W, height: H } = state;
 
         ctx.strokeStyle = rgbToCss(secondaryColorRef.current);
         ctx.lineWidth = 2;
@@ -103,7 +118,9 @@ export default function FreqGuesser({signal, width, height, components, classNam
 
     const fillSignal = () => {
             
-        const [ctx, W, H] = getCTX();
+        const state = getCTX();
+        if (!state) {return;}
+        const { ctx, width: W, height: H } = state;
 
         ctx.globalCompositeOperation = "source-in";
 
@@ -115,7 +132,9 @@ export default function FreqGuesser({signal, width, height, components, classNam
 
     const drawSignal = useCallback(() => {
         
-        const [ctx, W, H] = getCTX();
+        const state = getCTX();
+        if (!state) {return;}
+        const { ctx, width: W, height: H } = state;
 
         ctx.clearRect(0, 0, W, H);
 
@@ -161,7 +180,7 @@ export default function FreqGuesser({signal, width, height, components, classNam
     
         lastTimeRef.current = performance.now();
 
-        const loop = (now) => {
+        const loop = (now: number): void => {
             const last = lastTimeRef.current || now;
             const dt = now - last;
             lastTimeRef.current = now;
@@ -193,13 +212,13 @@ export default function FreqGuesser({signal, width, height, components, classNam
                 fillSignal();
             }
 
-            colorRafRef.current = requestAnimationFrame(loop);
+            colorRafRef.current = window.requestAnimationFrame(loop);
         };
 
-        colorRafRef.current = requestAnimationFrame(loop);
+        colorRafRef.current = window.requestAnimationFrame(loop);
 
         return () => {
-            if (colorRafRef.current) {cancelAnimationFrame(colorRafRef.current);}
+            if (colorRafRef.current !== null) {window.cancelAnimationFrame(colorRafRef.current);}
         };
 
     }, [colorTransition]);

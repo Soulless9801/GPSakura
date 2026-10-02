@@ -1,15 +1,23 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { rgbToCss } from "/src/utils/colors";
 
-export default function ColorPicker({ width, height, color, style = {}, className = "" }) {
+interface ColorPickerProps {
+    width?: number | string;
+    height?: number | string;
+    color: readonly number[];
+    style?: CSSProperties;
+    className?: string;
+}
+
+export default function ColorPicker({ width, height, color, style = {}, className = "" }: ColorPickerProps) {
 
     // Wrapper
     
-    const wrapperRef = useRef(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     // Canvas 
 
-    const canvasRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -24,7 +32,7 @@ export default function ColorPicker({ width, height, color, style = {}, classNam
         canvas.width = Math.floor(cssW * dpr / 2);
         canvas.height = Math.floor(cssH * dpr);
         const ctx = canvas.getContext("2d");
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height]);
 
     useEffect(() => {
@@ -35,7 +43,9 @@ export default function ColorPicker({ width, height, color, style = {}, classNam
 
         const recolor = () => {
             const canvas = canvasRef.current;
+            if (!canvas) {return;}
             const ctx = canvas.getContext("2d");
+            if (!ctx) {return;}
 
             const w = canvas.clientWidth;
             const h = canvas.clientHeight;

@@ -3,7 +3,7 @@ import { loadValue } from "/src/utils/storage";
 
 import ExperimentDemo from "/src/components/experiments/ExperimentDemo";
 
-import Fractal from "./Fractal";
+import Fractal, { type FractalType } from "./Fractal";
 import Select from "/src/components/tools/Select/Select";
 import Slider from "/src/components/tools/Slider/Slider";
 
@@ -24,7 +24,7 @@ export default function FractalDemo() {
         'fern',
     ];
 
-    const depthFractals = [
+    const depthFractals: FractalType[] = [
         'koch',
         'dragon',
         'pythagoras',
@@ -34,7 +34,7 @@ export default function FractalDemo() {
         'pythagoras',
     ];
 
-    const depthMax = {
+    const depthMax: Partial<Record<FractalType, number>> = {
         'koch': 7,
         'dragon': 15,
         'pythagoras': 12,
@@ -45,11 +45,12 @@ export default function FractalDemo() {
     const speedKey = 'fractalDemoSpeed';
     const angleKey = 'fractalDemoAngle';
 
-    const [type, setType] = useState(() => loadValue(typeKey, 'sierpinski'));
-    const [depth, setDepth] = useState(() => loadValue(depthKey, 3));
-    const [maxDepth, setMaxDepth] = useState(() => depthMax[type] || 7);
-    const [speed, setSpeed] = useState(() => loadValue(speedKey, 100));
-    const [angle, setAngle] = useState(() => loadValue(angleKey, 90));
+    const isFractalType = (value: string): value is FractalType => fractalOptions.some(option => option.value === value);
+    const [type, setType] = useState<FractalType>(() => loadValue<FractalType>(typeKey, 'sierpinski'));
+    const [depth, setDepth] = useState<number>(() => loadValue(depthKey, 3));
+    const [maxDepth, setMaxDepth] = useState<number>(() => depthMax[type] ?? 7);
+    const [speed, setSpeed] = useState<number>(() => loadValue(speedKey, 100));
+    const [angle, setAngle] = useState<number>(() => loadValue(angleKey, 90));
 
     useEffect(() => { localStorage.setItem(typeKey, JSON.stringify(type)); }, [type]);
     useEffect(() => { localStorage.setItem(depthKey, JSON.stringify(depth)); }, [depth]);
@@ -77,10 +78,11 @@ export default function FractalDemo() {
                         defaultValue={type}
                         onChange={e => {
                             const value = e.value;
+                            if (typeof value !== "string" || !isFractalType(value)) {return;}
                             setType(value);
                             if (depthFractals.findIndex(item => item === value) === -1) {return;}
 
-                            const newMaxDepth = depthMax[value];
+                            const newMaxDepth = depthMax[value] ?? 7;
 
                             setMaxDepth(newMaxDepth);
                             setDepth(prev => Math.min(prev, newMaxDepth));

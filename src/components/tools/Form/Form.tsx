@@ -1,13 +1,26 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./Form.css";
 
-export default function Form({ init, min, max, onChange, step = 1, places = 0, disabled = false, style={}, className="", notifyOnInitChange = true }) {
+interface FormProps {
+	init: number;
+	min: number;
+	max: number;
+	onChange?: (value: number) => void;
+	step?: number;
+	places?: number;
+	disabled?: boolean;
+	style?: React.CSSProperties;
+	className?: string;
+	notifyOnInitChange?: boolean;
+}
+
+export default function Form({ init, min, max, onChange, step = 1, places = 0, disabled = false, style = {}, className = "", notifyOnInitChange = true }: FormProps) {
 	const [value, setValue] = useState(init);
-	const [draft, setDraft] = useState(String(init));
+	const [draft, setDraft] = useState<string>(String(init));
 	const [focus, setFocus] = useState(false);
 	const skipNextOnChange = useRef(true);
 
-	const inputRef = useRef(null);
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (init !== undefined) {
@@ -26,21 +39,20 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	}, [value]);
 
 	useEffect(() => {
-		if (!focus) {inputRef.current.blur();}
+		if (!focus) {inputRef.current?.blur();}
 	}, [focus]);
 
-	const updateValue = (newValue) => {
+	const updateValue = (newValue: number): number => {
 		newValue = Math.min(max, Math.max(min, newValue));
 		newValue = Math.round(newValue / step) * step;
-		newValue = newValue.toFixed(places);
-		return newValue;
+		return Number(newValue.toFixed(places));
 	};
 
 	useEffect(() => {
 		setValue(prev => updateValue(Number(prev)));
 	}, [min, max, step, places]);
 
-	const commit = useCallback((off = 0) => {
+	const commit = useCallback((off: number = 0) => {
 		let num = parseFloat(draft);
 		if (!isNaN(num)) {
 			num = num + off;
@@ -50,7 +62,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 		}
 	}, [draft, value]);
 
-	const handleKeyDown = useCallback((e) => {
+	const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (disabled || !focus) {return;}
 		if (e.key === "Enter") {
 			setFocus(false);
@@ -72,33 +84,33 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 		commit();
 	};
 
-	const holdInterval = useRef(null);
-	const holdTimeout = useRef(null);
+	const holdInterval = useRef<number | null>(null);
+	const holdTimeout = useRef<number | null>(null);
 
-	const startHold = (inc) => {
+	const startHold = (inc: number): void => {
 		if (disabled || holdTimeout.current || holdInterval.current) {return;}
 		setValue(prev => updateValue(Number(prev) + inc));
-		holdTimeout.current = setTimeout(() => {
-			holdInterval.current = setInterval(() => {
+		holdTimeout.current = window.setTimeout(() => {
+			holdInterval.current = window.setInterval(() => {
 				setValue(prev => updateValue(Number(prev) + inc));
 			}, 30);
 		}, 500);
 	};
 
-	const stopHold = () => {
-		clearTimeout(holdTimeout.current);
-		clearInterval(holdInterval.current);
+	const stopHold = (): void => {
+		if (holdTimeout.current !== null) {window.clearTimeout(holdTimeout.current);}
+		if (holdInterval.current !== null) {window.clearInterval(holdInterval.current);}
 		holdTimeout.current = null;
 		holdInterval.current = null;
 	};
 
 	return (
 		<div className={`customNumberInput ${disabled ? "disabled" : ""} ${className}`} style={style} onClick={handleClick} onBlur={handleBlur} >
-			<input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={e => { setDraft(e.target.value); }} onFocus={() => { setFocus(true); }} onKeyDown={handleKeyDown} />
+			<input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setDraft(e.target.value); }} onFocus={() => { setFocus(true); }} onKeyDown={handleKeyDown} />
 			<div className="customNumberButtons">
 				<div
 					className="btn-up"
-					onPointerDown={e => { e.preventDefault(); startHold(step); }}
+					onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => { e.preventDefault(); startHold(step); }}
 					onPointerUp={stopHold}
 					onPointerLeave={stopHold}
 				>
@@ -106,7 +118,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 				</div>
 				<div
 					className="btn-down"
-					onPointerDown={e => { e.preventDefault(); startHold(-step); }}
+					onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => { e.preventDefault(); startHold(-step); }}
 					onPointerUp={stopHold}
 					onPointerLeave={stopHold}
 				>

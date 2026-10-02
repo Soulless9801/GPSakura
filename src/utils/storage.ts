@@ -1,8 +1,6 @@
-export function loadValue(key, defaultValue) {
+export function loadValue<T>(key: string, defaultValue: T): T {
     const raw = localStorage.getItem(key);
-    const val = (raw !== null ? JSON.parse(raw) : defaultValue);
+	const val: T = (raw !== null ? JSON.parse(raw) as T : defaultValue);
 	localStorage.setItem(key, JSON.stringify(val));
-	if (typeof defaultValue === "number") {return Number(val);}
-	if (typeof defaultValue === "boolean") {return Boolean(val);}
 	return val;
 }

@@ -1,12 +1,16 @@
-export function hexToRGB(value) {
+export type RGB = [number, number, number];
+export type HSV = [number, number, number];
+
+export function hexToRGB(value: unknown): RGB | null {
     if (typeof value !== 'string') {return null;}
 
     const parsed = value.trim().replace(/^#/, '');
 
     if (/^[0-9a-fA-F]{3}$/.test(parsed)) {
-        return parsed
+        const channels = parsed
             .split('')
             .map(channel => parseInt(`${channel}${channel}`, 16));
+        return [channels[0] ?? 0, channels[1] ?? 0, channels[2] ?? 0];
     }
 
     if (!/^[0-9a-fA-F]{6}$/.test(parsed)) {return null;}
@@ -18,37 +22,37 @@ export function hexToRGB(value) {
     ];
 }
 
-const toHex = (value) => value.toString(16).padStart(2, "0");
+const toHex = (value: number): string => value.toString(16).padStart(2, "0");
 
-export function clampRGB(value) {
+export function clampRGB(value: number): number {
 	const numeric = Number(value);
 	if (Number.isNaN(numeric)) {return 0;}
 	return Math.max(0, Math.min(255, Math.round(numeric)));
 };
 
-function pruneRGB(rgb) {
-    return rgb.map(v => clampRGB(v));
+function pruneRGB(rgb: readonly number[]): RGB {
+    return [clampRGB(rgb[0] ?? 0), clampRGB(rgb[1] ?? 0), clampRGB(rgb[2] ?? 0)];
 }
 
-export function rgbToHex(rgb) {
+export function rgbToHex(rgb: readonly number[]): string {
     const [r, g, b] = pruneRGB(rgb);
     // console.log("Pruned RGB:", `#${toHex(r)}${toHex(g)}${toHex(b)}`);
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-export function normalizeHex(value) {
+export function normalizeHex(value: unknown): string | null {
 	if (typeof value !== "string") {return null;}
 	const parsed = value.trim().replace(/^#/, "").toLowerCase();
 	if (!/^[0-9a-f]{6}$/.test(parsed)) {return null;}
 	return `#${parsed}`;
 }
 
-export function rgbToCss(rgb) {
+export function rgbToCss(rgb: readonly number[]): string {
     const [r, g, b] = pruneRGB(rgb);
     return `rgb(${r}, ${g}, ${b})`;
 }
 
-export function hsvToRGB(h, s, v) {
+export function hsvToRGB(h: number, s: number, v: number): RGB {
     const hue = ((h % 360) + 360) % 360;
     const c = v * s;
     const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
@@ -85,7 +89,7 @@ export function hsvToRGB(h, s, v) {
     ];
 }
 
-export function rgbToHsv([r, g, b]) {
+export function rgbToHsv([r, g, b]: readonly [number, number, number]): HSV {
     const rn = r / 255;
     const gn = g / 255;
     const bn = b / 255;
@@ -107,15 +111,15 @@ export function rgbToHsv([r, g, b]) {
     return [normalizedHue, s, v];
 }
 
-export function hexToHsv(hex) {
+export function hexToHsv(hex: unknown): HSV {
     const rgb = hexToRGB(hex);
     if (!rgb) {return [210, 0.76, 0.96];}
     return rgbToHsv(rgb);
 }
 
-const FALLBACK_RGB = [255, 255, 255];
+const FALLBACK_RGB: RGB = [255, 255, 255];
 
-export function readColor() {
+export function readColor(): [RGB, RGB] {
     const styles = getComputedStyle(document.documentElement);
 
     const primaryColor = hexToRGB(styles.getPropertyValue("--primary-color"));

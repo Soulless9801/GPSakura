@@ -1,8 +1,14 @@
-import { convertToPixels } from '/src/utils/resize.js';
+import type { ReactNode } from 'react';
+import { convertToPixels } from '/src/utils/resize';
 
 import './ExperimentDemo.css';
 
-export default function ExperimentDemo({display, controls}) {
+interface ExperimentDemoProps {
+    display: ReactNode;
+    controls: ReactNode;
+}
+
+export default function ExperimentDemo({ display, controls }: ExperimentDemoProps) {
 
     return (
         <section className='container-fluid experimentDemoWrapper'>

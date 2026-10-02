@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { readColor, rgbToCss, rgbToHex } from '/src/utils/colors';
+import { readColor, rgbToCss, rgbToHex, type RGB } from '/src/utils/colors';
 import { loadValue } from '/src/utils/storage';
 import { randomColor, defaultColor } from '/src/entities/color';
 
@@ -57,7 +57,7 @@ export default function ColorPickerDemo() {
         return () => { window.removeEventListener("themeStorage", onStorage); };
     }, []);
 
-    const colorFromDistance = useCallback((d) => {
+    const colorFromDistance = useCallback((d: number): string => {
         if (d < 0) {return rgbToCss(primary);}
         if (d === 0) {return "#00ff00";}
         if (d < 10) {return "#ffff00";}
@@ -154,7 +154,7 @@ export default function ColorPickerDemo() {
                                     value={rgbToHex(guessColor)}
                                     onChange={(index, nextValue) => {
                                         setCachedColor(prev => {
-                                            const nextColor = [...prev];
+                                            const nextColor: RGB = [prev[0], prev[1], prev[2]];
                                             nextColor[index] = nextValue;
                                             return nextColor;
                                         });

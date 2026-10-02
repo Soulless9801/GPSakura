@@ -1,5 +1,37 @@
-import { useRef, useEffect, useCallback } from "react";
-import { rgbToCss, readColor } from "/src/utils/colors"
+import { useRef, useEffect, useCallback, type CSSProperties } from "react";
+import { rgbToCss, readColor, type RGB } from "/src/utils/colors"
+
+export interface ChaosPoint {
+    x: number;
+    y: number;
+    z: number;
+}
+
+export interface ChaosAttractor {
+    dims: 3;
+    params: Record<string, number>;
+    step: (x: number, y: number, z: number, params: Record<string, number>) => [number, number, number];
+    speedFactor: number;
+    scaleFactor: number;
+    start: ChaosPoint;
+    view: ChaosPoint;
+}
+
+interface ChaosProps {
+    attractor?: ChaosAttractor;
+    width?: number | string;
+    height?: number | string;
+    pitch?: number;
+    yaw?: number;
+    speed?: number;
+    lineWidth?: number;
+    colorTransition?: number;
+    refresh?: boolean;
+    className?: string;
+    style?: CSSProperties;
+}
+
+interface CanvasState { ctx: CanvasRenderingContext2D; width: number; height: number; }
 
 export default function Chaos({
     attractor,
@@ -12,15 +44,15 @@ export default function Chaos({
     colorTransition = 300,
     className = "",
     style = {},
-}) {
+}: ChaosProps) {
 
     // Wrapper
     
-    const wrapperRef = useRef(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     // Canvas
 
-    const canvasRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -35,7 +67,7 @@ export default function Chaos({
         canvas.width = Math.floor(cssW * dpr);
         canvas.height = Math.floor(cssH * dpr);
         const ctx = canvas.getContext("2d");
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height]);
 
     useEffect(() => {
@@ -44,16 +76,16 @@ export default function Chaos({
 
     // Render Refs
 
-    const rafRef = useRef(null);
+    const rafRef = useRef<number | null>(null);
     const lastColorTimeRef = useRef(performance.now());
     const lastChaosTimeRef = useRef(performance.now());
 
     // Color Refs
 
-    const colorRafRef = useRef(null);
+    const colorRafRef = useRef<number | null>(null);
 
-    const currentColorRef = useRef([0, 0, 0]);
-    const targetColorRef = useRef([0, 0, 0]);
+    const currentColorRef = useRef<RGB>([0, 0, 0]);
+    const targetColorRef = useRef<RGB>([0, 0, 0]);
     const transitionProgressRef = useRef(1);
 
     useEffect(() => {
@@ -73,11 +105,11 @@ export default function Chaos({
 
     // Position Ref
 
-    const pointRef = useRef({ x: 0.1, y: 0, z: 0 });
+    const pointRef = useRef<ChaosPoint>({ x: 0.1, y: 0, z: 0 });
 
     // Chaos Drawing
 
-    const calc = useCallback((vec) => {
+    const calc = useCallback((vec: ChaosPoint): [number, number] => {
         const cosPitch = Math.cos(pitch);
         const sinPitch = Math.sin(pitch);
         const cosYaw = Math.cos(yaw);
@@ -90,21 +122,24 @@ export default function Chaos({
         return [x, y];
     }, [pitch, yaw]);
 
-    const getCTX = () => {
+    const getCTX = (): CanvasState | null => {
         const canvas = canvasRef.current;
         if (!canvas) {return null;}
 
         const ctx = canvas.getContext("2d");
+        if (!ctx) {return null;}
 
         const W = ctx.canvas.clientWidth;
         const H = ctx.canvas.clientHeight;
 
-        return [ctx, W, H];
+        return { ctx, width: W, height: H };
     }
 
     const fillChaos = () => {
         
-        const [ctx, W, H] = getCTX();
+        const canvasState = getCTX();
+        if (!canvasState) {return;}
+        const { ctx, width: W, height: H } = canvasState;
 
         ctx.globalCompositeOperation = "source-in";
 
@@ -116,20 +151,22 @@ export default function Chaos({
 
     const setupChaos = () => {
         
-        const [ctx, W, H] = getCTX();
+        const canvasState = getCTX();
+        if (!canvasState) {throw new Error("Chaos canvas is unavailable");}
+        const { ctx, width: W, height: H } = canvasState;
 
         ctx.clearRect(0, 0, W, H);
 
         ctx.fillStyle = rgbToCss(currentColorRef.current);
 
-        return [ctx, W, H];
+        return canvasState;
     };
 
     const drawChaos = useCallback(() => {
 
         if (!attractor) {return;}
 
-        const [ctx, W, H] = setupChaos();
+        const { ctx, width: W, height: H } = setupChaos();
 
         const params = attractor.params;
         const dims = attractor.dims;
@@ -138,7 +175,7 @@ export default function Chaos({
 
         lastChaosTimeRef.current = performance.now();
 
-        const step = (now) => {
+        const step = (now: number): void => {
 
             let dt = (now - lastChaosTimeRef.current) / attractor.speedFactor * speed;
             dt = Math.min(dt, 0.001);
@@ -160,9 +197,7 @@ export default function Chaos({
 
             for (let i = 0; i < 200; i++) {
 
-                const d = dims === 3
-                    ? attractor.step(x, y, z, params)
-                    : attractor.step(x, y, params);
+                const d = attractor.step(x, y, z, params);
 
                 x += d[0] * dt;
                 y += d[1] * dt;
@@ -182,10 +217,10 @@ export default function Chaos({
 
             pointRef.current = { x, y, z };
 
-            rafRef.current = requestAnimationFrame(step);
+            rafRef.current = window.requestAnimationFrame(step);
         };
 
-        rafRef.current = requestAnimationFrame(step);
+        rafRef.current = window.requestAnimationFrame(step);
 
     }, [attractor, speed, lineWidth, calc]);
 
@@ -216,7 +251,7 @@ export default function Chaos({
     
         lastColorTimeRef.current = performance.now();
 
-        const loop = (now) => {
+        const loop = (now: number): void => {
             const last = lastColorTimeRef.current || now;
             const dt = now - last;
             lastColorTimeRef.current = now;
@@ -238,10 +273,10 @@ export default function Chaos({
                 fillChaos();
             }
 
-            colorRafRef.current = requestAnimationFrame(loop);
+            colorRafRef.current = window.requestAnimationFrame(loop);
         };
 
-        colorRafRef.current = requestAnimationFrame(loop);
+        colorRafRef.current = window.requestAnimationFrame(loop);
 
         return () => {
             if (colorRafRef.current) {cancelAnimationFrame(colorRafRef.current);}
