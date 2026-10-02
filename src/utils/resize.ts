@@ -24,7 +24,6 @@ export function convertToPixels(input: number | string, context: HTMLElement = d
             return value * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
         default:
-            console.warn("Unknown unit:", unit);
             return value; 
     }
 }

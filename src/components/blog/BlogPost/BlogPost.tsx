@@ -17,8 +17,8 @@ interface BlogPostProps {
 
 export default function BlogPost({ title, body, creationTime, updateTime, postId }: BlogPostProps) {
 
-    const collapsedKey = `blogPostCollapsed_${postId}`;
-    const scrolledKey = `blogPostScrolled_${postId}`;
+    const collapsedKey = `blogPostCollapsed_${String(postId)}`;
+    const scrolledKey = `blogPostScrolled_${String(postId)}`;
 
     const [collapsed, setCollapsed] = useState(loadValue(collapsedKey, false));
     const [scrolled, setScrolled] = useState(loadValue(scrolledKey, false));

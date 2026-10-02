@@ -41,8 +41,11 @@ export class Game {
         let rem_player = data.player_cards;
         let rem_dealer = data.dealer_cards;
 
-        this.dealerHand.addCard(this.deck.draw()!); // face up card
-        this.purgatory = this.deck.draw()!; // hole card
+        const faceUpCard = this.deck.draw();
+        const holeCard = this.deck.draw();
+        if (!faceUpCard || !holeCard) {throw new Error("Unable to deal blackjack cards");}
+        this.dealerHand.addCard(faceUpCard); // face up card
+        this.purgatory = holeCard; // hole card
 
         if (rem_dealer > 1) { // dealer turn
             rem_dealer -= 2;

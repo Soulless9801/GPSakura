@@ -91,15 +91,12 @@ export class Game {
 
     static deserializeGame(game: string): Game | null {
 
-        const des : any = deserialize(game);
-        if (!des || typeof des !== "object") {return null;}
-
-        const { state, hands, deck, dipai } = des as { 
-            state: GameState, 
-            hands: Map<string, SJCore.HandData>,
-            deck: SJCore.DeckData,
-            dipai: Card[],
-        };
+        const { state, hands, deck, dipai } = deserialize<{
+            state?: GameState,
+            hands?: Map<string, SJCore.HandData>,
+            deck?: SJCore.DeckData,
+            dipai?: Card[],
+        }>(game);
 
         // console.log(state, hands, deck, dipai);
 
@@ -197,10 +194,7 @@ export class Game {
     speedDraw() {
         if (this.state.over || !this.state.draw) {return false;}
 
-        while (this.state.draw) {
-            const player = this.state.players[this.state.turn];
-            this.drawCard(player);
-        }
+        while (this.drawCard(this.state.players[this.state.turn])) {}
 
         return true;
     }
@@ -437,7 +431,7 @@ export class Game {
         for (const player of this.state.players){
             const pInfo = this.state.info.get(player);
             if (!pInfo) {continue;}
-            for (const card of pInfo?.play?.cards || []) {this.state.discard.push(card);}
+            for (const card of pInfo.play?.cards || []) {this.state.discard.push(card);}
         }
 
         this.state.chu = this.state.lead; // winner of the trick starts the next trick

@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import * as firebase from 'firebase/app';
 import * as fireStore from 'firebase/firestore';
+import type { HandlerEvent } from '@netlify/functions';
 
 import { errorJSON, successJSON } from './data/json.ts';
 
@@ -32,7 +33,7 @@ export const firebaseConfig = {
 
 dotenv.config();
 
-export async function handler(event: any) {
+export async function handler(event: HandlerEvent) {
 
     let firebaseApp;
 
@@ -44,8 +45,6 @@ export async function handler(event: any) {
     const col : string = String(body.col || "").trim();
     const loc : string = String(body.loc || "").trim();
     const id : string = String(body.id || "").trim();
-
-    console.log(`firebase-collection-query: Received query for collection: ${col} with document id: ${id} with local fallback: ${loc}.json`);
 
     let collection;
 
@@ -62,7 +61,7 @@ export async function handler(event: any) {
         collection = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         
         // FIXME: modify all firestore Timestamp objects to ISO string
-        collection.map((doc: any) => {
+        collection.map((doc: Record<string, string | number | boolean | null | fireStore.Timestamp>) => {
             Object.keys(doc).forEach((key) => {
                 if (doc[key] instanceof fireStore.Timestamp){
                     doc[key] = doc[key].toDate().toISOString();
@@ -70,18 +69,18 @@ export async function handler(event: any) {
             });
         });
 
-    } catch (error: any) {
-        console.log(`firebase-collection-query: Error fetching collection from Firestore, falling back to local file ${loc}.json`, error.message);
+    } catch {
         try {
             const filePath = path.resolve(`./netlify/functions/data/${loc}.json`);
             collection = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             // Timestamps should already be in ISO format
-        } catch (error: any) {
-            return errorJSON(`firebase-collection-query: Error fetching collection from Firestore and local fallback: ${error.message}`, 500);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            return errorJSON(`firebase-collection-query: Error fetching collection from Firestore and local fallback: ${message}`, 500);
         }   
     }
 
-    if (id) {return successJSON(collection.find((doc: any) => doc.id === id) || null);}
+    if (id) {return successJSON(collection.find((doc: { id?: string }) => doc.id === id) || null);}
 
     return successJSON(collection);
 };

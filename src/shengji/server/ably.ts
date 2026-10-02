@@ -9,8 +9,8 @@ export function useAbly({ request }: { request: Identity | null }): Ably.Realtim
 
     useEffect(() => {
 
-        const clientId: string = String(request?.clientId || "").trim();
-        const signature: string = String(request?.signature || "").trim();
+        const clientId: string = request?.clientId.trim() ?? "";
+        const signature: string = request?.signature.trim() ?? "";
 
         if (!clientId || !signature) {
             setAbly(null);
@@ -27,7 +27,7 @@ export function useAbly({ request }: { request: Identity | null }): Ably.Realtim
         setAbly(client);
 
         return () => {
-            client?.close();
+            client.close();
         };
         
     }, [request?.clientId, request?.signature]);

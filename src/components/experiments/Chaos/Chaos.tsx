@@ -58,8 +58,8 @@ export default function Chaos({
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
         if (!canvas || !wrapper) {return;}
-        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
-        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${String(width)}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${String(height)}px` : height;}
 
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;
@@ -169,8 +169,6 @@ export default function Chaos({
         const { ctx, width: W, height: H } = setupChaos();
 
         const params = attractor.params;
-        const dims = attractor.dims;
-
         pointRef.current = { ...attractor.start };
 
         lastChaosTimeRef.current = performance.now();
@@ -185,7 +183,7 @@ export default function Chaos({
 
             let { x, y, z } = pointRef.current;
 
-            const [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
+            const [cx, cy] = calc(pointRef.current);
 
             ctx.beginPath();
             ctx.strokeStyle = rgbToCss(currentColorRef.current);
@@ -201,11 +199,11 @@ export default function Chaos({
 
                 x += d[0] * dt;
                 y += d[1] * dt;
-                if (dims === 3) {z += d[2] * dt;}
+                z += d[2] * dt;
 
                 pointRef.current = { x, y, z };
 
-                const [cx, cy] = dims === 3 ? calc(pointRef.current) : [x, y];
+                const [cx, cy] = calc(pointRef.current);
 
                 const nx = W / 2 + cx * attractor.scaleFactor;
                 const ny = H / 2 + cy * attractor.scaleFactor;

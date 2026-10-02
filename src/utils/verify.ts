@@ -22,7 +22,7 @@ export async function getIdentity(functionName: string, clidntIdLoc: string, sig
         }),
     });
 
-    if (!ver || !ver.ok || forceNew) {
+    if (!ver.ok || forceNew) {
 
         clientId = await gen();
         if (!clientId) {return null;}
@@ -38,7 +38,7 @@ export async function getIdentity(functionName: string, clidntIdLoc: string, sig
                 clientId,
             }),
         });
-        if (!res || !res.ok) {return null;}
+        if (!res.ok) {return null;}
 
         const data = await res.text();
         if (!data) {return null;}

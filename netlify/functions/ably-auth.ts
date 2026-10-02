@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import Ably from 'ably';
+import type { HandlerEvent } from '@netlify/functions';
 
 import { errorJSON, successJSON } from './data/json.ts';
 
@@ -12,7 +13,7 @@ const { ABLY_API_KEY_CLIENT } = process.env;
 
 const client = new Ably.Rest({ key: ABLY_API_KEY_CLIENT });
 
-export const handler = async (event: any) => {
+export const handler = async (event: HandlerEvent) => {
 
     try {
         
@@ -21,8 +22,6 @@ export const handler = async (event: any) => {
 
         if (!clientId || !signature) {return errorJSON("Missing clientId or signature", 400);}
         if (!verify(clientId, signature)) {return errorJSON("Invalid signature", 403);}
-
-        console.log(`ably-auth: Received token generation request for clientId ${clientId}`);
 
         const tokenRequest = await client.auth.createTokenRequest({
             clientId,
@@ -33,8 +32,8 @@ export const handler = async (event: any) => {
 
         return successJSON(tokenRequest);
 
-    } catch (error: any) {
-        console.error("ably-auth: Internal server error:", error.message);
-        return errorJSON(`ably-auth: Internal server error ${error.message}`, 500);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return errorJSON(`ably-auth: Internal server error ${message}`, 500);
     }
 };

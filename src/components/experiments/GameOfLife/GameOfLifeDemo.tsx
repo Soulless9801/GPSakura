@@ -111,12 +111,12 @@ export default function GameOfLifeDemo() {
             <Slider min={minZoom.current} max={maxZoom.current} value={zoom} unit={"%"} onChange={e => { setZoom(e); }} label="Zoom"/>
             <div className='row g-1'>
                 <div className='col-6'>
-                    <button className="cellButton" onClick={() => { setZoom(prev => Math.min(Number(prev) + 10, maxZoom.current)); }}>
+                    <button className="cellButton" onClick={() => { setZoom(prev => Math.min(prev + 10, maxZoom.current)); }}>
                         Zoom In
                     </button>
                 </div>
                 <div className='col-6'>
-                    <button className="cellButton" onClick={() => { setZoom(prev => Math.max(Number(prev) - 10, minZoom.current)); }}>
+                    <button className="cellButton" onClick={() => { setZoom(prev => Math.max(prev - 10, minZoom.current)); }}>
                         Zoom Out
                     </button>
                 </div>

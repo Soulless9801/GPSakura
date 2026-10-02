@@ -55,8 +55,8 @@ export default memo(function ParticleNetwork({
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
         if (!canvas || !wrapper) {return;}
-        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
-        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${String(width)}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${String(height)}px` : height;}
 
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;
@@ -295,7 +295,7 @@ export default memo(function ParticleNetwork({
                                     ctx.moveTo(p.x, p.y);
                                     ctx.lineTo(other.x, other.y);
                                     const alpha = 1 - dist / connectionDistance;
-                                    ctx.strokeStyle = `rgba(${strokeRgb}, ${alpha})`;
+                                    ctx.strokeStyle = `rgba(${strokeRgb}, ${String(alpha)})`;
                                     ctx.lineWidth = 0.5;
                                     ctx.stroke();
                                 }

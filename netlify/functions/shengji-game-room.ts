@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import Ably from 'ably';
+import type { HandlerEvent } from '@netlify/functions';
 import { Redis } from '@upstash/redis';
 
 import { verify } from "./create-session";
@@ -20,7 +21,19 @@ function getAbly() {
     });
 }
 
-async function publish(channel: any, event: string, data: any) {
+interface PublishData {
+    [key: string]: string | number | boolean | object | null;
+}
+
+interface PresenceItem {
+    clientId: string;
+    data?: {
+        username?: string;
+        team?: number;
+    };
+}
+
+async function publish(channel: Ably.Channel, event: string, data: PublishData) {
     //TODO: do something with timestamp
     await channel.publish(event, { timestamp: Date.now(), ...data });
 }
@@ -49,7 +62,7 @@ const GAME_KEY_PREFIX = "game:";
 async function loadGame(redis: Redis, roomId: string) {
     //TODO: figure out why this isn't returning as string
     const res = await redis.get(GAME_KEY_PREFIX + roomId);
-    if (res == null) {return null;}
+    if (res === null) {return null;}
     return typeof res === "string" ? res : JSON.stringify(res);
 }
 
@@ -62,7 +75,7 @@ const RATE_LIMIT_RULES: Record<string, [number, number]> = { // TODO: fine-tune 
     default: [1, 1],
 };
 
-export const handler = async(event: any) => {
+export const handler = async(event: HandlerEvent) => {
 
     const redis = getRedis();
 
@@ -81,9 +94,7 @@ export const handler = async(event: any) => {
 
         const roomId : string = String(body.roomId || '').trim();
         const action : string = String(body.action || '').trim();
-        const payload : any = body.payload;
-
-        console.log(`shengji-game-room: Received action ${action} from client ${clientId} for room_${roomId}`);
+        const payload : PublishData = typeof body.payload === "object" && body.payload !== null ? body.payload : {};
 
         if (!clientId) {return errorJSON("Invalid clientId");}
         if (!roomId) {return errorJSON("Invalid roomId");}
@@ -94,9 +105,8 @@ export const handler = async(event: any) => {
         const [limit, windowSeconds] = rule;
 
         // rate limit check
-        const rlClientId : string = clientId || "unknown";
+        const rlClientId : string = clientId || "anonymous";
         const key : string = `rl:${roomId}:${roomSpecific.has(action) ? "global" : rlClientId}:${action}`;
-        console.log(`rate limit check for key ${key}: limit ${limit} per ${windowSeconds} seconds`);
         const isAllowed : boolean = await rateLimit(redis, key, limit, windowSeconds);
         if (!isAllowed) {return errorJSON("Rate limit exceeded", 429);}
 
@@ -104,7 +114,7 @@ export const handler = async(event: any) => {
 
         // get room live object
 
-        const channel : any = ably.channels.get(`room_${roomId}`);
+        const channel: Ably.Channel = ably.channels.get(`room_${roomId}`);
 
         // helper function to get game state
         async function getGame() {
@@ -128,7 +138,7 @@ export const handler = async(event: any) => {
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
             const presence = await channel.presence.get();
-            const items : any[] = presence.items;
+            const items: PresenceItem[] = presence.items as PresenceItem[];
             const players = game.getState().players;
             const missing = players.filter(player => !items.some(item => item.clientId === player));
 
@@ -148,9 +158,9 @@ export const handler = async(event: any) => {
             // console.log("Initializing game...");
 
             const presence = await channel.presence.get();
-            const items : any[] = presence.items;
-            const a = items.filter((p: any) => p.data.team === 0);
-            const b = items.filter((p: any) => p.data.team === 1);
+            const items: PresenceItem[] = presence.items as PresenceItem[];
+            const a = items.filter((p: { data?: { team?: number } }) => p.data?.team === 0);
+            const b = items.filter((p: { data?: { team?: number } }) => p.data?.team === 1);
 
             if (a.length !== b.length) {return errorJSON("Teams must be balanced");}
 
@@ -160,11 +170,11 @@ export const handler = async(event: any) => {
             for (let i = 0; i < Math.max(a.length, b.length); i++) {
                 if (i < a.length) {
                     players.push(a[i].clientId); 
-                    users.push(a[i].data.username);
+                    users.push(a[i].data?.username ?? "unknown");
                 }
                 if (i < b.length) {
                     players.push(b[i].clientId); 
-                    users.push(b[i].data.username);
+                    users.push(b[i].data?.username ?? "unknown");
                 }
             }
 
@@ -254,7 +264,7 @@ export const handler = async(event: any) => {
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
             // console.log("Payload for trump call:", payload);
-            const trump : SJCore.Trump = JSON.parse(payload && payload.trump);
+            const trump : SJCore.Trump = JSON.parse(payload && String(payload.trump));
             // console.log("Received Trump:", trump);
             if (!game.callTrump(clientId, trump)) {return errorJSON("Invalid trump call");}
 
@@ -283,8 +293,8 @@ export const handler = async(event: any) => {
             const game = await getGame();
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
-            const give : SJCore.Card[] = JSON.parse(payload && payload.give);
-            const receive : SJCore.Card[] = JSON.parse(payload && payload.receive);
+            const give : SJCore.Card[] = JSON.parse(payload && String(payload.give));
+            const receive : SJCore.Card[] = JSON.parse(payload && String(payload.receive));
 
             // console.log(`Client ${clientId} wants to exchange dipai. Give: ${serialize(give)}, Receive: ${serialize(receive)}`);
 
@@ -303,7 +313,7 @@ export const handler = async(event: any) => {
             const game = currentGame;
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
-            const play : SJCore.Play = JSON.parse(payload && payload.play);
+            const play : SJCore.Play = JSON.parse(payload && String(payload.play));
 
             // console.log(`Client ${clientId} attempts to play: ${serialize(play)}`);
 
@@ -322,7 +332,7 @@ export const handler = async(event: any) => {
             const game = currentGame;
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
             
-            const play : SJCore.Play = JSON.parse(payload && payload.play);
+            const play : SJCore.Play = JSON.parse(payload && String(payload.play));
 
             if (!game.tryShuai(clientId, play)) {return errorJSON("Invalid shuai");}
 
@@ -366,9 +376,9 @@ export const handler = async(event: any) => {
 
         return errorJSON(`shengji-game-room: Invalid action`, 400);
 
-    } catch (error: any) {
+    } catch (error) {
         // catch and return any errors
-        console.error("shengji-game-room: Error handling request:", error.message);
-        return errorJSON(`shengji-game-room: Internal server error ${error.message}`, 500);
+        const message = error instanceof Error ? error.message : String(error);
+        return errorJSON(`shengji-game-room: Internal server error ${message}`, 500);
     }
 }

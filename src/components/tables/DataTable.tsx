@@ -77,7 +77,7 @@ export default function CustomDataTable({ title, rows, columns, options = {}, ht
                             placeholder="" 
                             onChange={e => {
                                 const table = $(`#${id}`).DataTable();
-                                table.search(String(e.target.value)).draw();
+                                table.search(e.target.value).draw();
                             }}
                             className="table-search"
                         />

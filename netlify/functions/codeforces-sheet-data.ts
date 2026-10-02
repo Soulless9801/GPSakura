@@ -1,12 +1,13 @@
 import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
+import type { HandlerEvent } from '@netlify/functions';
 
 dotenv.config();
 
 const { SPREADSHEET_ID } = process.env;
 
-export const handler = async (_event: any) => {
+export const handler = async (_event: HandlerEvent) => {
 
     let csv;
 
@@ -22,19 +23,17 @@ export const handler = async (_event: any) => {
         csv = await res.text();
         csv = csv.replaceAll('\t', ';'); // replace delimiter
 
-        console.log(`codeforces-sheet-data: Fetched ${csv.length} rows from Google Sheets`);
         
-    } catch (error: any) {
-        console.error(`codeforces-sheet-data: Error fetching data from Google Sheets`, error.message);
+    } catch {
         try {
             const filePath = path.resolve('./netlify/functions/data/cfProblems.csv');
             csv = fs.readFileSync(filePath, 'utf8');
-        } catch (error: any) {
-            console.error(`codeforces-sheet-data: Error reading local file`, error.message);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
             return {
                 statusCode: 500,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ error: `codeforces-sheet-data: Internal server error ${error.message}` }),
+                body: JSON.stringify({ error: `codeforces-sheet-data: Internal server error ${message}` }),
             };
         }
     }

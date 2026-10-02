@@ -4,17 +4,18 @@ dotenv.config();
 
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
+import type { HandlerEvent } from '@netlify/functions';
 import { players } from "../../db/schema.ts";
 
 import { errorJSON, successJSON } from './data/json.ts';
 
-const sql = neon(process.env.NEON_DATABASE_URL!);
+const sql = neon(process.env.NEON_DATABASE_URL ?? "");
 
 const db = drizzle(sql);
 
 // request a new entry in player schema to be created
 
-export async function handler(_event: any) {
+export async function handler(_event: HandlerEvent) {
 
     try {
 
@@ -39,8 +40,8 @@ export async function handler(_event: any) {
             money: ret.money,
         });
         
-    } catch (error: any) {
-        console.error("neon-create-user: Error creating player:", error.message);
-        return errorJSON(`neon-create-user: Internal server error ${error.message}`, 500);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return errorJSON(`neon-create-user: Internal server error ${message}`, 500);
     }
 }

@@ -48,7 +48,7 @@ function CardRow({ cards, size = "md" }: { cards: Card[]; size?: "sm" | "md" }) 
     return (
         <span className="advCardRow">
             {cards.map((card, i) => (
-                <PlayCard key={`${cardKey(card)}-${i}`} card={card} size={size} />
+                <PlayCard key={`${cardKey(card)}-${String(i)}`} card={card} size={size} />
             ))}
         </span>
     );
@@ -60,7 +60,7 @@ function Chips({ cards, onRemove }: { cards: Card[]; onRemove: (index: number) =
         <span className="advChips">
             {cards.map((card, i) => (
                 <button
-                    key={`${cardKey(card)}-${i}`}
+                    key={`${cardKey(card)}-${String(i)}`}
                     className="advChip"
                     title={`remove ${CardModule.cardName(card)}`}
                     onClick={() => { onRemove(i); }}
@@ -189,7 +189,7 @@ export default function Advisor() {
             ? "your hand"
             : target.kind === "seen"
               ? "cards seen earlier"
-              : `seat ${target.index + 1}'s play`;
+              : `seat ${String(target.index + 1)}'s play`;
 
     const best = advice.candidates[0];
     const alternatives = advice.candidates.slice(1, 5);
@@ -322,7 +322,7 @@ export default function Advisor() {
                         <header className="advPanel__head">
                             <h3>On the table</h3>
                             <span className="advCount">
-                                {trick.length ? `${advice.facts.potPoints} pts in the trick` : "you are leading"}
+                                {trick.length ? `${String(advice.facts.potPoints)} pts in the trick` : "you are leading"}
                             </span>
                             <button onClick={addPlay} disabled={trick.length >= numPlayers - 1}>
                                 add a play
@@ -414,7 +414,7 @@ export default function Advisor() {
                                     ))}
                                 </ul>
                             </>
-                        ) : best ? (
+                        ) : (
                             <>
                                 <h3>Play</h3>
                                 <div className="advBest">
@@ -500,7 +500,7 @@ export default function Advisor() {
                                     </>
                                 )}
                             </>
-                        ) : null}
+                        )}
                     </section>
                 </div>
             </div>

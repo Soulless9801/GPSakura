@@ -58,17 +58,16 @@ function HSVInput({ value, onChange, disabled = false }: HSVInputProps) {
 
 	const hueColor = rgbToHex(hsvToRGB(hsv[0], 1, 1));
 	const pickerHandleStyle = {
-		left: `${hsv[1] * 100}%`,
-		top: `${(1 - hsv[2]) * 100}%`,
+		left: `${String(hsv[1] * 100)}%`,
+		top: `${String((1 - hsv[2]) * 100)}%`,
 	};
 
 	const hueHandleStyle = {
-		left: `${(hsv[0] / 360) * 100}%`,
+		left: `${String((hsv[0] / 360) * 100)}%`,
 	};
 
 	useEffect(() => {
 		const next = hexToHsv(value);
-		if (!next) {return;}
 		if (pickerDragRef.current || hueDragRef.current) {return;}
 		setHSV(next);
 	}, [value]);
@@ -213,8 +212,8 @@ export function RGBInput({ value, onSubmit, onChange, getFieldStyle, disabled = 
 		const nextRGB: RGB = [rgb[0], rgb[1], rgb[2]];
 		nextRGB[index] = Math.min(255, Math.max(0, rawValue));
 		setRGB(nextRGB);
-		if (onSubmit) {onSubmit?.(rgbToHex(nextRGB));}
-		if (onChange) {onChange?.(index, nextRGB[index]);}
+		onSubmit?.(rgbToHex(nextRGB));
+		onChange?.(index, nextRGB[index]);
 	};
 
 	return (

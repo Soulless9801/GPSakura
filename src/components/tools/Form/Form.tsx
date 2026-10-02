@@ -23,10 +23,8 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		if (init !== undefined) {
-			skipNextOnChange.current = !notifyOnInitChange;
-			setValue(updateValue(init));
-		}
+		skipNextOnChange.current = !notifyOnInitChange;
+		setValue(updateValue(init));
 	}, [init, notifyOnInitChange]);
 
 	useEffect(() => {
@@ -45,11 +43,11 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 	const updateValue = (newValue: number): number => {
 		newValue = Math.min(max, Math.max(min, newValue));
 		newValue = Math.round(newValue / step) * step;
-		return Number(newValue.toFixed(places));
+		return parseFloat(newValue.toFixed(places));
 	};
 
 	useEffect(() => {
-		setValue(prev => updateValue(Number(prev)));
+		setValue(prev => updateValue(prev));
 	}, [min, max, step, places]);
 
 	const commit = useCallback((off: number = 0) => {
@@ -68,10 +66,10 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 			setFocus(false);
 		}
 		if (e.key === "ArrowUp") {
-			setValue(prev => updateValue(Number(prev) + step));
+			setValue(prev => updateValue(prev + step));
 		}
 		if (e.key === "ArrowDown") {
-			setValue(prev => updateValue(Number(prev) - step));
+			setValue(prev => updateValue(prev - step));
 		}
 	}, [disabled, focus]);
 
@@ -89,10 +87,10 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 
 	const startHold = (inc: number): void => {
 		if (disabled || holdTimeout.current || holdInterval.current) {return;}
-		setValue(prev => updateValue(Number(prev) + inc));
+		setValue(prev => updateValue(prev + inc));
 		holdTimeout.current = window.setTimeout(() => {
 			holdInterval.current = window.setInterval(() => {
-				setValue(prev => updateValue(Number(prev) + inc));
+				setValue(prev => updateValue(prev + inc));
 			}, 30);
 		}, 500);
 	};

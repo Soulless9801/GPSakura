@@ -76,21 +76,20 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     const [dipai, setDipai] = useState<SJCore.Card[] | null>([]);
     const dipaiRef = useRef<HandRef>(null);
 
-    const parseRes = (res: any): void => {
-
-        const des_data = deserialize(res);
-        if (!des_data || typeof des_data !== "object") {return;}
-
-        const data = des_data as { 
+    const parseRes = (res: string | null): void => {
+        if (res === null) {return;}
+        const data = deserialize<{ 
             hand?: SJCore.HandData, 
             dipai?: SJCore.Card[]
-        };
-
-        if (!data) {return;}
+        }>(res);
 
         if (data.hand) {setHand(SJCore.Hand.deserialize(data.hand));}
-        if (data.dipai) {setDipai(data.dipai || null);}
+        if (data.dipai) {setDipai(data.dipai);}
     }
+
+    const runAsync = <T,>(action: () => Promise<T>): void => {
+        void action().catch(() => undefined);
+    };
 
     async function drawCard() {
         const res = await SJRequest({
@@ -116,7 +115,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
         const cards = handRef.current?.getActiveCards() || [];
         if (cards.length === 0) {return;} // must select cards to call trump
         if (!SJComp.isAllSame(cards) && !SJComp.isAllJokers(cards)) {return;} // must be all same card or jokers to call trump
-        return SJRequest({
+        await SJRequest({
             roomId,
             action: "trump",
             identity,
@@ -206,14 +205,12 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
         if (!game || !hand) {return;}
         let i = game.lead;
         const tricks : SJAdvt.Move[] = [];
-        while (true) {
+        for (let steps = 0; steps < game.players.length; steps++) {
             const play = game.info.get(game.players[i])?.play;
             if (!play) {break;}
             tricks.push(play.cards);
             i = (i + 1) % game.players.length;
-            if (i === game.lead) {break;}
         }
-        if (i === game.lead) {tricks.length = 0;} // no tricks played yet
         if (game.players[game.turn] === identity?.clientId || !help) {
             const pos: SJAdvt.Position = {
                 numPlayers: game.players.length,
@@ -243,7 +240,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
         else if (game.dip) {
             setPhase("dipai");
             if (game.players[game.zhuang] !== identity?.clientId) {return;}
-            getDipai();
+            runAsync(getDipai);
         } else {
             getAdvice();
             setPhase("play");
@@ -254,13 +251,13 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
         if (!phase || phase === "over") {setHand(null);}
         else {
             if (phase !== "dipai") {setDipai([]);}
-            else {getHand();}
+            else {runAsync(getHand);}
         }
     }, [phase]);
 
     if (!game) {return null;}
 
-    const actionDisabled = Boolean(game.paused);
+    const actionDisabled = game.paused;
 
     return (
         <div className="sjg-phase">
@@ -313,8 +310,8 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                                     <p>Dipai (底牌)</p>
                                     <Hand ref={dipaiRef} cards={dipai || []} className="sjg-hand__wrapper"/>
                                     <div className="sjg-button__group">
-                                        <button className="sjg-button__game" onClick={() => exchangeDipai()} disabled={actionDisabled}>Exchange Dipai</button>
-                                        <button className="sjg-button__game" onClick={() => getDipai()} disabled={actionDisabled}>Get Dipai</button>
+                                        <button className="sjg-button__game" onClick={() => { runAsync(exchangeDipai); }} disabled={actionDisabled}>Exchange Dipai</button>
+                                        <button className="sjg-button__game" onClick={() => { runAsync(getDipai); }} disabled={actionDisabled}>Get Dipai</button>
                                     </div>
                                 </>
                             ) || (
@@ -327,7 +324,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                             {phase === "draw" && (
                                 <div className="sjg-draw">
                                     <div className="sjg-button__group">
-                                        <button className="sjg-button__game" onClick={() => drawCard()} disabled={actionDisabled}>Draw Card</button>
+                                        <button className="sjg-button__game" onClick={() => { runAsync(drawCard); }} disabled={actionDisabled}>Draw Card</button>
                                     </div>
                                 </div>
                             )}
@@ -337,14 +334,14 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                                 <div className="sjg-button__group">
                                     {phase === "play" && (
                                         <>
-                                            <button className="sjg-button__game" onClick={() => playCards()} disabled={actionDisabled}>Play Cards</button>
-                                            <button className="sjg-button__game" onClick={() => shuaiCards()} disabled={actionDisabled}>Gamble (甩)</button>
+                                            <button className="sjg-button__game" onClick={() => { runAsync(playCards); }} disabled={actionDisabled}>Play Cards</button>
+                                            <button className="sjg-button__game" onClick={() => { runAsync(shuaiCards); }} disabled={actionDisabled}>Gamble (甩)</button>
                                         </>
                                     )}
                                     {(phase === "dipai" || phase === "draw") && (
-                                        <button className="sjg-button__game" onClick={() => callTrump()} disabled={actionDisabled}>Call Trump (亮)</button>
+                                        <button className="sjg-button__game" onClick={() => { runAsync(callTrump); }} disabled={actionDisabled}>Call Trump (亮)</button>
                                     )}
-                                    <button className="sjg-button__game" onClick={() => getHand()}>Refresh Hand</button>
+                                    <button className="sjg-button__game" onClick={() => { runAsync(getHand); }}>Refresh Hand</button>
                                 </div>
                             </div>
                             {help && (
@@ -355,7 +352,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                         </div>
                     )}
                     <div className="sjg-button__group">
-                        <button className="sjg-button__game" onClick={() => speedDraw()}>Speed Draw (Cheat)</button>
+                        <button className="sjg-button__game" onClick={() => { runAsync(speedDraw); }}>Speed Draw (Cheat)</button>
                         <button className="sjg-button__game" onClick={() => { setHelp(help => !help); }}>Toggle Help</button>
                     </div>
                 </div>
@@ -364,7 +361,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     );
 }
 
-const gen = async () => `player_${Math.random().toString(36).substring(2, 10)}`;
+const gen = (): Promise<string> => Promise.resolve(`player_${Math.random().toString(36).substring(2, 10)}`);
 
 export default function GameRoom({ roomId, username }: { roomId: string, username: string }) {
 
@@ -372,6 +369,10 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     const [identity, setIdentity] = useState<Identity | null>(null);
     const ably = useAbly({ request: identity });
+
+    const runAsync = <T,>(action: () => Promise<T>): void => {
+        void action().catch(() => undefined);
+    };
 
     // "Authenticate" user
 
@@ -384,7 +385,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             });
         }
 
-        identify();
+        runAsync(identify);
 
     }, []);
 
@@ -460,8 +461,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     useEffect(() => {
         const channel = channelRef.current;
         if (!channel) {return;}
-        channel.presence.update({ username, team });
-        changeUsername(username);
+        runAsync(() => channel.presence.update({ username, team }));
+        runAsync(() => changeUsername(username));
     }, [username, team]);
 
     // Ably connection
@@ -485,6 +486,11 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     const [players, setPlayers] = useState<string[]>([]);
     const [teams, setTeams] = useState<number[]>([]);
 
+    const isPresenceData = (value: object): value is { username: string; team: number } => (
+        "username" in value && typeof value.username === "string"
+            && "team" in value && typeof value.team === "number"
+    );
+
     useEffect(() => {
 
         if (!ably) {return;}
@@ -504,25 +510,34 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
             await channel.attach();
 
-            channel.presence.subscribe((_msg) => {
+            void channel.presence.subscribe((_msg) => {
                 if (cancelled) {return;}
-                channel.presence.get().then(presence => {
+                void channel.presence.get().then(presence => {
                     setIds(presence.map(p => p.clientId));
-                    setPlayers(presence.map(p => p.data.username));
-                    setTeams(presence.map(p => p.data.team));
-                });
+                    setPlayers(presence.map(p => {
+                        const data = p.data as object;
+                        return isPresenceData(data) ? data.username : "";
+                    }));
+                    setTeams(presence.map(p => {
+                        const data = p.data as object;
+                        return isPresenceData(data) ? data.team : -1;
+                    }));
+                }).catch(() => undefined);
             });
 
             await channel.presence.enter({ username, team });
 
             // console.log(`Joined room_${roomId} as ${username} on team ${team ? "1" : "2"}`);
 
-            channel.subscribe('state_change', (msg) => { // game state updated
+            void channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) {return;}
-                const des_data = deserialize(msg.data.game);
-                if (!des_data || typeof des_data !== "object") { setGame(null); return; } // corrupted game state
-                const state = des_data as SJGame.GameState;
-                if (state) {setGame(state);}
+                const rawData = msg.data as { game?: string } | null;
+                if (!rawData || typeof rawData.game !== "string") {
+                    setGame(null);
+                    return;
+                }
+                const state = deserialize<SJGame.GameState>(rawData.game);
+                setGame(state);
                 // console.log("Updated:", state);
             });
 
@@ -530,7 +545,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             // await getState();
         }
 
-        connect();
+        runAsync(connect);
 
         return () => {
             cancelled = true;
@@ -568,7 +583,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         const connection = async () => { await connectionUpdate(); };
 
         if (miss.length > 0) {
-            connection();
+            runAsync(connection);
             setMissing(miss);
         } else {setMissing(null);}
 
@@ -584,13 +599,13 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 <p>PlayerID: <strong>{identity?.clientId}</strong></p>
                 <p>Connection: <strong>{connectionState}</strong></p>
             </div>
-            <button className="sjg-button__game" onClick={() => endGame()}>End Game</button>
+            <button className="sjg-button__game" onClick={() => { runAsync(endGame); }}>End Game</button>
             {!game && (
                 <div className="sjg-lobby">
                     <PlayerList players={players} teams={teams} />
                     <div className="sjg-button__group">
                         <button onClick={() => { setTeam(p => 1 - Math.abs(p)); }}>{team === -1 ? `Join Game` : `Switch Team`}</button>
-                        <button onClick={() => startGame()}>Start Game</button>
+                        <button onClick={() => { runAsync(startGame); }}>Start Game</button>
                     </div>
                 </div>
             )}

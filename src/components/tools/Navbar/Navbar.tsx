@@ -14,7 +14,7 @@ interface NavItem extends HTMLElement {
 }
 
 export default function Navbar() {
-    const [theme, setTheme] = useState(localStorage.theme || 'light');
+    const [theme, setTheme] = useState<string>(localStorage.getItem('theme') ?? 'light');
 
     const [brand, setBrand] = useState(lightImage);
 
@@ -23,7 +23,7 @@ export default function Navbar() {
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
         window.dispatchEvent(new Event('themeStorage'));
-        localStorage.theme = theme;
+        localStorage.setItem('theme', theme);
 
         const icon = document.getElementById('darkModeIcon');
         const websiteIcon = document.getElementById('websiteIcon') as HTMLLinkElement | null;
@@ -123,7 +123,7 @@ export default function Navbar() {
                                         { value: 'USACO', label: 'USACO', to: '/usaco' },
                                         { value: 'Codeforces', label: 'Codeforces', to: '/cf' },
                                     ]}
-                                    onChange={(option: SelectOption) => { if (option.to) { navigate(option.to); } }}
+                                    onChange={(option: SelectOption) => { if (option.to) { void navigate(option.to); } }}
                                     fixedSelect={true}
                                     placeholder="Coding"
                                     className="nav-dropdown"
@@ -139,7 +139,7 @@ export default function Navbar() {
                                         { value: 'Chaos', label: 'Chaotic Attractors', to: '/chaos' },
                                         { value: '3D', label: '3D Graphics', to: '/3d' },
                                     ]}
-                                    onChange={(option: SelectOption) => { if (option.to) { navigate(option.to); } }}
+                                    onChange={(option: SelectOption) => { if (option.to) { void navigate(option.to); } }}
                                     fixedSelect={true}
                                     placeholder="Experiments"
                                     className="nav-dropdown"
@@ -155,7 +155,7 @@ export default function Navbar() {
                                         { value: 'Freq', label: 'Frequency Guesser', to: '/freq' },
                                         { value: 'BlackJack', label: 'Black Jack', to: '/blackjack' },
                                     ]}
-                                    onChange={(option: SelectOption) => { if (option.to) { navigate(option.to); } }}
+                                    onChange={(option: SelectOption) => { if (option.to) { void navigate(option.to); } }}
                                     fixedSelect={true}
                                     placeholder="Games"
                                     className="nav-dropdown"

@@ -1,7 +1,7 @@
 export type RGB = [number, number, number];
 export type HSV = [number, number, number];
 
-export function hexToRGB(value: unknown): RGB | null {
+export function hexToRGB(value: string): RGB | null {
     if (typeof value !== 'string') {return null;}
 
     const parsed = value.trim().replace(/^#/, '');
@@ -25,7 +25,7 @@ export function hexToRGB(value: unknown): RGB | null {
 const toHex = (value: number): string => value.toString(16).padStart(2, "0");
 
 export function clampRGB(value: number): number {
-	const numeric = Number(value);
+    const numeric = value;
 	if (Number.isNaN(numeric)) {return 0;}
 	return Math.max(0, Math.min(255, Math.round(numeric)));
 };
@@ -40,7 +40,7 @@ export function rgbToHex(rgb: readonly number[]): string {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-export function normalizeHex(value: unknown): string | null {
+export function normalizeHex(value: string): string | null {
 	if (typeof value !== "string") {return null;}
 	const parsed = value.trim().replace(/^#/, "").toLowerCase();
 	if (!/^[0-9a-f]{6}$/.test(parsed)) {return null;}
@@ -49,7 +49,7 @@ export function normalizeHex(value: unknown): string | null {
 
 export function rgbToCss(rgb: readonly number[]): string {
     const [r, g, b] = pruneRGB(rgb);
-    return `rgb(${r}, ${g}, ${b})`;
+    return `rgb(${String(r)}, ${String(g)}, ${String(b)})`;
 }
 
 export function hsvToRGB(h: number, s: number, v: number): RGB {
@@ -111,7 +111,7 @@ export function rgbToHsv([r, g, b]: readonly [number, number, number]): HSV {
     return [normalizedHue, s, v];
 }
 
-export function hexToHsv(hex: unknown): HSV {
+export function hexToHsv(hex: string): HSV {
     const rgb = hexToRGB(hex);
     if (!rgb) {return [210, 0.76, 0.96];}
     return rgbToHsv(rgb);

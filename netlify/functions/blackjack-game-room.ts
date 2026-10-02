@@ -8,6 +8,7 @@ import type { Identity } from "../../src/utils/verify";
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
+import type { HandlerEvent } from '@netlify/functions';
 //TODO: add money and betting
 import { games, players } from "../../db/schema";
 
@@ -15,7 +16,7 @@ import * as BJGame from "../../src/blackjack/core/game";
 
 import { errorJSON, successJSON } from './data/json.ts';
 
-const sql = neon(process.env.NEON_DATABASE_URL!);
+const sql = neon(process.env.NEON_DATABASE_URL ?? "");
 
 const db = drizzle(sql);
 
@@ -23,8 +24,15 @@ interface GameRow extends BJGame.GameData {
     id: number;
 }
 
-function parseGameRow(data: any): GameRow | null {
-    if (!data || typeof data !== "object") {return null;}
+type RequestValue = string | number | boolean | null | RequestValue[] | { [key: string]: RequestValue };
+type RequestRecord = Record<string, RequestValue | undefined>;
+
+function isRecord(value: object): value is RequestRecord {
+    return typeof value === "object" && value !== null;
+}
+
+function parseGameRow(data: object): GameRow | null {
+    if (!isRecord(data)) {return null;}
 
     const id = Number(data.id);
     const player_cards = Number(data.player_cards);
@@ -51,13 +59,13 @@ function genSeed() : number { // TODO: use better seed generation method
     return Math.floor(Math.random() * 1000000);
 }
 
-export async function handler(event: any) {
+export async function handler(event: HandlerEvent) {
 
     try {
 
         // get action data
 
-        const body = JSON.parse(event.body || '{}');
+        const body = JSON.parse(event.body || "{}");
 
         const identity : Identity | null = body.identity || null;
         if (!identity) {return errorJSON("Missing identity", 400);}
@@ -68,9 +76,7 @@ export async function handler(event: any) {
 
         const action : string = String(body.action || "").trim();
         let roomId : number = Number(body.roomId || 0);
-        const payload : any = body.payload || {};
-
-        console.log(`blackjack-game-room: Received action ${action} from clientId ${clientId} for roomId ${roomId}`);
+        const payload : RequestRecord = isRecord(body.payload) ? body.payload : {};
 
         if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) {return errorJSON("Invalid clientId");}
         if (!signature || !verify(identityClientId, signature)) {return errorJSON("Invalid signature");}
@@ -251,11 +257,10 @@ export async function handler(event: any) {
             return retJSON(game);
         }
 
-        console.error(`blackjack-game-room: Invalid action ${action} received from clientId ${clientId} for roomId ${roomId}`);
         return errorJSON(`blackjack-game-room: Invalid action ${action}`, 400);
 
-    } catch (error: any) {
-        console.error("blackjack-game-room: Internal server error:", error.message);
-        return errorJSON(`blackjack-game-room: Internal server error ${error.message}`, 500);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return errorJSON(`blackjack-game-room: Internal server error ${message}`, 500);
     }
 }

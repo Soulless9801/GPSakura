@@ -23,8 +23,8 @@ export default function FreqGuesser({ signal, width, height, components, classNa
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
         if (!canvas || !wrapper) {return;}
-        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
-        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
+        if (width) {wrapper.style.width = typeof width === "number" ? `${String(width)}px` : width;}
+        if (height) {wrapper.style.height = typeof height === "number" ? `${String(height)}px` : height;}
 
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;

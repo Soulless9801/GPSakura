@@ -27,7 +27,7 @@ export function sortCards(cards: Card[], trump: Trump | null): Card[] {
     // console.log("Sorting cards:", cardsToString(cards), "Trump:", trumpToString(trump || { suit: null, rank: 0 })); 
     return cards.sort((b, a) => {
         if (!trump || (!isMainLine(a, trump) && !isMainLine(b, trump))) {
-            if (a.suit !== b.suit) {return suit_order.get(b.suit)! - suit_order.get(a.suit)!;}
+            if (a.suit !== b.suit) {return (suit_order.get(b.suit) ?? 0) - (suit_order.get(a.suit) ?? 0);}
             else {return b.rank - a.rank;}
         }
         return isCardBigger(a, b, trump) ? -1 : 1;
@@ -334,7 +334,7 @@ function getTrickUnits(tricks: Card[][], size: number): TrickUnit[] {
 }
 
 function cardKey(card: Card): string {
-    return `${card.suit}:${card.rank}`;
+    return `${card.suit}:${String(card.rank)}`;
 }
 
 // return counts of lengths of consecutive cards, where a card supplying several groups
@@ -561,7 +561,7 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
                 cnt = 0;
                 lst = null;
                 // console.log("Unsame");
-            } else if (count != m || !lst || (lst && !isCardNext(lst, card, trump))) {
+            } else if (count !== m || !lst || !isCardNext(lst, card, trump)) {
                 if (!isCardBigger(card, lead, trump)) {break;}
                 cnt = 1;
                 lst = card;

@@ -130,7 +130,7 @@ export function Chaos3D({
     useEffect(() => {
         const canvas = canvasRef.current;
 
-        if (!canvas || !attractor) {return;}
+        if (!canvas) {return;}
         const canvasElement = canvas;
 
         const scene = new THREE.Scene();

@@ -10,7 +10,7 @@ export function errorJSON(message: string, code = 400) {
     };
 }
 
-export function successJSON(payload: any) {
+export function successJSON(payload: object) {
     return {
         statusCode: 200,
         headers: {

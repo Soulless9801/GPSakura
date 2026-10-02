@@ -33,9 +33,7 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
     }, [min, max, step, places]);
 
     useEffect(() => {
-        if (value !== undefined) {
-            updateValue(value);
-        }
+        updateValue(value);
     }, [value, updateValue]);
 
     useEffect(() => {
@@ -83,10 +81,10 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
                     )}
                     <div className="customSliderTrackWrapper" onPointerDown={startDrag}>
                         <div className="customSliderTrack"  ref={trackRef}>
-                            <div className="customSliderTrackActive" style={{ width: `${percent}%` }} />
-                            <div className="customSliderTrackInactive" style={{ width: `${100 - percent}%` }} />
+                            <div className="customSliderTrackActive" style={{ width: `${String(percent)}%` }} />
+                            <div className="customSliderTrackInactive" style={{ width: `${String(100 - percent)}%` }} />
                         </div>
-                        <div className="customSliderThumb" style={{ left: `${percent}%` }} />
+                        <div className="customSliderThumb" style={{ left: `${String(percent)}%` }} />
                     </div>
                 </div>
             </div>

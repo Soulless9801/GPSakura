@@ -57,8 +57,8 @@ export default function BlogApp() {
     }, []);
 
     const cmp = useCallback((a: BlogPostData, b: BlogPostData): number => {
-        const aPinned = localStorage.getItem(`pin_${a.id}`) === 'true';
-        const bPinned = localStorage.getItem(`pin_${b.id}`) === 'true';
+        const aPinned = localStorage.getItem(`pin_${String(a.id)}`) === 'true';
+        const bPinned = localStorage.getItem(`pin_${String(b.id)}`) === 'true';
         if (aPinned !== bPinned) {return bPinned ? 1 : -1;}
         const aDate = new Date(a.updated);
         const bDate = new Date(b.updated);
@@ -73,7 +73,7 @@ export default function BlogApp() {
             sorted.sort((a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime());
         } else if (sortByValue === "created") {
             sorted.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
-        } else if (sortByValue === "title") {
+        } else {
             sorted.sort((a, b) => a.title.localeCompare(b.title));
         }
 
@@ -104,7 +104,7 @@ export default function BlogApp() {
             
         }
 
-        fetchPosts();
+        void fetchPosts();
 
     }, []);
 

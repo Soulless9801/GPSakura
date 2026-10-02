@@ -69,8 +69,8 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
         const canvas = canvasRef.current;
         const wrapper = wrapperRef.current;
         if (!canvas || !wrapper) {return;}
-        if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
-        if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
+		if (width) {wrapper.style.width = typeof width === "number" ? `${String(width)}px` : width;}
+		if (height) {wrapper.style.height = typeof height === "number" ? `${String(height)}px` : height;}
 
 		const rect = wrapper.getBoundingClientRect();
 
@@ -95,8 +95,8 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 		const dpr = window.devicePixelRatio || 1;
 		canvas.width = cssW * dpr;
 		canvas.height = cssH * dpr;
-		canvas.style.width = `${cssW  }px`;
-		canvas.style.height = `${cssH  }px`;
+		canvas.style.width = `${String(cssW)}px`;
+		canvas.style.height = `${String(cssH)}px`;
         const ctx = canvas.getContext("2d");
 		ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }, [width, height, cellSize]);

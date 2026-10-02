@@ -1,9 +1,11 @@
-export interface DebouncedFunction<Args extends readonly unknown[]> {
+type DebounceArgument = string | number | boolean | object | null | undefined;
+
+export interface DebouncedFunction<Args extends readonly DebounceArgument[]> {
     (...args: Args): void;
     cancel: () => void;
 }
 
-export function debounce<Args extends readonly unknown[]>(func: (...args: Args) => void, delay: number): DebouncedFunction<Args> {
+export function debounce<Args extends readonly DebounceArgument[]>(func: (...args: Args) => void, delay: number): DebouncedFunction<Args> {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const debounced = function(...args: Args): void {
         clearTimeout(timeoutId);

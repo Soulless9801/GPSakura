@@ -135,7 +135,9 @@ describe("advice", () => {
 
         // the rule scales by points in the move, so it only bites on the King — and it
         // has to push the King to the bottom of the ranking
-        const king = advice.candidates.find((c) => c.move[0].rank === 13)!;
+        const king = advice.candidates.find((c) => c.move[0].rank === 13);
+        expect(king).toBeDefined();
+        if (!king) {return;}
         expect(king.rules.map((r) => r.id)).toContain("hold-points-when-you-are-losing");
         expect(king.score).toBe(Math.min(...advice.candidates.map((c) => c.score)));
     });

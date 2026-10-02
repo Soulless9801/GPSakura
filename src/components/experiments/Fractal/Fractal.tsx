@@ -46,8 +46,8 @@ export default memo(function Fractal({
 		const canvas = canvasRef.current;
 		const wrapper = wrapperRef.current;
 		if (!canvas || !wrapper) {return;}
-		if (width) {wrapper.style.width = typeof width === "number" ? `${width}px` : width;}
-		if (height) {wrapper.style.height = typeof height === "number" ? `${height}px` : height;}
+		if (width) {wrapper.style.width = typeof width === "number" ? `${String(width)}px` : width;}
+		if (height) {wrapper.style.height = typeof height === "number" ? `${String(height)}px` : height;}
 
 		const dpr = window.devicePixelRatio || 1;
 		const cssW = canvas.clientWidth || wrapper.clientWidth;
@@ -297,7 +297,7 @@ export default memo(function Fractal({
 		points.push([x, y]);
 
 		for (let i = 0; i < steps; i++) {
-			const turn = ((i & -i) << 1) & (i + 1) ? -1 : +1;
+			const turn = ((i & -i) << 1) & (i + 1) ? -1 : 1;
 
 			dir = (dir + turn + 4) % 4;
 

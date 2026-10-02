@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import type { HandlerEvent } from '@netlify/functions';
 
 dotenv.config();
 
@@ -9,7 +10,7 @@ const { SESSION_SECRET } = process.env;
 
 function sign(clientId: string) {
     return crypto
-        .createHmac('sha256', SESSION_SECRET!)
+        .createHmac('sha256', SESSION_SECRET ?? "")
         .update(clientId)
         .digest('hex');
 }
@@ -20,7 +21,7 @@ export function verify(clientId: string, signature: string) {
     return expected === signature;
 }
 
-export const handler = async (event: any) => {
+export const handler = async (event: HandlerEvent) => {
 
     try {
 
@@ -29,8 +30,6 @@ export const handler = async (event: any) => {
         const action = String(body.action || "").trim();
         const clientId = String(body.clientId || "").trim();
         const signature = String(body.signature || "").trim();
-
-        console.log(`create-session: Received action ${action} for clientId: ${clientId}`);
 
         const clientVal: string = String(clientId || "").trim();
 
@@ -53,8 +52,8 @@ export const handler = async (event: any) => {
         }
 
 
-    } catch (error: any) {
-        console.error("create-session: Internal server error:", error.message);
-        return errorJSON(`create-session: Internal server error ${error.message}`, 500);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return errorJSON(`create-session: Internal server error ${message}`, 500);
     }
 };

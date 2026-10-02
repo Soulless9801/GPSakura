@@ -36,7 +36,7 @@ const gen = async () => {
             "Content-Type": "application/json",
         },
     });
-    if (!res || !res.ok) {return null;}
+    if (!res.ok) {return null;}
 
     const data = await res.text();
     if (!data) {return null;}
@@ -45,7 +45,7 @@ const gen = async () => {
     if (!des_data || typeof des_data !== "object") {return null;}
 
     const ret = des_data as { player_id: string };
-    if (!ret || !ret.player_id) {return null;}
+    if (!ret.player_id) {return null;}
 
     return ret.player_id;
 }
@@ -64,7 +64,7 @@ export default function GameRoom() {
             });
         }
 
-        identify();
+        void identify().catch(() => undefined);
 
     }, []);
 
@@ -88,7 +88,7 @@ export default function GameRoom() {
 
     useEffect(() => {
         if (!identity) {return;}
-        getMoney();
+        void getMoney().catch(() => undefined);
     }, [identity]);
 
     async function refillMoney() {
@@ -146,30 +146,23 @@ export default function GameRoom() {
         setJson(res);
     }
 
-    const setJson = useCallback((data: any) => {
-
-        if (!data) {return;}
-
-        const des_data = deserialize(data);
-        if (!des_data || typeof des_data !== "object") {return;}
-
-        const ret = des_data as { 
+    const setJson = useCallback((data: string | null): void => {
+        if (data === null) {return;}
+        const ret = deserialize<{
             id?: number,
             money?: number,
             player_cards?: BJCore.HandData, 
             dealer_cards?: BJCore.HandData, 
             over?: boolean, 
             status?: string 
-        };
-
-        if (!ret) {return;}
+        }>(data);
 
         // console.log("GameRoom setJson:", ret);
 
         if (ret.money !== undefined) {setMoney(ret.money);}
         if (ret.over) {setStatus(ret.status || null);}
         else {setStatus(null);}
-        setGameId(String(ret.id || gameId));
+        if (ret.id !== undefined) {setGameId(String(ret.id));}
         if (ret.player_cards) {setPlayerCards(BJCore.Hand.deserialize(ret.player_cards));}
         if (ret.dealer_cards) {setDealerCards(BJCore.Hand.deserialize(ret.dealer_cards));}
     }, [gameId]);
@@ -201,20 +194,20 @@ export default function GameRoom() {
                 <p>Money: {money}</p>
             </div>
             <div className="bjg-actions">
-                <button onClick={loadGame} className="bjg-button">
+                <button onClick={() => { void loadGame().catch(() => undefined); }} className="bjg-button">
                     Load Game
                 </button>
-                <button onClick={startGame} className="bjg-button">
+                <button onClick={() => { void startGame().catch(() => undefined); }} className="bjg-button">
                     Start Game
                 </button>
                 <Form init={bet} min={1} max={Math.max(money, 1)} onChange={setBet} />
-                <button onClick={hit} className="bjg-button">
+                <button onClick={() => { void hit().catch(() => undefined); }} className="bjg-button">
                     Hit
                 </button>
-                <button onClick={stand} className="bjg-button">
+                <button onClick={() => { void stand().catch(() => undefined); }} className="bjg-button">
                     Stand
                 </button>
-                <button onClick={refillMoney} className="bjg-button">
+                <button onClick={() => { void refillMoney().catch(() => undefined); }} className="bjg-button">
                     Refill
                 </button>
             </div>

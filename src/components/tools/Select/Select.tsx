@@ -44,7 +44,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
     useEffect(() => {
         // console.log(defaultValue);
         const initialOption = options[findIndex(defaultValue, options, defaultIndex)];
-        if (!fixedSelect && initialOption) {handleSelect(initialOption);}
+        if (!fixedSelect) {handleSelect(initialOption);}
         const handleClickOutside = (event: PointerEvent) => {
             if (ref.current && event.target instanceof Node && !ref.current.contains(event.target)) {
                 setOpen(false);
@@ -72,7 +72,7 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
                     </div>
                     <div className={`customSelectOptions${showMenu ? " show" : ""}${align === "right" ? " right" : ""}`} ref={menuRef}>
                         {options.map((option) => (
-                            <div key={option.value} className={`customSelectOption${value && value.value === option.value ? " selected" : ""}`} onClick={() => { handleSelect(option); }}>
+                            <div key={option.value} className={`customSelectOption${value.value === option.value ? " selected" : ""}`} onClick={() => { handleSelect(option); }}>
                                 {option.label}
                             </div>
                         ))}

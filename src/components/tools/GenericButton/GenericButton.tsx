@@ -12,7 +12,7 @@ interface GenericButtonProps {
 
 export default function GenericButton({ postId, type, icon, fill }: GenericButtonProps) {
 
-    const storageKey = `${type}_${postId}`;
+        const storageKey = `${type}_${String(postId)}`;
     const iconStyle = {
         '--icon-hover-color': fill,
         '--icon-active-color': fill,

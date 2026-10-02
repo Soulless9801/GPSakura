@@ -17,7 +17,7 @@ interface CardLayout {
 
 function computeLayout(cards: CardCore.Card[]): CardLayout[] | null {
 
-    if (!cards || cards.length === 0) {return null;}
+    if (cards.length === 0) {return null;}
 
     const overlap = 24;
 
@@ -58,7 +58,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
 
     useEffect(() => {
         setLayout(computeLayout(cards));
-        setBactive(new Array(cards?.length || 0).fill(false));
+        setBactive(new Array(cards.length).fill(false));
         // console.log("Cards received by Hand: ", cards);
     }, [cards]);
 

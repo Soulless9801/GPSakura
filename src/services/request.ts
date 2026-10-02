@@ -1,7 +1,7 @@
 import type { Identity } from "/src/utils/verify";
 
 export interface ClientRequest {
-    payload?: any;
+    payload?: Record<string, string | number | boolean | null>;
 }
 
 export interface GameRequest extends ClientRequest {
@@ -43,7 +43,7 @@ export async function clientRequest(request: ClientRequest, className: string, f
         body: JSON.stringify(request),
     });
 
-    if (!res || !res.ok) {return null;}
+    if (!res.ok) {return null;}
 
     const data = await res.text();
 

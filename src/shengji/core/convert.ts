@@ -10,7 +10,7 @@ type Card = SJCore.Card;
 type Play = SJCore.Play;
 
 export function trumpToString(trump: Trump): string {
-    if (!trump.suit) {return `No Trump (${trump.rank})`;}
+    if (!trump.suit) {return `No Trump (${String(trump.rank)})`;}
     const card : Card = { suit: trump.suit, rank: trump.rank };
     return cardToString(card);
 }
@@ -50,7 +50,7 @@ export function cardToString(card: Card): string {
         14: "A"
     };
 
-    return `${rank_strings[card.rank] || card.rank}${suit_symbols[card.suit]}`;
+    return `${rank_strings[card.rank] || String(card.rank)}${suit_symbols[card.suit]}`;
 }
 
 export function cardsToString(cards: Card[]): string {

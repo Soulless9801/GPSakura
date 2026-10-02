@@ -26,7 +26,7 @@ export default function CodeforcesTable() {
     const columns = ['Rating', 'Problem Name', 'Submission'];
 
     useEffect(() => {
-        fetch('/.netlify/functions/codeforces-sheet-data')
+        void fetch('/.netlify/functions/codeforces-sheet-data')
         .then(res=> res.text())
         .then(text => {
             const data = text.split(/\r?\n/).slice(1).filter(Boolean).map((line: string): string[] => {
@@ -38,7 +38,7 @@ export default function CodeforcesTable() {
                 ];
             });
             setRows(data);
-        });
+        }).catch(() => undefined);
     }, []);
 
     const options = {

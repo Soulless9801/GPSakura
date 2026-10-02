@@ -115,11 +115,11 @@ export default function ColorPickerDemo() {
     `;
 
     const statDescription = `
-        Total Games Completed: ${count}
+        Total Games Completed: ${String(count)}
         \n\n
-        Average Guesses: ${count === 0 ? 0 : (sum / count).toFixed(2)}
+        Average Guesses: ${String(count === 0 ? 0 : (sum / count).toFixed(2))}
         \n\n
-        Total Games Given Up: ${giveUp}
+        Total Games Given Up: ${String(giveUp)}
     `;
 
     return (

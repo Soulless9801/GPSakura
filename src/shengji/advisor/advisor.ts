@@ -77,7 +77,7 @@ function survivalProbability(
     trump: Trump,
 ): number {
     const winning: Move = trick[winnerPos];
-    if (!winning || winning.length === 0) {return 0.5;}
+    if (winning.length === 0) {return 0.5;}
 
     const iwin = playInfo(winning, trump);
     const top: Card = iwin.play.cards[iwin.play.cards.length - 1]; // sorted ascending
@@ -171,18 +171,18 @@ function validate(position: Position): string[] {
         problems.push("Every play in the trick needs at least one card.");
     }
 
-    const lead: Move | undefined = position.trick[0];
-    if (lead) {
+    const lead: Move = position.trick[0];
+    if (position.trick.length > 0) {
         for (let i = 1; i < position.trick.length; i++) {
             if (position.trick[i].length !== lead.length) {
                 problems.push(
-                    `Play ${i + 1} has ${position.trick[i].length} card(s) but the lead was ${lead.length}.`,
+                    `Play ${String(i + 1)} has ${String(position.trick[i].length)} card(s) but the lead was ${String(lead.length)}.`,
                 );
                 break;
             }
         }
         if (position.hand.length < lead.length) {
-            problems.push(`The lead is ${lead.length} cards but you are only holding ${position.hand.length}.`);
+            problems.push(`The lead is ${String(lead.length)} cards but you are only holding ${String(position.hand.length)}.`);
         }
     }
 
@@ -196,7 +196,7 @@ function validate(position: Position): string[] {
     for (const [card, n] of total.values()) {
         if (n > position.decks) {
             problems.push(
-                `${card.suit === "jokers" ? (card.rank === 2 ? "Big joker" : "Small joker") : `${card.rank} of ${card.suit}`} appears ${n} times, but only ${position.decks} decks are in play.`,
+                `${card.suit === "jokers" ? (card.rank === 2 ? "Big joker" : "Small joker") : `${String(card.rank)} of ${card.suit}`} appears ${String(n)} times, but only ${String(position.decks)} decks are in play.`,
             );
         }
     }

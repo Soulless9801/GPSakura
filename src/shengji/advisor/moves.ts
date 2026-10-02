@@ -28,7 +28,7 @@ import type { Card, Move, Rank, Suit, Trump } from "./types";
 export const SUITS: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
 
 export function cardKey(card: Card): string {
-    return `${card.suit}:${card.rank}`;
+    return `${card.suit}:${String(card.rank)}`;
 }
 
 /** Order-independent identity for a play, so two orderings of the same cards dedupe. */
@@ -123,8 +123,8 @@ function generateLeads(hand: Card[], trump: Trump): Move[] {
         // split into maximal consecutive chains, so a tractor is a slice of one chain
         const chains: Card[][] = [];
         for (const card of eligible) {
-            const last: Card[] | undefined = chains[chains.length - 1];
-            if (last && SJComp.isCardNext(card, last[last.length - 1], trump)) {last.push(card);}
+            const last = chains[chains.length - 1];
+            if (chains.length > 0 && SJComp.isCardNext(card, last[last.length - 1], trump)) {last.push(card);}
             else {chains.push([card]);}
         }
 
@@ -190,7 +190,7 @@ function multisetCombinations(
     }
 
     // how many cards are left from index i onwards, to prune hopeless branches
-    const suffix: number[] = new Array(ordered.length + 1).fill(0);
+    const suffix: number[] = new Array<number>(ordered.length + 1).fill(0);
     for (let i = ordered.length - 1; i >= 0; i--) {suffix[i] = suffix[i + 1] + ordered[i][1];}
 
     const out: Move[] = [];

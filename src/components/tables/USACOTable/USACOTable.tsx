@@ -52,7 +52,7 @@ export default function USACOTable() {
 
     useEffect(() => {
         //fetch('/.netlify/functions/usaco-problems-data')
-        fetch('/.netlify/functions/firebase-collection-query', {
+        void fetch('/.netlify/functions/firebase-collection-query', {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export default function USACOTable() {
 
                 setRows(rows);
 
-            });
+            }).catch(() => undefined);
     }, []);
 
     useEffect(() => {
@@ -115,8 +115,11 @@ export default function USACOTable() {
             setData(data);
         };
 
-        document.addEventListener("click", handler);
-        return () => { document.removeEventListener("click", handler); };
+        const onDocumentClick = (event: MouseEvent): void => {
+            void handler(event).catch(() => undefined);
+        };
+        document.addEventListener("click", onDocumentClick);
+        return () => { document.removeEventListener("click", onDocumentClick); };
     }, []);
 
     const options = {

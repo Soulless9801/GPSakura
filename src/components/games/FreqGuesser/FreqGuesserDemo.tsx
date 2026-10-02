@@ -89,8 +89,8 @@ export default function FreqGuesserDemo() {
     const chk = useCallback(() => {
         const targetStrings = [];
         const cachedStrings = [];
-        for (const { a, f } of targetFreq) {targetStrings.push(`${a}_${f}`);}
-        for (const { a, f } of cachedFreq) {cachedStrings.push(`${a}_${f}`);}
+        for (const { a, f } of targetFreq) {targetStrings.push(`${String(a)}_${String(f)}`);}
+        for (const { a, f } of cachedFreq) {cachedStrings.push(`${String(a)}_${String(f)}`);}
         targetStrings.sort();
         cachedStrings.sort();
         for (let i = 0; i < components; i++) {if (targetStrings[i] !== cachedStrings[i]) {return false;}}
@@ -119,7 +119,7 @@ export default function FreqGuesserDemo() {
     const update = (idx: number, key: keyof SignalComponent, value: number): void => {
         setCachedFreq(prev => {
             const next = [...prev];
-            next[idx] = { ...next[idx], [key]: Number(value) };
+            next[idx] = { ...next[idx], [key]: value };
             return next;
         });
     };
@@ -133,11 +133,11 @@ export default function FreqGuesserDemo() {
     `;
 
     const statDescription = `
-        Total Games Completed: ${count}
+        Total Games Completed: ${String(count)}
         \n\n
-        Average Guesses: ${count === 0 ? 0 : (sum / count).toFixed(2)}
+        Average Guesses: ${String(count === 0 ? 0 : (sum / count).toFixed(2))}
         \n\n
-        Total Games Given Up: ${giveUp}
+        Total Games Given Up: ${String(giveUp)}
     `;
 
 
