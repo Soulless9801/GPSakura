@@ -50,7 +50,7 @@ jobs:
       - run: npm ci
 
       # Runs every *.test.ts(x) under src/ and netlify/, then enforces the per-directory
-      # coverage floors configured in vite.config.ts.
+      # coverage floors configured in vitest.config.ts.
       - name: Run tests with coverage
         run: npm run coverage -- --reporter=default --reporter=github-actions --coverage.reporter=text --coverage.reporter=text-summary --coverage.reporter=lcov
 

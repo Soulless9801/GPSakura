@@ -18,6 +18,17 @@ Treat them as leads, not confirmed defects.
 The first pass changed no application source. The signing and path-traversal findings (S1, S2,
 S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the small blackjack bugs (G5, G6, phantom refill) were then fixed. Shengji follow-up fixes are recorded below and in `REMAINING_BUGS.md`.
 
+## Follow-up status — 2026-10-07
+
+All 14 expected failures remaining after the Shengji pass are fixed and are now ordinary
+regression tests. This resolves C1–C8 and malformed request handling in the Firebase collection
+endpoint. Unpinned backend authorization/concurrency/product issues and other reported leads
+remain open; see `REMAINING_BUGS.md` for the current distinction.
+
+Production builds have separate TypeScript/Vite configuration and reject test imports. Netlify
+function discovery now uses seven explicit handler entrypoints, excluding colocated tests, and
+copies fallback data only to the functions that need it.
+
 ## Security
 
 | # | Finding | Status |
@@ -48,14 +59,14 @@ S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the
 
 | # | Finding | Status |
 |---|---------|--------|
-| C1 | `loadValue` throws on corrupt JSON in `localStorage`; it runs inside `useState` initialisers, so this blanks the page. | pinned |
-| C2 | `convertToPixels("1.50em")` ignores the unit (it removes `String(parseFloat(x))` from the input). | pinned |
-| C3 | `findIndex` compares `item.value === String(val)`, so numeric `Select` options never match their saved default (the Chaos demo's dimension switch). `Select` throws with empty `options`. | pinned |
-| C4 | `Particle` with zero velocity becomes `NaN`. | pinned |
-| C5 | `Form` with `notifyOnInitChange={false}` (used by `Slider` and the colour selector) swallows every second edit; values can snap above `max` (`step=2, max=5` shows 6). `Slider`'s track does not follow typed input unless the parent echoes the value back. | pinned: `Form.test.tsx`, `Slider.test.tsx` |
-| C6 | Hand classes are separated; selection and highlighting survive equal cards recreated during render and reset together on changed contents. | **fixed**: `Hand.test.tsx`, `Card.test.tsx` |
-| C7 | `Modal` leaves `body { overflow: hidden }` behind if unmounted while open. `GenericButton` has no accessible name. | pinned |
-| C8 | `framer-motion` is imported (`Hand`, `BlogApp`) but only `motion` is declared in `package.json`. Works today because `motion` pulls it in. | pinned: `package-hygiene.test.ts` |
+| C1 | `loadValue` throws on corrupt JSON in `localStorage`; it runs inside `useState` initialisers, so this blanks the page. | **fixed** (follow-up above) |
+| C2 | `convertToPixels("1.50em")` ignores the unit (it removes `String(parseFloat(x))` from the input). | **fixed** (follow-up above) |
+| C3 | `findIndex` compares `item.value === String(val)`, so numeric `Select` options never match their saved default (the Chaos demo's dimension switch). `Select` throws with empty `options`. | **fixed** (follow-up above) |
+| C4 | `Particle` with zero velocity becomes `NaN`. | **fixed** (follow-up above) |
+| C5 | `Form` with `notifyOnInitChange={false}` (used by `Slider` and the colour selector) swallows every second edit; values can snap above `max` (`step=2, max=5` shows 6). `Slider`'s track does not follow typed input unless the parent echoes the value back. | **fixed** (follow-up above) |
+| C6 | Hand classes are separated; selection and highlighting survive equal cards recreated during render and reset together on changed contents. | **fixed** (follow-up above) |
+| C7 | `Modal` leaves `body { overflow: hidden }` behind if unmounted while open. `GenericButton` has no accessible name. | **fixed** (follow-up above) |
+| C8 | `framer-motion` is imported (`Hand`, `BlogApp`) but only `motion` is declared in `package.json`. Works today because `motion` pulls it in. | **fixed** (follow-up above) |
 | C9 | Shengji connection updates publish only on pause/resume transitions. Clients deduplicate by missing player IDs, sync returns, retry rejected updates, and explicitly load initial state. | **fixed**: `shengji-game-room.test.ts`, `GameRoom.test.tsx` |
 | C10 | Other reported leads: `ParticleNetwork` captures a stale `interactive` flag and misses `pointerup` outside its wrapper; `BlogApp`/`CodeforcesTable`/`USACOTable` fetch without `res.ok` checks (and USACO has a response-order race); no error boundary or catch-all route around lazy routes; **fixed:** `GameInfo` advice now reacts to the latest hand and current trick (`GameRoom.test.tsx`); `FreqGuesser` counts every page load as a give-up; hex shorthand typed into the colour field is silently ignored; `Chaos` ignores `refresh`. | reported |
 

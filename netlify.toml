@@ -11,5 +11,12 @@
   port = 8080
 
 [functions]
+  directory = "netlify/entrypoints"
   node_bundler = "esbuild"
-  included_files = ["./src/shengji/core/game.ts"]
+
+# Runtime imports are traced by esbuild. Only filesystem-loaded fallback data needs copying.
+[functions.firebase-collection-query]
+  included_files = ["netlify/functions/data/firebase*.json"]
+
+[functions.codeforces-sheet-data]
+  included_files = ["netlify/functions/data/cfProblems.csv"]

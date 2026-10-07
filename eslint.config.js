@@ -158,6 +158,7 @@ export default defineConfig([
             'db/**/*.{js,jsx,ts,tsx}',
             'netlify/**/*.{js,jsx,ts,tsx}',
             'vite.config.{js,ts}',
+            'vitest.config.{js,ts}',
             'eslint.config.js',
             'node_modules/**/*.{js,jsx,ts,tsx}',
         ],

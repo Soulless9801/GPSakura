@@ -8,6 +8,39 @@ line numbers refer to that commit; search for the quoted symbol in files that ha
 the detailed descriptions, including items resolved since the hand-off.
 
 
+## Expected-failure cleanup and production boundaries — 2026-10-07
+
+All **14 remaining `it.fails` markers** have been converted to passing regression tests.
+The pre-fix run of those ordinary tests failed exactly 14 times. Resolved items:
+
+* **SV-6:** malformed Firebase request JSON or a non-object body receives HTTP 400.
+* **UT-1 / UT-2:** CSS units parse correctly with trailing zeros, signs and exponents; corrupt or
+  blocked storage falls back safely, and failed write-back does not discard a successful read.
+* **UI-1 / UI-2 / UI-3:** Form explicitly reports committed edits without dropping parent echoes;
+  Form and Slider share zero-based step rounding followed by clamping; slider width follows its
+  actual value. Hold timers and drag listeners clean up on cancellation/unmount, and fixed ranges
+  do not produce invalid widths.
+* **UI-4 / UI-5:** numeric Select defaults match; empty options do not crash or call `onChange`.
+* **UI-7 / UI-8 / UI-9:** Modal restores prior scrolling styles on cleanup, icon buttons have
+  required accessible labels and pressed state, and zero-velocity particles remain finite.
+* **DEP-1:** Hand and BlogApp import the declared `motion/react` entrypoint.
+
+Build settings now separate Vite and Vitest, exclude unit tests/helpers from production TypeScript
+roots, and reject development-only imports in Vite's production module graph. Shengji's developer
+panel is development-only. Netlify uses a clean `netlify/entrypoints/` directory with seven handlers:
+its previous directory also discovered seven `.test.ts` files as functions. All seven production
+archives were built locally and inspected: no test artifacts, and only the appropriate Firebase
+JSON or Codeforces CSV fallback assets. The production guard was tested with an intentionally
+imported test module and rejected it; the temporary module was then removed.
+
+Validation for this pass: **1,095 passing tests across 51 files, zero expected failures**;
+coverage thresholds, lint, full typecheck, production build and `git diff --check` pass.
+The dependency audit reports zero vulnerabilities. Function archives were built with the locally
+installed Netlify bundler; no deployment or live service calls were made.
+
+**Still open:** unpinned SV-7 through SV-9 and the remaining reported leads/design questions below.
+Zero expected failures does not mean those unpinned items have been resolved.
+
 ## Shengji verification and fixes — 2026-10-07
 
 * **Verified existing fixes:** SJ-1 (joker tractors), SJ-2 (pair obligation), SJ-3 (throw
@@ -390,7 +423,7 @@ Listed here because the server side of it is in this file; the cause is client-s
 
 ## 4. Other server functions
 
-### SV-6: `firebase-collection-query` answers malformed JSON with an unhandled exception
+### SV-6 (fixed): `firebase-collection-query` answers malformed JSON with an unhandled exception
 * **File:** `netlify/functions/firebase-collection-query.ts:43`. **Pinned:**
   `firebase-collection-query.test.ts:204`.
 * **Symptom:** `JSON.parse(event.body || '{}')` is outside the `try`, so a bad body rejects the whole
@@ -433,7 +466,7 @@ Listed here because the server side of it is in this file; the cause is client-s
 
 ## 5. Client utilities
 
-### UT-1: `convertToPixels` ignores the unit when the number has trailing zeros
+### UT-1 (fixed): `convertToPixels` ignores the unit when the number has trailing zeros
 * **File:** `src/utils/resize.ts:5`. **Pinned:** `resize.test.ts:54` and `:58`.
 * **Symptom:** the unit is found with `input.replace(String(parseFloat(input)), "")`. For `"1.50em"`,
   `String(1.5)` is `"1.5"`, which is removed from the string leaving `"0em"`, an unknown unit, so the
@@ -443,7 +476,7 @@ Listed here because the server side of it is in this file; the cause is client-s
   switch on the captured unit. Keep: numbers pass through; unitless strings are pixels; `"auto"`
   returns `NaN` (there is a test); `"5 px"` (space) is accepted (there is a test).
 
-### UT-2: `loadValue` throws on corrupt or blocked `localStorage`
+### UT-2 (fixed): `loadValue` throws on corrupt or blocked `localStorage`
 * **File:** `src/utils/storage.ts:3`. **Pinned:** `storage.test.ts:46`.
 * **Symptom:** `JSON.parse(raw)` is unguarded, and `getItem`/`setItem` can themselves throw (Safari
   private mode, blocked storage, quota). `loadValue` is called inside `useState` initialisers in
@@ -464,7 +497,7 @@ Listed here because the server side of it is in this file; the cause is client-s
 
 All have tests in the component's own folder. The jsdom setup is in `src/test/setup.ts`.
 
-### UI-1: `Form` swallows every second edit when `notifyOnInitChange={false}`
+### UI-1 (fixed): `Form` swallows every second edit when `notifyOnInitChange={false}`
 * **File:** `src/components/tools/Form/Form.tsx:21-37`. **Pinned:** `Form.test.tsx:180`.
 * **Where it bites:** `Slider` renders `<Form ... onChange=...>` and the colour selector uses
   `notifyOnInitChange={false}` bound to parent state. In the Color game: type R=100 (registered), then
@@ -482,7 +515,7 @@ All have tests in the component's own folder. The jsdom setup is in `src/test/se
   value once by default; silent on mount with `notifyOnInitChange={false}`; follows a changed `init`;
   re-clamps when the range changes.
 
-### UI-2: `Form` can show a value above `max` (and below `min`)
+### UI-2 (fixed): `Form` can show a value above `max` (and below `min`)
 * **File:** `Form.tsx:43-47` (`updateValue`); the same code is duplicated in `Slider.tsx:27-33`.
   **Pinned:** `Form.test.tsx:80`.
 * **Symptom:** it clamps to `[min, max]` and *then* rounds to a multiple of `step` counted from zero, so
@@ -497,7 +530,7 @@ All have tests in the component's own folder. The jsdom setup is in `src/test/se
   dependencies of the key handler (stale values after props change); the hold interval started at
   `Form.tsx:85-103` is not cleared on unmount.
 
-### UI-3: `Slider`'s track does not follow typed input unless the parent echoes the value back
+### UI-3 (fixed): `Slider`'s track does not follow typed input unless the parent echoes the value back
 * **File:** `src/components/tools/Slider/Slider.tsx:78`. **Pinned:** `Slider.test.tsx:106`.
 * **Symptom:** the embedded `Form`'s `onChange` only calls `setInternalValue(e)`; the track percentage is
   state set in `updateValue`, which that path never calls. With a controlled parent that feeds the value
@@ -507,7 +540,7 @@ All have tests in the component's own folder. The jsdom setup is in `src/test/se
 * **Related (reported, unverified):** `max === min` divides by zero (`NaN%` width); there is no
   `pointercancel` listener so the window listeners can leak if a drag is cancelled.
 
-### UI-4: `Select` never matches a numeric `defaultValue`
+### UI-4 (fixed): `Select` never matches a numeric `defaultValue`
 * **Files:** `src/utils/list.ts:2` and `Select.tsx:46`. **Pinned:** `list.test.ts:50` and
   `Select.test.tsx:92`.
 * **Symptom:** `findIndex` compares `item.value === String(val)`; for numeric option values the left side
@@ -517,7 +550,7 @@ All have tests in the component's own folder. The jsdom setup is in `src/test/se
 * **Fix:** `String(item.value) === String(val)`, guarding `val === null || val === undefined` first so
   the string `"undefined"` is not matched. Note the type signature allows `string | number`.
 
-### UI-5: `Select` crashes when `options` is empty
+### UI-5 (fixed): `Select` crashes when `options` is empty
 * **File:** `Select.tsx:46-47,70`. **Pinned:** `Select.test.tsx:103`.
 * **Symptom:** `options[findIndex(...)]` is `undefined`; the mount effect calls `handleSelect(undefined)`
   which stores it in state and calls `onChange(undefined)`, then render reads `value.label` and throws.
@@ -542,20 +575,20 @@ All have tests in the component's own folder. The jsdom setup is in `src/test/se
   Add a test where the parent re-renders with an equal array and the selection survives, and one where the
   hand genuinely changes and the selection clears (that second one passes today and must keep passing).
 
-### UI-7: `Modal` leaves the page unscrollable when unmounted while open
+### UI-7 (fixed): `Modal` leaves the page unscrollable when unmounted while open
 * **File:** `src/components/tools/Modal/Modal.tsx:17-19`. **Pinned:** `Modal.test.tsx:107`.
 * **Fix:** return a cleanup from that effect that restores the previous `body.style.overflow`.
 * **Related (reported, unverified, accessibility):** the closed modal stays in the tab order (`aria-hidden`
   on a subtree with focusable children); there is no `role="dialog"`/`aria-modal`, focus trap or labelled
   close button. `Navbar.tsx` (~42-100) queries `.nav-item.dropdown`, which nothing renders (dead code).
 
-### UI-8: `GenericButton` has no accessible name
+### UI-8 (fixed): `GenericButton` has no accessible name
 * **File:** `src/components/tools/GenericButton/GenericButton.tsx:35`. **Pinned:**
   `GenericButton.test.tsx:63`.
 * **Fix:** add a `label` prop (used as `aria-label`) and `aria-pressed={state}`; update the callers (grep
   for `<GenericButton`). Make `label` required so a nameless button cannot come back.
 
-### UI-9: `Particle` with zero velocity turns into `NaN`
+### UI-9 (fixed): `Particle` with zero velocity turns into `NaN`
 * **File:** `src/entities/particle.ts:33` (`adjustSpeed`). **Pinned:** `particle.test.ts:123`.
 * **Symptom:** `adjustSpeed` computes `Math.sqrt(this.s / Math.sqrt(vx² + vy²))`; when the velocity is
   exactly zero this is `0/0`. The constructor sets `s = Math.random() * speed`, so `s === 0` (and also
@@ -566,7 +599,7 @@ All have tests in the component's own folder. The jsdom setup is in `src/test/se
 
 ## 7. Dependencies
 
-### DEP-1: `framer-motion` is imported but not declared
+### DEP-1 (fixed): `framer-motion` is imported but not declared
 * **Files:** `src/components/tools/Hand/Hand.tsx:2` and `src/components/blog/BlogApp/BlogApp.tsx:2`
   import from `'framer-motion'`; `package.json` lists only `motion`. It works today because `motion`
   depends on `framer-motion` and npm hoists it. **Pinned:** `src/package-hygiene.test.ts:63`.
