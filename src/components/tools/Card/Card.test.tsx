@@ -78,4 +78,14 @@ describe("Card", () => {
         render(<Card card={c("clubs", 7)} className="mine" />);
         expect(screen.getByRole("button").className).toMatch(/\bmine\b/);
     });
+
+    it("keeps selection for an equal card and reports the current position", () => {
+        const onClick = vi.fn();
+        const { rerender } = render(<Card card={c("clubs", 7)} pos={1} onClick={onClick} />);
+        fireEvent.click(screen.getByRole("button"));
+        rerender(<Card card={c("clubs", 7)} pos={2} onClick={onClick} />);
+        expect(screen.getByRole("button").classList.contains("selected")).toBe(true);
+        fireEvent.click(screen.getByRole("button"));
+        expect(onClick).toHaveBeenLastCalledWith(2, false);
+    });
 });

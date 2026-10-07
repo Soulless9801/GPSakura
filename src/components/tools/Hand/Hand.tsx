@@ -42,7 +42,8 @@ export interface HandRef {
 
 const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "" }, ref) {
 
-    const [layout, setLayout] = useState<CardLayout[] | null>(null);
+    const layout = computeLayout(cards);
+    const handKey = cards.map(card => `${card.suit}:${String(card.rank)}`).join("|");
 
     const [bactive, setBactive] = useState<boolean[]>([]);
 
@@ -57,10 +58,9 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
     }));
 
     useEffect(() => {
-        setLayout(computeLayout(cards));
         setBactive(new Array(cards.length).fill(false));
         // console.log("Cards received by Hand: ", cards);
-    }, [cards]);
+    }, [handKey, cards.length]);
 
     const handleClick = useCallback((index: number, active: boolean) => {
         setBactive(prev => {
@@ -71,8 +71,8 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
     }, []);
 
     return (
-        <div className={`card-hand__wrapper${className}`.trim()}>
-            <div className="card-hand">
+        <div className={`card-hand__wrapper ${className}`.trim()}>
+            <div className="card-hand" key={handKey}>
                 {cards.map((card, index) => {
                     if (!layout || !layout[index]) {return null;}
                     return (

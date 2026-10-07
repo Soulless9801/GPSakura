@@ -13,6 +13,7 @@ import * as SJGame from '../../src/shengji/core/game.ts';
 import type * as SJCore from '../../src/shengji/core/entities.ts';
 
 import { errorJSON, successJSON } from './data/json.ts';
+import { parseJsonField, toCards, toPlay, toTrump, toUsername } from './data/guards.ts';
 import { serialize } from '../../src/utils/serial.ts';
 
 function getAbly() {
@@ -59,6 +60,13 @@ async function rateLimit(redis: Redis, key: string, limit: number, windowSeconds
 
 const GAME_KEY_PREFIX = "game:";
 
+// The speed-draw shortcuts deal the whole hand at once, skipping the drawing and declaring
+// phase. They exist to make testing quick and must never run in production: only `netlify dev`
+// (which sets NETLIFY_DEV / CONTEXT=dev) enables them.
+function speedDrawEnabled(): boolean {
+    return process.env.NETLIFY_DEV === "true" || process.env.CONTEXT === "dev";
+}
+
 async function loadGame(redis: Redis, roomId: string) {
     //TODO: figure out why this isn't returning as string
     const res = await redis.get(GAME_KEY_PREFIX + roomId);
@@ -104,13 +112,14 @@ export const handler = async(event: HandlerEvent) => {
         const rule : [number, number] = RATE_LIMIT_RULES[action] || RATE_LIMIT_RULES.default;
         const [limit, windowSeconds] = rule;
 
+        // authenticate first: the limiter is keyed by client id, so an unsigned request must not
+        // be able to spend another player's allowance
+        if (!signature || !verify(clientId, signature)) {return errorJSON("Invalid signature");}
+
         // rate limit check
-        const rlClientId : string = clientId || "anonymous";
-        const key : string = `rl:${roomId}:${roomSpecific.has(action) ? "global" : rlClientId}:${action}`;
+        const key : string = `rl:${roomId}:${roomSpecific.has(action) ? "global" : clientId}:${action}`;
         const isAllowed : boolean = await rateLimit(redis, key, limit, windowSeconds);
         if (!isAllowed) {return errorJSON("Rate limit exceeded", 429);}
-
-        if (!signature || !verify(clientId, signature)) {return errorJSON("Invalid signature");}
 
         // get room live object
 
@@ -142,10 +151,13 @@ export const handler = async(event: HandlerEvent) => {
             const players = game.getState().players;
             const missing = players.filter(player => !items.some(item => item.clientId === player));
 
-            if (missing.length > 0) {game.setPaused(true);}
-            else {game.setPaused(false);}
-            
-            await savePublish(game);
+            const paused = missing.length > 0;
+            // A state broadcast makes clients recheck presence. Do not publish unchanged
+            // state, or a disconnected player causes a request/broadcast feedback loop.
+            if (game.getState().paused !== paused) {
+                game.setPaused(paused);
+                await savePublish(game);
+            }
 
             return successJSON({});
         }
@@ -170,11 +182,11 @@ export const handler = async(event: HandlerEvent) => {
             for (let i = 0; i < Math.max(a.length, b.length); i++) {
                 if (i < a.length) {
                     players.push(a[i].clientId); 
-                    users.push(a[i].data?.username ?? "unknown");
+                    users.push(toUsername(a[i].data?.username) ?? "unknown");
                 }
                 if (i < b.length) {
                     players.push(b[i].clientId); 
-                    users.push(b[i].data?.username ?? "unknown");
+                    users.push(toUsername(b[i].data?.username) ?? "unknown");
                 }
             }
 
@@ -190,7 +202,7 @@ export const handler = async(event: HandlerEvent) => {
 
             if (!clientId) {return errorJSON("Missing clientId");}
 
-            const username : string = String(payload && payload.username) || "";
+            const username : string | null = toUsername(payload.username);
             if (!username) {return errorJSON("Missing username");}
 
             const game = currentGame;
@@ -219,12 +231,13 @@ export const handler = async(event: HandlerEvent) => {
             return successJSON({ hand });
         }
 
-        if (action === "speed_draw") { // ADMIN ACTION: SPEED DRAW (FOR TESTING)
+        if (action === "speed_draw") { // DEVELOPMENT ONLY: SPEED DRAW (FOR TESTING)
 
-            // return errorJSON("Speed draw is disabled", 403);
+            if (!speedDrawEnabled()) {return errorJSON("Speed draw is only available in development", 403);}
 
             const game = currentGame;
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
+            if (!game.getState().players.includes(clientId)) {return errorJSON("Only players can speed draw", 403);}
             
             if (!game.speedDraw()) {return errorJSON("Failed to speed draw");}
 
@@ -264,9 +277,8 @@ export const handler = async(event: HandlerEvent) => {
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
             // console.log("Payload for trump call:", payload);
-            const trump : SJCore.Trump = JSON.parse(payload && String(payload.trump));
-            // console.log("Received Trump:", trump);
-            if (!game.callTrump(clientId, trump)) {return errorJSON("Invalid trump call");}
+            const trump : SJCore.Trump | null = toTrump(parseJsonField(payload.trump));
+            if (!trump || !game.callTrump(clientId, trump)) {return errorJSON("Invalid trump call");}
 
             await savePublish(game);
 
@@ -293,8 +305,9 @@ export const handler = async(event: HandlerEvent) => {
             const game = await getGame();
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
-            const give : SJCore.Card[] = JSON.parse(payload && String(payload.give));
-            const receive : SJCore.Card[] = JSON.parse(payload && String(payload.receive));
+            const give : SJCore.Card[] | null = toCards(parseJsonField(payload.give));
+            const receive : SJCore.Card[] | null = toCards(parseJsonField(payload.receive));
+            if (!give || !receive) {return errorJSON("Failed to exchange Dipai");}
 
             // console.log(`Client ${clientId} wants to exchange dipai. Give: ${serialize(give)}, Receive: ${serialize(receive)}`);
 
@@ -313,11 +326,8 @@ export const handler = async(event: HandlerEvent) => {
             const game = currentGame;
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
-            const play : SJCore.Play = JSON.parse(payload && String(payload.play));
-
-            // console.log(`Client ${clientId} attempts to play: ${serialize(play)}`);
-
-            if (!game.tryPlay(clientId, play)) {return errorJSON("Invalid play");}
+            const play : SJCore.Play | null = toPlay(parseJsonField(payload.play));
+            if (!play || !game.tryPlay(clientId, play)) {return errorJSON("Invalid play");}
 
             await savePublish(game);
 
@@ -332,9 +342,8 @@ export const handler = async(event: HandlerEvent) => {
             const game = currentGame;
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
             
-            const play : SJCore.Play = JSON.parse(payload && String(payload.play));
-
-            if (!game.tryShuai(clientId, play)) {return errorJSON("Invalid shuai");}
+            const play : SJCore.Play | null = toPlay(parseJsonField(payload.play));
+            if (!play || !game.tryShuai(clientId, play)) {return errorJSON("Invalid shuai");}
 
             await savePublish(game);
 
@@ -360,12 +369,15 @@ export const handler = async(event: HandlerEvent) => {
 
         }
 
-        if (action === "speed") { // ACTION: END GAME
+        if (action === "speed") { // DEVELOPMENT ONLY: SPEED DRAW (FOR TESTING)
+
+            if (!speedDrawEnabled()) {return errorJSON("Speed draw is only available in development", 403);}
 
             if (!clientId) {return errorJSON("Missing clientId");}
 
             const game = currentGame;
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
+            if (!game.getState().players.includes(clientId)) {return errorJSON("Only players can speed draw", 403);}
 
             if (!game.speedDraw()) {return errorJSON("Speed draw failed");}
 

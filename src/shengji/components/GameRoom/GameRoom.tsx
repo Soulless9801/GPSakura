@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 import { deserialize } from "/src/utils/serial";
 
@@ -199,36 +199,29 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     const [phase, setPhase] = useState<string | null>(null);
 
     const [help, setHelp] = useState<boolean>(false); // toggle advice display
-    const [advice, setAdvice] = useState<SJAdvt.Advice | null>(null);
-
-    const getAdvice = useCallback(() => {
-        if (!game || !hand) {return;}
-        let i = game.lead;
+    const advice = useMemo<SJAdvt.Advice | null>(() => {
+        if (!game || !hand || !help || game.over || game.draw || game.dip || game.players[game.turn] !== identity?.clientId) {return null;}
+        let i = game.chu;
         const tricks : SJAdvt.Move[] = [];
-        for (let steps = 0; steps < game.players.length; steps++) {
+        for (let steps = 0; steps < game.players.length && i !== game.turn; steps++) {
             const play = game.info.get(game.players[i])?.play;
             if (!play) {break;}
             tricks.push(play.cards);
             i = (i + 1) % game.players.length;
         }
-        if (game.players[game.turn] === identity?.clientId || !help) {
-            const pos: SJAdvt.Position = {
-                numPlayers: game.players.length,
-                decks: game.players.length / 2,
-                trump: game.trump,
-                hand: SJConv.handToCards(hand, game.trump),
-                trick: tricks,
-                seen: game.discard,
-            };
-            const adv = SJAdvr.analyse(pos);
-            // console.log(adv);
-            setAdvice(adv);
-        } else {setAdvice(null);}
-    }, [game, hand, help]);
+        const pos: SJAdvt.Position = {
+            numPlayers: game.players.length,
+            decks: game.players.length / 2,
+            trump: game.trump,
+            hand: SJConv.handToCards(hand, game.trump),
+            trick: tricks,
+            seen: game.discard,
+        };
+        return SJAdvr.analyse(pos);
+    }, [game, hand, help, identity?.clientId]);
 
     useEffect(() => {
         if (!game) {
-            setAdvice(null);
             setPhase(null); 
             setHand(null);
             return; 
@@ -242,7 +235,6 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
             if (game.players[game.zhuang] !== identity?.clientId) {return;}
             runAsync(getDipai);
         } else {
-            getAdvice();
             setPhase("play");
         }
     }, [game]);
@@ -352,7 +344,9 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                         </div>
                     )}
                     <div className="sjg-button__group">
-                        <button className="sjg-button__game" onClick={() => { runAsync(speedDraw); }}>Speed Draw (Cheat)</button>
+                        {import.meta.env.DEV && (
+                            <button className="sjg-button__game" onClick={() => { runAsync(speedDraw); }}>Speed Draw (Cheat)</button>
+                        )}
                         <button className="sjg-button__game" onClick={() => { setHelp(help => !help); }}>Toggle Help</button>
                     </div>
                 </div>
@@ -390,15 +384,6 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     // Game state
 
     const [game, setGame] = useState<SJGame.GameState | null>(null);
-
-    //TODO: REVIEW
-    async function connectionUpdate() {
-        await SJRequest({
-            roomId,
-            action: "connection",
-            identity,
-        });
-    }
 
     // Game actions
 
@@ -480,7 +465,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         };
     }, [ably]);
 
-    const [ids, setIds] = useState<string[]>([]);
+    const [ids, setIds] = useState<string[] | null>(null);
     const [players, setPlayers] = useState<string[]>([]);
     const [teams, setTeams] = useState<number[]>([]);
 
@@ -495,8 +480,17 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         const options: Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
         const channel = ably.channels.get(`room_${roomId}`, options);
         channelRef.current = channel;
+        setIds(null);
+        setGame(null);
 
         let cancelled : boolean = false;
+        let receivedState = false;
+        const isCurrent = (): boolean => !cancelled;
+        const loadInitialState = (res: string | null): void => {
+            if (res && !cancelled && !receivedState) {
+                setGame(deserialize<{ game: SJGame.GameState }>(res).game);
+            }
+        };
 
         const connect = async () => {
 
@@ -507,10 +501,12 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             }
 
             await channel.attach();
+            if (cancelled) {return;}
 
             void channel.presence.subscribe((_msg) => {
                 if (cancelled) {return;}
                 void channel.presence.get().then(presence => {
+                    if (cancelled) {return;}
                     setIds(presence.map(p => p.clientId));
                     setPlayers(presence.map(p => {
                         const data = p.data as object;
@@ -523,12 +519,11 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 }).catch(() => undefined);
             });
 
-            await channel.presence.enter({ username, team });
-
             // console.log(`Joined room_${roomId} as ${username} on team ${team ? "1" : "2"}`);
 
-            void channel.subscribe('state_change', (msg) => { // game state updated
+            await channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) {return;}
+                receivedState = true;
                 const rawData = msg.data as { game?: string } | null;
                 if (!rawData || typeof rawData.game !== "string") {
                     setGame(null);
@@ -539,8 +534,14 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 // console.log("Updated:", state);
             });
 
-            await connectionUpdate(); // update presence
-            // await getState();
+            // Read the current game explicitly: an unchanged connection no longer broadcasts.
+            // Subscribing and loading state must not depend on presence.enter succeeding.
+            const res = await SJRequest({ roomId, action: "state", identity });
+            if (!isCurrent()) {return;}
+            loadInitialState(res);
+            await channel.presence.enter({ username, team });
+            const presence = await channel.presence.get();
+            if (isCurrent()) {setIds(presence.map(p => p.clientId));}
         }
 
         runAsync(connect);
@@ -556,7 +557,10 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     // respond to game state changes
 
-    const [missing, setMissing] = useState<string[] | null>(null);
+    const missingIds = game && ids ? game.players.filter(player => !ids.includes(player)) : null;
+    const missing = game && missingIds?.length ? missingIds.map(player => game.info.get(player)?.username || player) : null;
+    // Use player IDs, not state object identity or display names, to recognize a change.
+    const connectionKey = game && missingIds ? JSON.stringify([game.players, missingIds]) : null;
 
     useEffect(() => {
         if (!game) {return;}
@@ -572,22 +576,21 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     useEffect(() => {
 
-        if (!game) {return;}
-
-        const miss : string[] = [];
-
-        for (let i = 0; i < game.players.length; i++) {if (!ids.find(id => id === game.players[i])) {miss.push(game.info.get(game.players[i])?.username || game.players[i]);}}
-
-        const connection = async () => { await connectionUpdate(); };
-
-        if (miss.length > 0) {
-            runAsync(connection);
-            setMissing(miss);
-        } else {setMissing(null);}
-
-        // console.log("Players in game:", cnt, "/", game.players.length);
-
-    }, [game, ids]);
+        if (!connectionKey || !identity) {return;}
+        let cancelled = false;
+        let retry: ReturnType<typeof setTimeout> | undefined;
+        const sync = async (): Promise<void> => {
+            const res = await SJRequest({ roomId, action: "connection", identity }).catch(() => null);
+            // Other clients share the room's limiter. Retry a rejected update so a return
+            // during that window cannot leave the game paused indefinitely.
+            if (res === null && !cancelled) {retry = setTimeout(() => { void sync(); }, 1500);}
+        };
+        void sync();
+        return () => {
+            cancelled = true;
+            clearTimeout(retry);
+        };
+    }, [connectionKey, roomId, identity]);
 
     return (
         <div className="sjg-room">

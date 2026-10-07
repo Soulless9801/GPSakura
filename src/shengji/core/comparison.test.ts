@@ -200,11 +200,25 @@ describe("getNextCardData / isCardNext", () => {
         expect(SJComp.getNextCardData(SJ, T7)).toEqual([1, 0, 0, 2]);
     });
 
-    // getNextCardData bumps the joker rank (1 -> 2) and then "skips the trump rank", which
-    // for trump rank 2 bumps it again to 3. Round 1 always has trump rank 2, so a joker
-    // tractor (SJ SJ BJ BJ) is not recognised in the opening round.
-    it.fails("KNOWN BUG: the small joker is followed by the big joker when the trump rank is 2", () => {
-        expect(SJComp.isCardNext(BJ, SJ, T)).toBe(true);
+    // getNextCardData used to bump the joker rank (1 -> 2) and then "skip the trump rank", which
+    // for trump rank 2 bumped it again to 3. Round 1 always has trump rank 2, so a joker
+    // tractor (SJ SJ BJ BJ) was not recognised in the opening round.
+    it.each([
+        ["trump rank 2", { suit: "spades", rank: 2 }],
+        ["trump rank 7", { suit: "spades", rank: 7 }],
+        ["trump rank 14", { suit: "spades", rank: 14 }],
+        ["no trump suit", { suit: null, rank: 2 }],
+        ["jokers declared", { suit: "jokers", rank: 2 }],
+        ["hearts trump, rank 2", { suit: "hearts", rank: 2 }],
+    ] as [string, Trump][])("the small joker is followed by the big joker with %s", (_label, trump) => {
+        expect(SJComp.isCardNext(BJ, SJ, trump)).toBe(true);
+        expect(SJComp.isCardNext(SJ, BJ, trump)).toBe(false);
+        expect(SJComp.isCardNext(BJ, BJ, trump)).toBe(false);
+    });
+
+    it("the big joker follows the small joker only: nothing is between them", () => {
+        expect(SJComp.isCardNext(BJ, S(2), T)).toBe(false);
+        expect(SJComp.isCardNext(BJ, H(14), T)).toBe(false);
     });
 
     it("an off-suit 2 is never next to another off-suit 2", () => {
@@ -288,8 +302,22 @@ describe("play structure (getPlayStruct)", () => {
         expect(iplay([SJ, SJ, BJ, BJ], T7).struct).toEqual({ cards: [[SJ, BJ]], count: [2] });
     });
 
-    it.fails("KNOWN BUG: ... and also when the trump rank is 2", () => {
-        expect(iplay([SJ, SJ, BJ, BJ]).struct).toEqual({ cards: [[SJ, BJ]], count: [2] });
+    it.each<[string, Trump]>([
+        ["trump rank 2", T],
+        ["jokers declared", { suit: "jokers", rank: 2 }],
+        ["no trump suit", { suit: null, rank: 2 }],
+    ])("a joker tractor is recognised with %s", (_label, trump) => {
+        expect(iplay([SJ, SJ, BJ, BJ], trump).struct).toEqual({ cards: [[SJ, BJ]], count: [2] });
+    });
+
+    it("a joker tractor is a legal lead and a legal follow to another joker tractor", () => {
+        const hand = [SJ, SJ, BJ, BJ, H(3)];
+        expect(legal(hand, [], [SJ, SJ, BJ, BJ])).toBe(true);
+        expect(legal(hand, [S(14), S(14), H(2), H(2)], [SJ, SJ, BJ, BJ])).toBe(true);
+    });
+
+    it("a single pair of jokers is not a tractor", () => {
+        expect(iplay([SJ, SJ]).struct).toEqual({ cards: [[SJ]], count: [2] });
     });
 
     it("sorts the play's own card array as a side effect", () => {
@@ -403,13 +431,14 @@ describe("following a pair", () => {
         expect(legal([H(3), H(3), H(9), H(10)], lead, [H(3), H(3)])).toBe(true);
     });
 
-    // Tractor leads enforce "play your pair if you have one" (see below) but pair leads do
-    // not: two loose cards of the suit are accepted although a pair is held.
-    it.fails("KNOWN BUG: must play the pair when holding one", () => {
+    // Pair leads used to accept two loose cards of the suit although a pair was held (a phantom
+    // "run" for an empty list in findMaxConsecutive made the check pass); tractor leads always
+    // enforced it. See also following.test.ts for the full rules and an independent oracle.
+    it("must play the pair when holding one", () => {
         expect(legal([H(3), H(3), H(9), H(10)], lead, [H(9), H(10)])).toBe(false);
     });
 
-    it.fails("KNOWN BUG: must not split a pair into two singles when a pair is held", () => {
+    it("must not split a pair into two singles when a pair is held", () => {
         expect(legal([H(3), H(3), H(9)], lead, [H(3), H(9)])).toBe(false);
     });
 
@@ -588,10 +617,9 @@ describe("isShuaiValid (leading a throw)", () => {
         expect(shuai(mine, mine, [[H(13), H(13)]])).toBe(false);
     });
 
-    // isBeatable starts a new "sequence" for any card whose count differs from the component's,
-    // so a lone King is treated as beating a pair of nines. (The source already carries a
-    // "shuai checking is bugged" FIXME.)
-    it.fails("KNOWN BUG: single cards cannot beat a pair component", () => {
+    // isBeatable used to start a new "sequence" for any card whose count differed from the
+    // component's, so a lone King counted as beating a pair of nines.
+    it("single cards cannot beat a pair component", () => {
         const mine = [H(14), H(9), H(9)];
         expect(shuai(mine, mine, [[H(13), H(12)]])).toBe(true);
     });
@@ -620,19 +648,19 @@ describe("isShuaiValid (following a throw)", () => {
         expect(followShuai(lead, hand, [C(14), C(13), C(12)])).toBe(false);
     });
 
-    // A shuai follow goes through the same suit-and-length rules as any play: a player holding
-    // fewer cards of the suit than were thrown must give them all and then pad with other
-    // cards. The mixed-suit padding is rejected by the leading-shuai "single suit" rule, which
-    // is applied to followers too, so the follower is left with no legal reply at all.
-    it.fails("KNOWN BUG: a short follower may dump their suit and pad with other cards", () => {
+    // A follower who is short in the led suit must dump what they hold and pad with anything
+    // else. That mixed-suit play used to be rejected by the leader's "one line only" rule, which
+    // left the follower with no legal reply at all.
+    it("a short follower may dump their suit and pad with other cards", () => {
         const lead = [H(14), H(13), H(12)];
         const hand = [H(3), C(4), C(5), C(6)];
         expect(followShuai(lead, hand, [H(3), C(4), C(5)])).toBe(true);
     });
 
-    it.fails("KNOWN BUG: a follower must play as many cards as the throw", () => {
+    it("a follower must play as many cards as the throw", () => {
         const lead = [H(14), H(13), H(12)];
         const hand = [H(3), C(4), C(5), C(6)];
         expect(followShuai(lead, hand, [H(3)])).toBe(false);
+        expect(followShuai(lead, hand, [H(3), C(4), C(5), C(6)])).toBe(false);
     });
 });

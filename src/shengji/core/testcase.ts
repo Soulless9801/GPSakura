@@ -115,24 +115,15 @@ function genCard(rng: RNG) : Card {
 
 // GENERATION
 
-// generate a random valid trump
+// generate a random valid trump: a plain suit and a real rank (2..14, never a joker's rank)
 function randomTrump(rng: RNG): Trump {
 
-    const trumpcard : Card = genCard(rng);
+    const plainSuits = SUITS.filter(suit => suit !== "jokers");
 
-    let val : boolean = trumpcard.suit !== "jokers";
-
-    while (!val) {
-        trumpcard.suit = rng.pick<Suit>(SUITS);
-        val = trumpcard.suit !== "jokers";
-    }
-
-    const trump : Trump = {
-        suit: trumpcard.suit,
-        rank: trumpcard.rank
+    return {
+        suit: rng.pick<Suit>(plainSuits),
+        rank: rng.int(2, 14) as Rank
     };
-
-    return trump;
 }
 
 // generates a trick, any suit if suit is null, otherwise must be the specified suit

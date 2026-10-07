@@ -62,7 +62,7 @@ describe("Hand", () => {
 
     // The class string is `card-hand__wrapper${className}` with no space, so a custom class
     // fuses onto the base one and neither selector matches.
-    it.fails("KNOWN BUG: the custom class is a separate class token", () => {
+    it("the custom class is a separate class token", () => {
         const { container } = render(<Hand cards={CARDS} className="mine" />);
         expect([...(container.firstElementChild?.classList ?? [])]).toContain("mine");
     });
@@ -70,11 +70,23 @@ describe("Hand", () => {
     // The selection is reset whenever the `cards` array identity changes, and callers build a
     // fresh array on every render (e.g. from `handToCards`), so an unrelated re-render of the
     // game room silently clears what the player had picked.
-    it.fails("KNOWN BUG: re-rendering with an equal array keeps the selection", () => {
+    it("re-rendering with an equal array keeps the selection", () => {
         const ref = createRef<HandRef>();
         const { rerender } = render(<Hand ref={ref} cards={[...CARDS]} />);
         fireEvent.click(screen.getByRole("button", { name: "3hearts" }));
-        rerender(<Hand ref={ref} cards={[...CARDS]} />);
+        rerender(<Hand ref={ref} cards={CARDS.map(card => ({ ...card }))} />);
         expect(ref.current?.getActiveCards()).toHaveLength(1);
+        expect(screen.getByRole("button", { name: "3hearts" }).classList.contains("selected")).toBe(true);
+        fireEvent.click(screen.getByRole("button", { name: "3hearts" }));
+        expect(ref.current?.getActiveCards()).toEqual([]);
+    });
+
+    it("clears both the selection and its highlight when another card changes", () => {
+        const ref = createRef<HandRef>();
+        const { rerender } = render(<Hand ref={ref} cards={CARDS} />);
+        fireEvent.click(screen.getByRole("button", { name: "3hearts" }));
+        rerender(<Hand ref={ref} cards={[CARDS[0], c("clubs", 5), CARDS[2]]} />);
+        expect(ref.current?.getActiveCards()).toEqual([]);
+        expect(screen.getByRole("button", { name: "3hearts" }).classList.contains("selected")).toBe(false);
     });
 });

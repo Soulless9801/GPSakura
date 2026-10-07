@@ -9,11 +9,14 @@ guard. Find them all with `grep -rn "it.fails" src netlify`.
 Items marked **fixed** were resolved after the first audit pass; their tests are now ordinary
 regression tests (no `.fails`).
 
+For a detailed, agent-oriented description of everything still open (root causes, line
+references, suggested fixes, work packages), see [REMAINING_BUGS.md](REMAINING_BUGS.md).
+
 Items marked **reported** came from a static read of the UI code and are *not* covered by a test.
 Treat them as leads, not confirmed defects.
 
 The first pass changed no application source. The signing and path-traversal findings (S1, S2,
-S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the small blackjack bugs (G5, G6, phantom refill) were then fixed; everything else below is still open.
+S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the small blackjack bugs (G5, G6, phantom refill) were then fixed. Shengji follow-up fixes are recorded below and in `REMAINING_BUGS.md`.
 
 ## Security
 
@@ -23,8 +26,8 @@ S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the
 | S2 | ~~An unset `SESSION_SECRET` silently became an empty HMAC key.~~ **Fixed:** signing throws and verifying returns false when the secret is missing; signatures are compared in constant time. | **fixed**: `create-session.test.ts` |
 | S3 | ~~`firebase-collection-query` spliced `loc` into a file path unchecked.~~ **Fixed:** `loc` must match `[A-Za-z0-9_-]+` (400 otherwise) and is joined onto the data directory. Still open: the `col` parameter lets callers read any Firestore collection. | **fixed** (traversal): `firebase-collection-query.test.ts` |
 | S4 | ~~`parseMarkdown` escaped nothing and `TextParser` assigns the result to `innerHTML`; raw HTML ran and link URLs could break out of `href`.~~ **Fixed:** input is HTML-escaped before any markup is added; math and link URLs are protected from the emphasis rules; links get `rel="noopener noreferrer"`. The Codeforces and USACO tables interpolated remote strings into HTML cells the same way; they now use `escapeHtml`/`linkHtml` (`src/utils/html.ts`), which also restricts hrefs to http(s). | **fixed**: `parse.test.ts`, `html.test.ts`, `TextParser.test.tsx` |
-| S5 | `shengji-game-room` rate-limits **before** verifying the signature, keyed by the claimed `clientId`: unsigned requests can burn a real player's budget (1 request/s per action). | pinned: `shengji-game-room.test.ts` |
-| S6 | `speed_draw` / `speed` ("for testing") are live and never check that the caller is a seated player. | pinned: `shengji-game-room.test.ts` |
+| S5 | Shengji signatures are verified before consuming the claimed player's rate-limit budget. | **fixed**: `shengji-game-room.test.ts` |
+| S6 | `speed_draw` / `speed` require a seated player and a development environment; the production client hides the button. | **fixed**: `shengji-game-room.test.ts` |
 | S7 | `neon-create-user` mints a funded account per unauthenticated call; `refill` adds 1000 at any balance. ~~`refill` reported money for a player that does not exist.~~ **Fixed** (phantom refill: now "Player not found"). Open: account minting and unlimited refill. | phantom refill **fixed**; rest documented |
 | S8 | ~~`getIdentity` treated the server's `200 {valid:false}` as valid.~~ **Fixed** as part of the identity rewrite: only `valid === true` reuses a stored identity. | **fixed**: `verify.test.ts` |
 
@@ -34,12 +37,12 @@ S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the
 |---|---------|--------|
 | G1 | ~~After round 1 the next deal started with the winner of the last trick instead of the new zhuang~~ (`endTrick` overwrote the `turn` set by `endRound`), which dealt uneven hands (24 vs 25 cards) and a 9-11 card kitty in 139 of 200 simulated rounds, then made legal moves fail. **Fixed:** `endTrick` hands over to `endRound` and stops; `endRound` also resets `chu`/`lead`. | **fixed**: `game.test.ts` (Shengji) |
 | G1b | ~~`state.discard` was never cleared between rounds.~~ `GameRoom` passes it to the advisor as the cards already seen, so from round 2 the advisor saw more copies than the pack holds and refused to give advice. **Fixed:** cleared in `endRound`. The trump suit is also reset to none each round, so a suit is only trump for the round it was declared in. | **fixed**: `game.test.ts` (Shengji) |
-| G2 | When the trump rank is 2 (always, in round 1) the small joker is not "next to" the big joker, so a joker-pair tractor (SJ SJ BJ BJ) is not recognised. | pinned: `comparison.test.ts` |
-| G3 | Following a pair lead does not force a player holding a pair to play it (two loose cards of the suit are accepted). Tractor leads *do* enforce it. | pinned: `comparison.test.ts` |
-| G4 | Shuai (throw): a short follower has no legal reply at all (mixed-suit padding is rejected) while a 1-card reply to a 3-card throw is accepted; and `isBeatable` counts a lone single as beating a pair, so almost no throw is valid. The source already carries a `FIXME`. | pinned: `comparison.test.ts` |
+| G2 | Joker pairs form a tractor even at trump rank 2, including no-trump and joker declarations. | **fixed**: `comparison.test.ts` |
+| G3 | Held pairs must answer pair leads. The existing house rule allowing triples to remain intact is preserved. | **fixed**: `comparison.test.ts`, `following.test.ts` |
+| G4 | Throws enforce reply count, allow short-suit padding, require sufficient copies to beat a component, and require one actual line when led. Advisor follows and mixed tractor/pair/single replies are covered. | **fixed**: `comparison.test.ts`, `throws.test.ts` |
 | G5 | ~~Blackjack: a **tie lost the bet**.~~ **Fixed** (a push returns the bet). ~~Starting a new hand while one was unfinished was allowed and unfinished hands are never charged, so a bad deal could be abandoned for free.~~ **Fixed** (409 "Finish your current hand first"; the open hand is resumed with Load). Still open: concurrent `stand` requests could double-settle (read-modify-write on `money`); not tested. | tie and abandon **fixed**: `blackjack-game-room.test.ts` |
-| G6 | ~~`RNG(0)` was stuck at zero~~ (**fixed**); ~~`blackjack Deck.deserialize` returned a base `Deck`~~ (**fixed**); `Hand.deserialize` aliases the source's per-suit maps (open). | partly **fixed** |
-| G7 | `testcase.ts` can generate a trump of rank 1 (a joker's rank survives the suit swap). | pinned |
+| G6 | `RNG(0)`, blackjack deck deserialization, and Shengji hand deserialization aliasing are resolved. | **fixed** |
+| G7 | The test-case generator draws trump ranks directly from 2 through 14. | **fixed**: `testcase.test.ts` |
 
 ## Client utilities and components
 
@@ -50,11 +53,11 @@ S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the
 | C3 | `findIndex` compares `item.value === String(val)`, so numeric `Select` options never match their saved default (the Chaos demo's dimension switch). `Select` throws with empty `options`. | pinned |
 | C4 | `Particle` with zero velocity becomes `NaN`. | pinned |
 | C5 | `Form` with `notifyOnInitChange={false}` (used by `Slider` and the colour selector) swallows every second edit; values can snap above `max` (`step=2, max=5` shows 6). `Slider`'s track does not follow typed input unless the parent echoes the value back. | pinned: `Form.test.tsx`, `Slider.test.tsx` |
-| C6 | `Hand`: the custom class is fused onto the base class (no space), and any re-render with a new-but-equal `cards` array clears the player's card selection. | pinned: `Hand.test.tsx` |
+| C6 | Hand classes are separated; selection and highlighting survive equal cards recreated during render and reset together on changed contents. | **fixed**: `Hand.test.tsx`, `Card.test.tsx` |
 | C7 | `Modal` leaves `body { overflow: hidden }` behind if unmounted while open. `GenericButton` has no accessible name. | pinned |
 | C8 | `framer-motion` is imported (`Hand`, `BlogApp`) but only `motion` is declared in `package.json`. Works today because `motion` pulls it in. | pinned: `package-hygiene.test.ts` |
-| C9 | Shengji `GameRoom` effect on `[game, ids]` calls the server's `connection` action whenever a player is missing; the server publishes `state_change` on every call, which re-runs the effect, so a dropped player makes every client loop at the rate limit. | reported |
-| C10 | Other reported leads: `ParticleNetwork` captures a stale `interactive` flag and misses `pointerup` outside its wrapper; `BlogApp`/`CodeforcesTable`/`USACOTable` fetch without `res.ok` checks (and USACO has a response-order race); no error boundary or catch-all route around lazy routes; `GameInfo` advice reads the previous hand; `FreqGuesser` counts every page load as a give-up; hex shorthand typed into the colour field is silently ignored; `Chaos` ignores `refresh`. | reported |
+| C9 | Shengji connection updates publish only on pause/resume transitions. Clients deduplicate by missing player IDs, sync returns, retry rejected updates, and explicitly load initial state. | **fixed**: `shengji-game-room.test.ts`, `GameRoom.test.tsx` |
+| C10 | Other reported leads: `ParticleNetwork` captures a stale `interactive` flag and misses `pointerup` outside its wrapper; `BlogApp`/`CodeforcesTable`/`USACOTable` fetch without `res.ok` checks (and USACO has a response-order race); no error boundary or catch-all route around lazy routes; **fixed:** `GameInfo` advice now reacts to the latest hand and current trick (`GameRoom.test.tsx`); `FreqGuesser` counts every page load as a give-up; hex shorthand typed into the colour field is silently ignored; `Chaos` ignores `refresh`. | reported |
 
 ## What changed in the repository
 

@@ -92,13 +92,32 @@ describe("Hand", () => {
         expect(copy.countCard(card("hearts", 7))).toBe(0);
     });
 
-    // Hand.deserialize copies only the outer Map, so the per-suit maps stay shared with the
-    // object it was restored from and editing one hand edits the other.
-    it.fails("KNOWN BUG: deserialize() does not alias the per-suit maps of its source", () => {
+    // Hand.deserialize used to copy only the outer Map, so the per-suit maps stayed shared with
+    // the object it was restored from and editing one hand edited the other.
+    it("deserialize() does not alias the per-suit maps of its source", () => {
         const source = new Hand();
         source.addCard(card("spades", 7));
         const copy = Hand.deserialize(source as unknown as { cards: Map<Suit, Map<Rank, number>> });
         copy.addCard(card("spades", 7));
+        copy.addCard(card("hearts", 9));
         expect(source.countCard(card("spades", 7))).toBe(1);
+        expect(source.countCard(card("hearts", 9))).toBe(0);
+        expect(copy.countCard(card("spades", 7))).toBe(2);
+    });
+
+    it("editing the source afterwards does not change the copy either", () => {
+        const source = new Hand();
+        source.addCard(card("clubs", 3));
+        const copy = Hand.deserialize(source as unknown as { cards: Map<Suit, Map<Rank, number>> });
+        source.removeCard(card("clubs", 3));
+        expect(copy.countCard(card("clubs", 3))).toBe(1);
+    });
+
+    it("deserialize() keeps an empty map for any suit the data leaves out", () => {
+        const partial = { cards: new Map<Suit, Map<Rank, number>>([["clubs", new Map<Rank, number>([[5, 2]])]]) };
+        const copy = Hand.deserialize(partial);
+        expect(copy.countCard(card("clubs", 5))).toBe(2);
+        copy.addCard(card("hearts", 9)); // would be silently dropped if the suit's map were missing
+        expect(copy.countCard(card("hearts", 9))).toBe(1);
     });
 });

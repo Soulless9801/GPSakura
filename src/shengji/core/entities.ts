@@ -60,7 +60,9 @@ export class Hand {
 
     static deserialize(data: HandData): Hand {
         const hand = new Hand();
-        hand.cards = new Map(data.cards);
+        // copy each suit's map too: sharing them would make edits to this hand show up in the
+        // object it was restored from. Suits missing from `data` keep their empty map.
+        for (const [suit, ranks] of data.cards) {hand.cards.set(suit, new Map(ranks));}
         return hand;
     }
 }

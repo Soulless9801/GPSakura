@@ -43,14 +43,27 @@ describe("genTestCase", () => {
         }
     });
 
-    // randomTrump draws a random card; when that card is a joker it only replaces the suit and
-    // keeps the joker's rank (1 or 2), so the trump rank can be 1.
-    it.fails("KNOWN BUG: the trump rank is always between 2 and 14", () => {
-        for (let i = 0; i < 100; i++) {
+    // randomTrump used to draw a random *card*; when that was a joker it only replaced the suit
+    // and kept the joker's rank, so the trump rank could be 1 or 2 on a plain suit.
+    it("the trump rank is always between 2 and 14", () => {
+        for (let i = 0; i < 300; i++) {
             const { trump } = at(1_600_000_000_000 + i * 12_345);
             expect(trump.rank).toBeGreaterThanOrEqual(2);
             expect(trump.rank).toBeLessThanOrEqual(14);
+            expect(Number.isInteger(trump.rank)).toBe(true);
         }
+    });
+
+    it("every plain suit and a spread of ranks occur", () => {
+        const suits = new Set<string>();
+        const ranks = new Set<number>();
+        for (let i = 0; i < 400; i++) {
+            const { trump } = at(1_500_000_000_000 + i * 99_991);
+            suits.add(String(trump.suit));
+            ranks.add(trump.rank);
+        }
+        expect([...suits].sort()).toEqual(["clubs", "diamonds", "hearts", "spades"]);
+        expect(ranks.size).toBeGreaterThan(8);
     });
 
     it("only deals legal cards, and the play comes out of the hand", () => {

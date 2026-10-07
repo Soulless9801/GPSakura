@@ -18,13 +18,13 @@ export default function Card({ card, pos = -1, className = "", onClick = null }:
 
 	useEffect(() => {
 		setActive(false);
-	}, [card]);
+	}, [card?.suit, card?.rank]);
 
 	const handleClick = useCallback(() => {
 		const nactive = !active;
 		setActive(nactive);
 		if (onClick && card) {onClick(pos, nactive);}
-	}, [active, onClick, card]);
+	}, [active, onClick, card, pos]);
 
 	if (!card) {return null;}
 

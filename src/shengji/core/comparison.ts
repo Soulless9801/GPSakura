@@ -160,6 +160,14 @@ export function getNextCardData(card: Card, trump: Trump): number[] | null {
 
     const val : number[] = getCardData(card, trump);
 
+    // small joker -> big joker. The "skip the trump rank" rule below is for plain ranks only:
+    // a joker's rank (1 or 2) is not a rank in that sense, and applying it made the jokers
+    // non-consecutive whenever the trump rank was 2
+    if (isJoker(card)) {
+        val[3] += 1;
+        return val;
+    }
+
     if (isSmallTrump(card, trump)) {val[2] = 1;} // big trump
     else {
         val[3] += 1;
@@ -222,25 +230,6 @@ export function isAllJokers(cards: Card[]): boolean {
     }
     return true;
 }
-
-// helper function to check if cards are all same suit
-function isAllSameSuit(cards: Card[]): boolean {
-    if (cards.length === 0) {return true;}
-    const suit : Suit = cards[0].suit;
-    for (const card of cards) {
-        if (card.suit !== suit) {return false;}
-    }
-    return true;
-}
-
-// helper function to check if cards are all main line cards
-function isAllMainLine(cards: Card[], trump: Trump): boolean {
-    for (const card of cards) {
-        if (!isMainLine(card, trump)) {return false;}
-    }
-    return true;
-}
-
 
 // CARD FUNCTIONS
 export function isCardEqual(cardA: Card, cardB: Card): boolean {
@@ -320,13 +309,19 @@ type TrickUnit = { card: Card, units: number };
 
 // project the trick buckets onto one group size: a card held `count` times can stand in for
 // floor(count / size) groups of that size, so a quad answers a lead of pairs as two pairs
-function getTrickUnits(tricks: Card[][], size: number): TrickUnit[] {
+//
+// `forced` is for the hand's side of the check, i.e. what the player is *obliged* to play.
+// House rule: a set is only an obligation when it divides evenly into groups of `size`, so a
+// triple is never forced to break up to answer a pair (nor a quad to answer a triple). The
+// play's side is not `forced`: a player may still choose to take a pair out of a triple.
+function getTrickUnits(tricks: Card[][], size: number, forced: boolean = false): TrickUnit[] {
 
     const units : TrickUnit[] = [];
 
     if (size <= 0) {return units;}
 
     for (let count = size; count < tricks.length; count++) {
+        if (forced && count % size !== 0) {continue;}
         for (const card of tricks[count]) {units.push({ card, units: Math.floor(count / size) });}
     }
 
@@ -341,6 +336,9 @@ function cardKey(card: Card): string {
 // counts for that many links in the chain (a quad is two pairs in a row)
 function findMaxConsecutive(units: TrickUnit[], trump: Trump): number[] {
 
+    // no units means no runs at all (not one run of length 1)
+    if (units.length === 0) {return [0];}
+
     const cards : Card[] = units.map(unit => unit.card);
     sortCards(cards, trump);
     // console.log("Finding max consecutive in:", cards);
@@ -350,7 +348,7 @@ function findMaxConsecutive(units: TrickUnit[], trump: Trump): number[] {
 
     const amount = (card: Card): number => supply.get(cardKey(card)) || 1;
 
-    let len : number = cards.length > 0 ? amount(cards[0]) : 1;
+    let len : number = amount(cards[0]);
 
     const seq : number[] = [];
     for (let i = 0; i < cards.length - 1; i++) {
@@ -455,7 +453,7 @@ function isPlayPossible(lead: number[][], iplay: IPlay, ilead: IPlay, ihand: IHa
         while (pos.length > 0 && pos[pos.length - 1] === 0) {pos.pop();}
         if (pos.length === 0) {continue;}
         // console.log("Possible Lead:", pos);
-        if (!isTrickValid(pos, getTrickUnits(play_tricks.tricks, i), getTrickUnits(hand_tricks.tricks, i), trump)) {return false;}
+        if (!isTrickValid(pos, getTrickUnits(play_tricks.tricks, i), getTrickUnits(hand_tricks.tricks, i, true), trump)) {return false;}
     }
 
     return true;
@@ -470,7 +468,11 @@ export function isPlayValid(iplay: IPlay, ilead: IPlay, ihand: IHand, trump: Tru
     const lead_struct = ilead.struct;
     const play_struct = iplay.struct;
 
-    if (!isPlayStructValid(lead_struct)) {return isPlayStructValid(play_struct);} // must be valid play struct
+    if (!isPlayStructValid(lead_struct)) {
+        // the lead is not a single group, so it is a throw (shuai) that is being answered
+        if (ilead.play.cards.length > 0) {return isShuaiValid(iplay, ilead, ihand, [], trump);}
+        return isPlayStructValid(play_struct); // leading: must be a valid play struct
+    }
     if (iplay.play.cards.length !== ilead.play.cards.length) {return false;} // must be same amount of cards
 
     const n : number = lead_struct.cards[0].length;
@@ -561,7 +563,14 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
                 cnt = 0;
                 lst = null;
                 // console.log("Unsame");
-            } else if (count !== m || !lst || !isCardNext(lst, card, trump)) {
+            } else if (count < m) {
+                // held too few times to be one of the m-tuples that would beat this component
+                // (a lone King does not beat a pair of nines); nothing below can beat it either
+                // once we are down to cards that are not bigger
+                if (!isCardBigger(card, lead, trump)) {break;}
+                cnt = 0;
+                lst = null;
+            } else if (!lst || !isCardNext(lst, card, trump)) {
                 if (!isCardBigger(card, lead, trump)) {break;}
                 cnt = 1;
                 lst = card;
@@ -578,15 +587,17 @@ function isBeatable(iplay: IPlay, ihand: IHand, trump: Trump): boolean {
     return false;
 }
 
-// FIXME: shuai checking is bugged
 // check if shuai is valid given lead or absence
 export function isShuaiValid(iplay: IPlay, ilead: IPlay, ihand: IHand, hands: Hand[], trump: Trump): boolean {
-
-    if (!isAllMainLine(iplay.play.cards, trump) && !isAllSameSuit(iplay.play.cards)) {return false;} // must be all main line cards or all same suit cards
 
     if (!isSubset(iplay, ihand)) {return false;} // must be subset of hand
 
     if (ilead.play.cards.length === 0){ // initial shuai
+
+        // a throw is made of one line only: all main line cards or all the same plain suit.
+        // (This is a rule for the leader; a follower who is short in the led suit has to
+        // dump it and pad with other cards, so it must not be applied to followers.)
+        if (iplay.play.cards.length === 0 || !iplay.play.cards.every(card => checkInline(card, iplay.play.cards[0], trump))) {return false;}
 
         for (let i = 0; i < hands.length; i++) {
             const iihand = handToInfo(hands[i], trump);
@@ -599,6 +610,8 @@ export function isShuaiValid(iplay: IPlay, ilead: IPlay, ihand: IHand, hands: Ha
         return true;
 
     } else {
+
+        if (iplay.play.cards.length !== ilead.play.cards.length) {return false;} // must be same amount of cards
 
         const lead_struct = ilead.struct;
 
