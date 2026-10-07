@@ -51,11 +51,18 @@ describe("convertToPixels", () => {
 
     // The unit is found by deleting String(parseFloat(input)) from the input, which fails
     // whenever the number is written with trailing zeros: "1.50em" -> unit "0em".
-    it.fails("KNOWN BUG: honours the unit when the number has a trailing zero", () => {
+    it("honours the unit when the number has a trailing zero", () => {
         expect(convertToPixels("1.50em", context)).toBe(15);
     });
 
-    it.fails("KNOWN BUG: honours the unit on '2.50vw'", () => {
+    it("honours the unit on '2.50vw'", () => {
         expect(convertToPixels("2.50vw")).toBe(25);
+    });
+
+    it("parses signs, fractional and exponent notation without corrupting the unit", () => {
+        expect(convertToPixels("-.50em", context)).toBe(-5);
+        expect(convertToPixels("+1.50REM")).toBe(30);
+        expect(convertToPixels("1e2px")).toBe(100);
+        expect(convertToPixels("1.2oops!")).toBeNaN();
     });
 });

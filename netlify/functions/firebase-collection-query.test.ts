@@ -200,8 +200,11 @@ describe("firebase-collection-query", () => {
     });
 
     describe("bad requests", () => {
+        it.each(["null", "[]", "7", "\"text\""])("rejects a JSON body with the wrong shape: %s", async (body) => {
+            expect((await handler({ body } as HandlerEvent)).statusCode).toBe(400);
+        });
         // JSON.parse sits outside the try block, so a bad body rejects the whole handler.
-        it.fails("KNOWN BUG: malformed JSON is answered with a 4xx response", async () => {
+        it("malformed JSON is answered with a 4xx response", async () => {
             const res = await handler({ body: "{oops" } as HandlerEvent);
             expect(res.statusCode).toBe(400);
         });

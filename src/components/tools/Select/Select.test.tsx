@@ -89,7 +89,7 @@ describe("Select", () => {
 
     // findIndex compares `item.value === String(val)`, so a numeric option never matches the
     // numeric defaultValue the parent passes; the saved choice is lost and index 0 wins.
-    it.fails("KNOWN BUG: honours a numeric defaultValue", () => {
+    it("honours a numeric defaultValue", () => {
         const numeric: SelectOption[] = [
             { value: 2, label: "Two" },
             { value: 3, label: "Three" },
@@ -100,8 +100,10 @@ describe("Select", () => {
 
     // With no options `options[...]` is undefined, which is stored as the selected value and
     // then dereferenced (`value.label`) during render.
-    it.fails("KNOWN BUG: renders without crashing when options is empty", () => {
-        vi.spyOn(console, "error").mockImplementation(() => undefined);
-        expect(() => render(<Select options={[]} onChange={vi.fn()} />)).not.toThrow();
+    it("renders without crashing when options is empty", () => {
+        const onChange = vi.fn();
+        const { container } = render(<Select options={[]} placeholder="No options" onChange={onChange} />);
+        expect(selected(container)).toContain("No options");
+        expect(onChange).not.toHaveBeenCalled();
     });
 });

@@ -31,6 +31,7 @@ export class Particle {
         this.freeze = Date.now() + freezeTimer;
     }
     adjustSpeed(): void {
+        if (this.vx === 0 && this.vy === 0) {return;}
         const factor = Math.sqrt(this.s / Math.sqrt(this.vx ** 2 + this.vy ** 2));
         this.vx *= factor;
         this.vy *= factor;

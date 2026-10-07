@@ -68,8 +68,8 @@ export default function BlogPost({ title, body, creationTime, updateTime, postId
             }
             <div className="timestamp">Updated {formatDate(updateTime)}</div>
             <div className="blogPostLike">
-                <GenericButton postId={postId} type={'pin'} icon='fa-heart' fill='#ff0000'/>
-                <GenericButton postId={postId} type={'like'} icon='fa-thumbs-up' fill='#00ff00'/>
+                <GenericButton label="Favorite post" postId={postId} type={'pin'} icon='fa-heart' fill='#ff0000'/>
+                <GenericButton label="Like post" postId={postId} type={'like'} icon='fa-thumbs-up' fill='#00ff00'/>
             </div>
         </section>
     );

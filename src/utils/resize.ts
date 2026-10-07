@@ -1,8 +1,10 @@
 export function convertToPixels(input: number | string, context: HTMLElement = document.body): number {
     if (typeof input === "number") {return input;} // already px
 
-    const value = parseFloat(input);
-    const unit = input.replace(String(value), "").trim();
+    const match = /^\s*([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)\s*([a-z%]*)\s*$/i.exec(input);
+    if (!match) {return NaN;}
+    const value = Number(match[1]);
+    const unit = match[2].toLowerCase();
 
     switch (unit) {
         case "px":

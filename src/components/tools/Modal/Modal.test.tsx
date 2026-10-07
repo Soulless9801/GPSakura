@@ -104,10 +104,19 @@ describe("Modal", () => {
 
     // The scroll lock is applied in an effect with no cleanup, so unmounting the modal while it
     // is open (e.g. by navigating away) leaves the page unscrollable.
-    it.fails("KNOWN BUG: unmounting an open modal restores page scrolling", () => {
+    it("unmounting an open modal restores page scrolling", () => {
         const { container, unmount } = view();
         openIt(container);
         unmount();
         expect(document.body.style.overflow).toBe("");
+    });
+
+    it("restores an existing overflow style instead of clearing it", () => {
+        document.body.style.overflow = "auto";
+        const { container, unmount } = view();
+        openIt(container);
+        unmount();
+        expect(document.body.style.overflow).toBe("auto");
+        document.body.style.overflow = "";
     });
 });

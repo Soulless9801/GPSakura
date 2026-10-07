@@ -54,13 +54,7 @@ describe("dependencies", () => {
         expect(names).toEqual(expect.arrayContaining(["react", "ably", "firebase"]));
     });
 
-    // Hand.tsx and BlogApp.tsx import `framer-motion`, but package.json only lists `motion`
-    // (which depends on it). Importing `motion/react` would use the declared package.
-    it("only the known undeclared package is missing", () => {
-        expect(undeclared.map(([name]) => name)).toEqual(["framer-motion"]);
-    });
-
-    it.fails("KNOWN BUG: every imported package is declared in package.json", () => {
+    it("every imported package is declared in package.json", () => {
         expect(undeclared).toEqual([]);
     });
 

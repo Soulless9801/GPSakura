@@ -1,5 +1,6 @@
 export function findIndex<T extends string | number>(val: T | null | undefined, list: readonly { value: T }[], defaultIndex: number): number {
-    const idx = list.findIndex(item => item.value === String(val));
+    if (val === null || val === undefined) {return defaultIndex;}
+    const idx = list.findIndex(item => String(item.value) === String(val));
     return idx !== -1 ? idx : defaultIndex;
 }
 

@@ -47,7 +47,12 @@ describe("findIndex", () => {
 
     // The signature is generic over `string | number`, but the comparison is
     // `item.value === String(val)`, so a numeric option can never be matched.
-    it.fails("KNOWN BUG: matches numeric option values", () => {
+    it("matches numeric option values", () => {
         expect(findIndex(5, [{ value: 4 }, { value: 5 }], -1)).toBe(1);
+    });
+
+    it("does not treat null or undefined as literal option strings", () => {
+        expect(findIndex(null, [{ value: "null" }], -1)).toBe(-1);
+        expect(findIndex(undefined, [{ value: "undefined" }], -1)).toBe(-1);
     });
 });

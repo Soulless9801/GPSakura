@@ -4,13 +4,14 @@ import type { CSSProperties } from 'react';
 import './GenericButton.css'
 
 interface GenericButtonProps {
+    label: string;
     postId: string | number;
     type: string;
     icon: string;
     fill: string;
 }
 
-export default function GenericButton({ postId, type, icon, fill }: GenericButtonProps) {
+export default function GenericButton({ postId, type, icon, fill, label }: GenericButtonProps) {
 
         const storageKey = `${type}_${String(postId)}`;
     const iconStyle = {
@@ -32,10 +33,9 @@ export default function GenericButton({ postId, type, icon, fill }: GenericButto
     };
 
     return (
-        <button onClick={handleClick} className="genericButton">
+        <button onClick={handleClick} className="genericButton" aria-label={label} aria-pressed={state}>
             <i className={`genericIcon ${icon} ${state ? 'fa-solid' : 'fa-regular'}`} style={iconStyle}/>
         </button>
     );
 }
-
 

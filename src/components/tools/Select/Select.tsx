@@ -25,7 +25,7 @@ interface SelectProps {
 
 export default function Select({ options = [], defaultValue, onChange, defaultIndex = 0, fixedSelect = false, align = "left", labelR = null, labelL = null, placeholder = "" }: SelectProps) {
     const [open, setOpen] = useState(false);
-    const [value, setValue] = useState<SelectOption>({ value: '1', label: '1' });
+    const [value, setValue] = useState<SelectOption | null>(null);
 
     const ref = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -43,8 +43,8 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
 
     useEffect(() => {
         // console.log(defaultValue);
-        const initialOption = options[findIndex(defaultValue, options, defaultIndex)];
-        if (!fixedSelect) {handleSelect(initialOption);}
+        const initialIndex = findIndex(defaultValue, options, defaultIndex);
+        if (!fixedSelect && initialIndex >= 0 && initialIndex < options.length) {handleSelect(options[initialIndex]);}
         const handleClickOutside = (event: PointerEvent) => {
             if (ref.current && event.target instanceof Node && !ref.current.contains(event.target)) {
                 setOpen(false);
@@ -67,12 +67,12 @@ export default function Select({ options = [], defaultValue, onChange, defaultIn
             <div className="customSelect">
                 <div ref={ref} onMouseEnter={() => { setHover(true); }} onMouseLeave={() => {setHover(false); setClosed(false);}}>
                     <div className="customSelectSelected" onClick={() => {setClosed(open); setOpen((prev) => !prev);}}>
-                        {fixedSelect ? placeholder : value.label}
+                        {fixedSelect ? placeholder : value?.label ?? placeholder}
                         <span className="customSelectArrow">{open ? "↑" : "↓"}</span>
                     </div>
                     <div className={`customSelectOptions${showMenu ? " show" : ""}${align === "right" ? " right" : ""}`} ref={menuRef}>
                         {options.map((option) => (
-                            <div key={option.value} className={`customSelectOption${value.value === option.value ? " selected" : ""}`} onClick={() => { handleSelect(option); }}>
+                            <div key={option.value} className={`customSelectOption${value?.value === option.value ? " selected" : ""}`} onClick={() => { handleSelect(option); }}>
                                 {option.label}
                             </div>
                         ))}

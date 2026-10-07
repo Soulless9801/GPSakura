@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
+import { clampToStep } from "/src/utils/number";
+
 import Form from '/src/components/tools/Form/Form';
 
 import "./Slider.css";
@@ -19,17 +21,14 @@ interface SliderProps {
 
 export default function Slider({ min, max, value, onChange, label, unit, step = 1, places = 0, disabled = false, form = true }: SliderProps) {
     
-    const [internalValue, setInternalValue] = useState(value);
-    const [percent, setPercent] = useState(((internalValue - min) / (max - min)) * 100);
+    const [internalValue, setInternalValue] = useState(() => clampToStep(value, min, max, step, places));
+    const percent = max === min ? 0 : ((internalValue - min) / (max - min)) * 100;
+    const stopDrag = useRef<(() => void) | null>(null);
 
     const trackRef = useRef<HTMLDivElement>(null);
 
     const updateValue = useCallback((newValue: number): void => {
-        newValue = Math.min(max, Math.max(min, newValue));
-        newValue = Math.round(newValue / step) * step;
-        newValue = Number(newValue.toFixed(places));
-        setInternalValue(newValue);
-        setPercent(((newValue - min) / (max - min)) * 100);
+        setInternalValue(clampToStep(newValue, min, max, step, places));
     }, [min, max, step, places]);
 
     useEffect(() => {
@@ -45,14 +44,16 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
         const track = trackRef.current;
         if (!track) {return;}
         const rect = track.getBoundingClientRect();
+        if (rect.width === 0) {return;}
         const x = clientX - rect.left;
         const newPercent = Math.min(Math.max(x / rect.width, 0), 1);
         const newValue = min + newPercent * (max - min);
         updateValue(newValue);
-        setPercent(newPercent * 100);
     }, [disabled, min, max, updateValue]);
 
     const startDrag = (e: React.PointerEvent<HTMLDivElement>): void => {
+        if (disabled) {return;}
+        stopDrag.current?.();
         e.preventDefault();
         handleMove(e.clientX);
 
@@ -62,11 +63,17 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
         const stop = () => {
             window.removeEventListener("pointermove", move);
             window.removeEventListener("pointerup", stop);
+            window.removeEventListener("pointercancel", stop);
+            stopDrag.current = null;
         };
 
+        stopDrag.current = stop;
+        window.addEventListener("pointercancel", stop);
         window.addEventListener("pointermove", move);
         window.addEventListener("pointerup", stop);
     };
+
+    useEffect(() => () => { stopDrag.current?.(); }, [handleMove]);
 
     return (
         <div className="customSliderWrapper">
@@ -75,7 +82,7 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
                     {form && (
                         <div className="customSliderLabel">
                             <span>{label}</span>
-                            <Form init={internalValue} min={min} max={max} step={step}places={places} disabled={disabled} onChange={e => { setInternalValue(e); }} />
+                            <Form init={internalValue} min={min} max={max} step={step} places={places} disabled={disabled} onChange={updateValue} />
                             <span>{unit ? unit : ""}</span>
                         </div>
                     )}

@@ -35,12 +35,18 @@ dotenv.config();
 
 export async function handler(event: HandlerEvent) {
 
+    let body;
+    try {
+        body = JSON.parse(event.body || '{}');
+        if (body === null || typeof body !== "object" || Array.isArray(body)) {return errorJSON("Invalid request body", 400);}
+    } catch {
+        return errorJSON("Invalid JSON", 400);
+    }
+
     let firebaseApp;
 
     if (!firebase.getApps().length) {firebaseApp = firebase.initializeApp(firebaseConfig);}
     else {firebaseApp = firebase.getApp();}
-
-    const body = JSON.parse(event.body || '{}');
 
     const col : string = String(body.col || "").trim();
     const loc : string = String(body.loc || "").trim();

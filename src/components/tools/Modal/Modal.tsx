@@ -15,7 +15,10 @@ interface ModalContentProps {
 function ModalContent({ open, onClose, onExited, children, scrollable = true }: ModalContentProps) {
 
     useEffect(() => {
-        document.body.style.overflow = open ? "hidden" : "";
+        if (!open) {return;}
+        const previous = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = previous; };
     }, [open]);
 
     useEffect(() => {
@@ -87,4 +90,3 @@ export default function Modal({ title, description, buttonText, buttonStyle = {}
         </>
     );
 }
-

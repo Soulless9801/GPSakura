@@ -120,7 +120,7 @@ describe("Particle", () => {
 
     // adjustSpeed divides by the current speed, so a particle whose velocity is exactly
     // zero (s = 0 is possible because s = random * speed) turns into NaN and vanishes.
-    it.fails("KNOWN BUG: a zero-velocity particle stays at a finite position", () => {
+    it("a zero-velocity particle stays at a finite position", () => {
         const p = make(0);
         vi.advanceTimersByTime(1000);
         p.x = 50;

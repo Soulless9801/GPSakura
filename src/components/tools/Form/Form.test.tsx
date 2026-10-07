@@ -77,7 +77,7 @@ describe("Form", () => {
     });
 
     // Snapping happens after clamping, so a value that rounds up can leave the range.
-    it.fails("KNOWN BUG: never shows a value above max", () => {
+    it("never shows a value above max", () => {
         render(<Form init={5} min={0} max={5} step={2} />);
         expect(Number(input().value)).toBeLessThanOrEqual(5);
     });
@@ -110,12 +110,49 @@ describe("Form", () => {
         expect(input().value).toBe("5");
     });
 
+    it("uses changed step props while focused and keeps an edited value when bounds change", () => {
+        const { rerender } = render(<Form init={2} min={0} max={20} />);
+        enter("8");
+        rerender(<Form init={2} min={0} max={10} step={2} />);
+        expect(input().value).toBe("8");
+        fireEvent.focus(input());
+        fireEvent.keyDown(input(), { key: "ArrowUp" });
+        expect(input().value).toBe("10");
+    });
+
+    it("silently follows an external init change without swallowing the next edit", () => {
+        const onChange = vi.fn();
+        const { rerender } = render(<Form init={2} min={0} max={10} notifyOnInitChange={false} onChange={onChange} />);
+        rerender(<Form init={7} min={0} max={10} notifyOnInitChange={false} onChange={onChange} />);
+        expect(input().value).toBe("7");
+        expect(onChange).not.toHaveBeenCalled();
+        enter("8");
+        expect(onChange.mock.calls).toEqual([[8]]);
+    });
+
+    it("normalizes the draft even when clamping leaves the committed value unchanged", () => {
+        render(<Form init={5} min={0} max={5} step={2} />);
+        enter("100");
+        expect(input().value).toBe("5");
+    });
+
     describe("holding a button", () => {
         beforeEach(() => {
             vi.useFakeTimers();
         });
         afterEach(() => {
             vi.useRealTimers();
+        });
+
+        it("clears pending repeats when unmounted or the pointer is cancelled", () => {
+            const { unmount } = render(<Form init={0} min={0} max={100} />);
+            fireEvent.pointerDown(screen.getByText("▲"));
+            fireEvent.pointerCancel(screen.getByText("▲"));
+            expect(vi.getTimerCount()).toBe(0);
+            fireEvent.pointerDown(screen.getByText("▲"));
+            act(() => { vi.advanceTimersByTime(600); });
+            unmount();
+            expect(vi.getTimerCount()).toBe(0);
         });
 
         it("repeats after half a second, every 30ms, until released", () => {
@@ -177,7 +214,7 @@ describe("Form", () => {
             expect(seen).toEqual([100]);
         });
 
-        it.fails("KNOWN BUG: reports the second edit as well", () => {
+        it("reports the second edit as well", () => {
             const seen: number[] = [];
             render(<Parent seen={seen} />);
             enter("100");

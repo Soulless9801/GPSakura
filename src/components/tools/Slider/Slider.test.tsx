@@ -72,6 +72,34 @@ describe("Slider", () => {
         stubTrack(container);
         fireEvent.pointerDown(wrapper(container), { clientX: 100 + 200 * 0.37 });
         expect(field().value).toBe("40");
+        expect(active(container)).toBe("40%");
+    });
+
+    it("handles a fixed range without an invalid track width", () => {
+        const { container } = render(<Slider min={5} max={5} value={5} />);
+        expect(active(container)).toBe("0%");
+        expect(field().value).toBe("5");
+    });
+
+    it("clamps after snapping near a bound", () => {
+        const { container } = render(<Slider min={0} max={5} value={5} step={2} />);
+        expect(active(container)).toBe("100%");
+        expect(field().value).toBe("5");
+    });
+
+    it("stops dragging on pointer cancellation and removes listeners on unmount", () => {
+        const onChange = vi.fn();
+        const { container, unmount } = render(<Slider min={0} max={100} value={0} onChange={onChange} />);
+        stubTrack(container);
+        fireEvent.pointerDown(wrapper(container), { clientX: 200 });
+        fireEvent.pointerCancel(window);
+        fireEvent.pointerMove(window, { clientX: 300 });
+        expect(field().value).toBe("50");
+        fireEvent.pointerDown(wrapper(container), { clientX: 220 });
+        const remove = vi.spyOn(window, "removeEventListener");
+        unmount();
+        expect(remove).toHaveBeenCalledWith("pointermove", expect.any(Function));
+        expect(remove).toHaveBeenCalledWith("pointercancel", expect.any(Function));
     });
 
     it("ignores the pointer when disabled", () => {
@@ -103,7 +131,7 @@ describe("Slider", () => {
     // The numeric field only updates `internalValue`; the track percentage is recomputed in
     // updateValue, which the field's onChange never calls. Only a parent that feeds the value
     // back through the `value` prop re-syncs it.
-    it.fails("KNOWN BUG: typing in the field moves the track even when the parent is static", () => {
+    it("typing in the field moves the track even when the parent is static", () => {
         const { container } = render(<Slider min={0} max={100} value={10} />);
         fireEvent.focus(field());
         fireEvent.change(field(), { target: { value: "80" } });

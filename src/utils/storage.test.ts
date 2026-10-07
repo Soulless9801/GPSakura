@@ -43,8 +43,20 @@ describe("loadValue", () => {
 
     // The demo components call this inside a useState initialiser, so a throw here
     // blanks the whole page.
-    it.fails("KNOWN BUG: falls back to the default when the stored JSON is corrupt", () => {
+    it("falls back to the default when the stored JSON is corrupt", () => {
         storage.setItem("k", "{not json");
         expect(loadValue("k", 3)).toBe(3);
+        expect(storage.setItem).toHaveBeenLastCalledWith("k", "3");
+    });
+
+    it("returns the default when reading storage is blocked", () => {
+        storage.getItem.mockImplementation(() => { throw new Error("blocked"); });
+        expect(loadValue("k", 3)).toBe(3);
+    });
+
+    it("keeps a successful read even when write-back fails", () => {
+        storage.setItem("k", "7");
+        storage.setItem.mockImplementation(() => { throw new Error("quota"); });
+        expect(loadValue("k", 3)).toBe(7);
     });
 });

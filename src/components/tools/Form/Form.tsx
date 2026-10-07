@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { clampToStep } from "/src/utils/number";
 import "./Form.css";
 
 interface FormProps {
@@ -15,63 +16,50 @@ interface FormProps {
 }
 
 export default function Form({ init, min, max, onChange, step = 1, places = 0, disabled = false, style = {}, className = "", notifyOnInitChange = true }: FormProps) {
-	const [value, setValue] = useState(init);
-	const [draft, setDraft] = useState<string>(String(init));
+	const updateValue = useCallback((next: number): number => clampToStep(next, min, max, step, places), [min, max, step, places]);
+	const [draft, setDraft] = useState(() => String(updateValue(init)));
 	const [focus, setFocus] = useState(false);
-	const skipNextOnChange = useRef(true);
-
+	const valueRef = useRef(updateValue(init));
+	const callbackRef = useRef(onChange);
+	const previousInit = useRef<{ value: number } | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	useEffect(() => {
-		skipNextOnChange.current = !notifyOnInitChange;
-		setValue(updateValue(init));
-	}, [init, notifyOnInitChange]);
+	useEffect(() => { callbackRef.current = onChange; }, [onChange]);
+
+	// Notify from explicit commits; a parent echo cannot suppress the next user edit.
+	const applyValue = useCallback((next: number, notify = true, force = false): void => {
+		const normalized = updateValue(next);
+		const changed = normalized !== valueRef.current;
+		valueRef.current = normalized;
+		setDraft(String(normalized));
+		if (notify && (changed || force)) {callbackRef.current?.(normalized);}
+	}, [updateValue]);
 
 	useEffect(() => {
-		setDraft(String(value));
-		if (skipNextOnChange.current) {
-			skipNextOnChange.current = false;
-			return;
-		}
-		onChange?.(value);
-	}, [value]);
+		const first = previousInit.current === null;
+		const changedInit = first || previousInit.current?.value !== init;
+		previousInit.current = { value: init };
+		applyValue(changedInit ? init : valueRef.current, changedInit ? notifyOnInitChange : true, first);
+	}, [init, notifyOnInitChange, applyValue]);
 
 	useEffect(() => {
 		if (!focus) {inputRef.current?.blur();}
 	}, [focus]);
 
-	const updateValue = (newValue: number): number => {
-		newValue = Math.min(max, Math.max(min, newValue));
-		newValue = Math.round(newValue / step) * step;
-		return parseFloat(newValue.toFixed(places));
-	};
-
-	useEffect(() => {
-		setValue(prev => updateValue(prev));
-	}, [min, max, step, places]);
-
-	const commit = useCallback((off: number = 0) => {
-		let num = parseFloat(draft);
-		if (!isNaN(num)) {
-			num = num + off;
-			setValue(updateValue(num));
-		} else {
-			setDraft(String(value));
-		}
-	}, [draft, value]);
+	const commit = useCallback(() => {
+		const num = parseFloat(draft);
+		if (Number.isFinite(num)) {applyValue(num);}
+		else {setDraft(String(valueRef.current));}
+	}, [draft, applyValue]);
 
 	const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (disabled || !focus) {return;}
-		if (e.key === "Enter") {
-			setFocus(false);
+		if (e.key === "Enter") {setFocus(false);}
+		if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+			e.preventDefault();
+			applyValue(valueRef.current + (e.key === "ArrowUp" ? step : -step));
 		}
-		if (e.key === "ArrowUp") {
-			setValue(prev => updateValue(prev + step));
-		}
-		if (e.key === "ArrowDown") {
-			setValue(prev => updateValue(prev - step));
-		}
-	}, [disabled, focus]);
+	}, [disabled, focus, step, applyValue]);
 
 	const handleClick = useCallback(() => {
 		if (disabled) {return;}
@@ -87,10 +75,10 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 
 	const startHold = (inc: number): void => {
 		if (disabled || holdTimeout.current || holdInterval.current) {return;}
-		setValue(prev => updateValue(prev + inc));
+		applyValue(valueRef.current + inc);
 		holdTimeout.current = window.setTimeout(() => {
 			holdInterval.current = window.setInterval(() => {
-				setValue(prev => updateValue(prev + inc));
+				applyValue(valueRef.current + inc);
 			}, 30);
 		}, 500);
 	};
@@ -102,6 +90,8 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 		holdInterval.current = null;
 	};
 
+	useEffect(() => stopHold, [min, max, step, places, disabled]);
+
 	return (
 		<div className={`customNumberInput ${disabled ? "disabled" : ""} ${className}`} style={style} onClick={handleClick} onBlur={handleBlur} >
 			<input className="customNumberCaret" type="text" ref={inputRef} value={draft} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setDraft(e.target.value); }} onFocus={() => { setFocus(true); }} onKeyDown={handleKeyDown} />
@@ -111,6 +101,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 					onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => { e.preventDefault(); startHold(step); }}
 					onPointerUp={stopHold}
 					onPointerLeave={stopHold}
+					onPointerCancel={stopHold}
 				>
 					▲
 				</div>
@@ -119,6 +110,7 @@ export default function Form({ init, min, max, onChange, step = 1, places = 0, d
 					onPointerDown={(e: React.PointerEvent<HTMLDivElement>) => { e.preventDefault(); startHold(-step); }}
 					onPointerUp={stopHold}
 					onPointerLeave={stopHold}
+					onPointerCancel={stopHold}
 				>
 					▼
 				</div>
