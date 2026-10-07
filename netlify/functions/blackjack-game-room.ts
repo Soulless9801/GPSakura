@@ -99,7 +99,8 @@ export async function handler(event: HandlerEvent) {
         const REFILL_AMOUNT : number = 1000; // amount to refill when action is "refill"
 
         if (action === "refill") {
-            money = (money || 0) + REFILL_AMOUNT;
+            if (money === null) {return errorJSON("Player not found");} // no row to credit
+            money += REFILL_AMOUNT;
             await db.update(players)
                 .set({ money })
                 .where(eq(players.id, clientId));
@@ -148,13 +149,9 @@ export async function handler(event: HandlerEvent) {
                 const betAmount : number = game.getBetAmount();
                 if (money === null) {return errorJSON("Player not found");}
 
-                if (status === "player") {
-                    money += betAmount;
-                    await db.update(players)
-                        .set({ money })
-                        .where(eq(players.id, clientId));
-                } else {
-                    money -= betAmount;
+                // a tie is a push: the bet is returned, so the balance does not move
+                if (status !== "tie") {
+                    money += status === "player" ? betAmount : -betAmount;
                     await db.update(players)
                         .set({ money })
                         .where(eq(players.id, clientId));
@@ -190,6 +187,17 @@ export async function handler(event: HandlerEvent) {
             if (money === null || isNaN(bet) || bet <= MIN_BET || bet > money) {return errorJSON("Invalid bet amount");}
 
             // console.log('Starting game...');
+
+            // one hand at a time: an unfinished hand is never charged, so letting a player
+            // start another would let them walk away from a bad deal for free
+            const open = await db
+                .select()
+                .from(games)
+                .where(and(eq(games.player_id, clientId), eq(games.settled, false)))
+                .then(rows => rows.map(row => parseGameRow(row)).filter((v): v is GameRow => Boolean(v)));
+            if (open.some(row => !new BJGame.Game(row).checkOver())) {
+                return errorJSON("Finish your current hand first", 409);
+            }
 
             const seed : number = genSeed();
 

@@ -228,9 +228,11 @@ describe("money and refill", () => {
         expect(res.json.money).toBe(2000);
     });
 
-    it.fails("KNOWN BUG: refill reports money for a player that does not exist", async () => {
+    it("refill for a player that does not exist is refused and credits nothing", async () => {
         const res = await as(99, "refill");
-        expect(res.json.money).not.toBe(1000);
+        expect(res.json.error).toBe("Player not found");
+        expect(res.json).not.toHaveProperty("money");
+        expect(store.players.find((p) => p.id === 99)).toBeUndefined();
     });
 });
 
@@ -318,15 +320,50 @@ describe("starting a hand", () => {
         expect([a.json.id, b.json.id]).toEqual([1, 2]);
     });
 
-    // Nothing stops a player from starting another hand while one is unsettled. An
-    // unfinished hand is never charged, so a player can look at a bad deal and walk away
-    // without losing the bet.
-    it.fails("KNOWN BUG: a new hand cannot be started while the previous one is unfinished", async () => {
-        const seed = findSeed((s) => fresh(s).getPlayerHand().getHandValue() < 21);
-        seedGame(seed);
-        await as(1, "start", { payload: { bet_amount: 10 } });
-        const second = await as(1, "start", { payload: { bet_amount: 10 } });
-        expect(second.status).not.toBe(200);
+    // An unfinished hand is never charged, so a second start would let a player walk away
+    // from a bad deal without losing the bet.
+    describe("one hand at a time", () => {
+        const playable = findSeed((s) => fresh(s).getPlayerHand().getHandValue() < 21);
+
+        it("refuses a new hand while one is unfinished", async () => {
+            seedGame(playable);
+            await as(1, "start", { payload: { bet_amount: 10 } });
+            const second = await as(1, "start", { payload: { bet_amount: 10 } });
+            expect(second.status).toBe(409);
+            expect(second.json.error).toBe("Finish your current hand first");
+            expect(store.games).toHaveLength(1);
+        });
+
+        it("the open hand can still be loaded and played", async () => {
+            seedGame(playable);
+            const first = await as(1, "start", { payload: { bet_amount: 10 } });
+            await as(1, "start", { payload: { bet_amount: 10 } });
+            const loaded = await as(1, "load");
+            expect(loaded.json.id).toBe(first.json.id);
+            expect((await as(1, "stand", { roomId: first.json.id })).status).toBe(200);
+        });
+
+        it("allows a new hand once the previous one is settled", async () => {
+            seedGame(playable);
+            const first = await as(1, "start", { payload: { bet_amount: 10 } });
+            await as(1, "stand", { roomId: first.json.id });
+            const second = await as(1, "start", { payload: { bet_amount: 10 } });
+            expect(second.status).toBe(200);
+            expect(store.games).toHaveLength(2);
+        });
+
+        it("does not block other players", async () => {
+            seedGame(playable);
+            await as(1, "start", { payload: { bet_amount: 10 } });
+            expect((await as(2, "start", { payload: { bet_amount: 10 } })).status).toBe(200);
+        });
+
+        it("a refused start does not touch the bankroll", async () => {
+            seedGame(playable);
+            await as(1, "start", { payload: { bet_amount: 10 } });
+            await as(1, "start", { payload: { bet_amount: 10 } });
+            expect(money(1)).toBe(1000);
+        });
     });
 });
 
@@ -337,7 +374,8 @@ describe("loading", () => {
     });
 
     it("returns the newest game of the caller", async () => {
-        await as(1, "start", { payload: { bet_amount: 5 } });
+        const first = await as(1, "start", { payload: { bet_amount: 5 } });
+        await as(1, "stand", { roomId: first.json.id });
         const second = await as(1, "start", { payload: { bet_amount: 7 } });
         const loaded = await as(1, "load");
         expect(loaded.json.id).toBe(second.json.id);
@@ -462,12 +500,24 @@ describe("stand and settlement", () => {
         expect(money(2)).toBe(1000);
     });
 
-    // A push (equal totals) is neither a win nor a loss, but the settlement code treats
-    // everything that is not a player win as a loss.
-    it.fails("KNOWN BUG: a tie returns the bet", async () => {
+    // A push (equal totals) is neither a win nor a loss. Settlement used to charge anything
+    // that was not a player win as a loss.
+    describe("a tie (push)", () => {
         const tieSeed = findSeed((s) => fresh(s).getPlayerHand().getHandValue() < 21 && standResult(s).winner === "tie");
-        const res = await play(tieSeed, 50);
-        expect(res.json.status).toBe("tie");
-        expect(money(1)).toBe(1000);
+
+        it("returns the bet: the balance does not move", async () => {
+            const res = await play(tieSeed, 50);
+            expect(res.json.status).toBe("tie");
+            expect(res.json.over).toBe(true);
+            expect(res.json.money).toBe(1000);
+            expect(money(1)).toBe(1000);
+        });
+
+        it("still settles the hand so a new one can be started", async () => {
+            await play(tieSeed, 50);
+            expect(store.games[0].settled).toBe(true);
+            seedGame(tieSeed);
+            expect((await as(1, "start", { payload: { bet_amount: 50 } })).status).toBe(200);
+        });
     });
 });

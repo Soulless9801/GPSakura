@@ -2,7 +2,8 @@ export default class RNG {
     private state: number;
 
     constructor(seed: number) {
-        this.state = seed;
+        // xorshift32 maps state 0 to itself, which would make every output 0
+        this.state = (seed | 0) === 0 ? 0x9e3779b9 : seed;
     }
 
     next(): number {

@@ -142,6 +142,12 @@ describe("Deck", () => {
         expect(drainAll(restored)).toEqual([...snapshot].reverse());
     });
 
+    it("deserialize() on the base class returns a base Deck", () => {
+        const copy = Deck.deserialize({ cards: [card("spades", 2)] });
+        expect(copy).toBeInstanceOf(Deck);
+        expect(copy.draw()).toEqual(card("spades", 2));
+    });
+
     it("survives a JSON round trip (how the server persists games)", () => {
         const deck = new Deck(2, 5);
         const copy = Deck.deserialize(JSON.parse(JSON.stringify(deck)) as { cards: Card[] });

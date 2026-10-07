@@ -88,12 +88,31 @@ describe("RNG", () => {
         expect(new RNG(1).shuffle([9])).toEqual([9]);
     });
 
-    // xorshift32 maps state 0 to itself, so seed 0 yields an all-zero stream and a
-    // "shuffle" that is only a fixed rotation. The blackjack server draws seeds from
-    // Math.floor(Math.random() * 1e6), so one game in a million is dealt from a fixed deck.
-    it.fails("KNOWN BUG: seed 0 still produces a varied stream", () => {
+    // xorshift32 maps state 0 to itself, which used to make seed 0 an all-zero stream and its
+    // shuffle a fixed rotation (the blackjack server draws seeds from [0, 1e6)).
+    it("seed 0 still produces a varied stream", () => {
         const rng = new RNG(0);
         const values = new Set(Array.from({ length: 10 }, () => rng.next()));
-        expect(values.size).toBeGreaterThan(1);
+        expect(values.size).toBe(10);
+    });
+
+    it("seed 0 shuffles for real", () => {
+        const items = Array.from({ length: 52 }, (_, i) => i);
+        const shuffled = new RNG(0).shuffle(items);
+        expect(shuffled).not.toEqual(items);
+        expect([...shuffled].sort((a, b) => a - b)).toEqual(items);
+    });
+
+    it("any seed that is zero as a 32-bit integer is rescued", () => {
+        const values = new Set(Array.from({ length: 5 }, (_, i) => new RNG(i * 2 ** 32).next()));
+        expect(values.size).toBe(1); // all map to the same replacement seed...
+        expect([...values][0]).toBeGreaterThan(0); // ...which is not the dead zero state
+    });
+
+    it("leaves every non-zero seed's stream unchanged", () => {
+        // values recorded before the fix: persisted blackjack games rely on them
+        const rng = new RNG(1);
+        expect(rng.next()).toBeCloseTo(0.00006295018829405308, 15);
+        expect(rng.next()).toBeCloseTo(0.015739798778668046, 15);
     });
 });

@@ -4,6 +4,7 @@ import 'datatables.net';
 
 import { formatDate } from '/src/utils/time';
 import { deserialize } from '/src/utils/serial';
+import { escapeHtml, linkHtml } from '/src/utils/html';
 
 import CustomDataTable from '/src/components/tables/DataTable';
 
@@ -73,9 +74,9 @@ export default function USACOTable() {
                     const div = data[i].division;
 
                     rows.push([
-                        div.charAt(0).toUpperCase() + div.slice(1),
-                        `<a href="${data[i].link}">${data[i].title}</a>`,
-                        `<button class="view-btn" data-id="${data[i].id}">View</button>`,
+                        escapeHtml(div.charAt(0).toUpperCase() + div.slice(1)),
+                        linkHtml(data[i].link, data[i].title),
+                        `<button class="view-btn" data-id="${escapeHtml(data[i].id)}">View</button>`,
                     ]);
                 }
 

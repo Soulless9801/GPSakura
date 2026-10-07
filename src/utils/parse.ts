@@ -1,3 +1,28 @@
+// The output of parseMarkdown is assigned to innerHTML, so the input is escaped before any
+// markup is added: the only tags in the result are the ones generated below.
+//
+// Math and link URLs are swapped for placeholders while the emphasis rules run, so that
+// `$a*b*c$` and `https://x.com/__id__` are not mangled into <em> / <u>.
+
+import { escapeHtml } from "/src/utils/html";
+
+const STASH_OPEN = "";
+const STASH_CLOSE = "";
+const STASH_PATTERN = new RegExp(`${STASH_OPEN}(\\d+)${STASH_CLOSE}`, "g");
+
+class Stash {
+    private items: string[] = [];
+
+    put(html: string): string {
+        this.items.push(html);
+        return `${STASH_OPEN}${String(this.items.length - 1)}${STASH_CLOSE}`;
+    }
+
+    restore(text: string): string {
+        return text.replace(STASH_PATTERN, (_match: string, index: string) => this.items[Number(index)]);
+    }
+}
+
 function parseNewlines(text: string): string {
     return text
     .split('\n\n')
@@ -5,17 +30,25 @@ function parseNewlines(text: string): string {
     .join("");
 }
 
-function parseBlockMath(html: string): string {
+function parseBlockMath(html: string, stash: Stash): string {
     return html.replace(
         /\$\$([\s\S]+?)\$\$/g,
-        (_match: string, expr: string) => `<div>\\[${expr.trim()}\\]</div>`
+        (_match: string, expr: string) => stash.put(`<div>\\[${expr.trim()}\\]</div>`)
     );
 }
 
-function parseInlineMath(html: string): string {
+function parseInlineMath(html: string, stash: Stash): string {
     return html.replace(
         /\$(.+?)\$/g,
-        (_match: string, expr: string) => `\\(${expr}\\)`
+        (_match: string, expr: string) => stash.put(`\\(${expr}\\)`)
+    );
+}
+
+function parseLinks(html: string, stash: Stash): string {
+    return html.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+        (_match: string, label: string, url: string) =>
+            `<a href="${stash.put(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`
     );
 }
 
@@ -26,19 +59,18 @@ function parseTextDecorations(html: string): string {
     .replace(/__(.+?)__/g, "<u>$1</u>");
 }
 
-function parseLinks(html: string): string {
-    return html.replace(
-        /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
-        '<a href="$2" target="_blank">$1</a>'
-    );
-}
-
 export function parseMarkdown(text: string): string {
-    let html = text;
+    const stash = new Stash();
+
+    // the stash markers are private-use characters; drop any that the input already contains
+    let html = text.replace(new RegExp(`[${STASH_OPEN}${STASH_CLOSE}]`, "g"), "");
+
+    html = escapeHtml(html);
     html = parseNewlines(html);
-    html = parseBlockMath(html);
-    html = parseInlineMath(html);
+    html = parseBlockMath(html, stash);
+    html = parseInlineMath(html, stash);
+    html = parseLinks(html, stash);
     html = parseTextDecorations(html);
-    html = parseLinks(html);
-    return html;
+
+    return stash.restore(html);
 }

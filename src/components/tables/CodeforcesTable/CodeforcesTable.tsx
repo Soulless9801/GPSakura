@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import $ from 'jquery';
 import 'datatables.net';
 
+import { escapeHtml, linkHtml } from '/src/utils/html';
+
 import CustomDataTable from '/src/components/tables/DataTable';
 
 const sorters = $.fn.dataTable.ext.oSort as Record<string, (a: string, b: string) => number>;
@@ -32,9 +34,9 @@ export default function CodeforcesTable() {
             const data = text.split(/\r?\n/).slice(1).filter(Boolean).map((line: string): string[] => {
                 const [rating, name, cfLink, subLink] = line.split(';');
                 return [
-                    rating,
-                    `<a href="${cfLink}" class="table-link">${name}</a>`,
-                    `<a href="${subLink}" class="table-link">Codeforces</a>`,
+                    escapeHtml(rating),
+                    linkHtml(cfLink, name, 'table-link'),
+                    linkHtml(subLink, 'Codeforces', 'table-link'),
                 ];
             });
             setRows(data);

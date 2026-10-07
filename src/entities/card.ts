@@ -80,8 +80,10 @@ export class Deck {
         return this.cards.pop() || null;
     }
 
-    static deserialize(data: DeckData): Deck {
-        const deck = Object.create(Deck.prototype) as Deck;
+    // `this.prototype` (not `Deck.prototype`) so a subclass calling super.deserialize gets
+    // an instance of the subclass back
+    static deserialize(this: typeof Deck, data: DeckData): Deck {
+        const deck = Object.create(this.prototype) as Deck;
         deck.cards = [...data.cards];
         return deck;
     }

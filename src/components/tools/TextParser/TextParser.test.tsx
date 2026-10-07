@@ -52,15 +52,30 @@ describe("TextParser", () => {
         expect(node).toBeInstanceOf(HTMLDivElement);
     });
 
-    // Text is written with innerHTML after a regex "markdown" pass that escapes nothing. The
-    // blog and problem pages feed it text from Firestore.
-    it("SECURITY: raw HTML in the text becomes live DOM", () => {
-        const { container } = render(<TextParser text={'<img src="x" alt="probe" onerror="alert(1)">'} />);
-        expect(container.querySelector("img[onerror]")).not.toBeNull();
-    });
-
-    it.fails("KNOWN BUG: raw HTML in the text is shown as text, not parsed", () => {
+    // The text is written with innerHTML, so the parser must not let it become markup.
+    it("shows raw HTML as text instead of parsing it", () => {
         const { container } = render(<TextParser text={'<img src="x" alt="probe" onerror="alert(1)">'} />);
         expect(container.querySelector("img")).toBeNull();
+        expect(container.textContent).toBe('<img src="x" alt="probe" onerror="alert(1)">');
+    });
+
+    it("does not create script or event-handler attributes from user text", () => {
+        const { container } = render(
+            <TextParser text={'<script>window.pwned=1</script> [x](https://a.com" onmouseover="window.pwned=1)'} />,
+        );
+        expect(container.querySelector("script")).toBeNull();
+        expect(container.querySelector("[onmouseover]")).toBeNull();
+        expect(container.querySelector("a")?.getAttribute("href")).toBe('https://a.com" onmouseover="window.pwned=1');
+    });
+
+    it("typesets math containing < and & correctly", () => {
+        const { container } = render(<TextParser text={"$a<b$ and $$\\begin{matrix} a & b \\end{matrix}$$"} />);
+        expect(container.querySelectorAll(".katex").length).toBeGreaterThanOrEqual(2);
+        expect(container.querySelector(".katex-error")).toBeNull();
+    });
+
+    it("links open safely in a new tab", () => {
+        const { container } = render(<TextParser text="[x](https://a.com)" />);
+        expect(container.querySelector("a")?.getAttribute("rel")).toBe("noopener noreferrer");
     });
 });

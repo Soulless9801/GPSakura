@@ -13,7 +13,7 @@ Items marked **reported** came from a static read of the UI code and are *not* c
 Treat them as leads, not confirmed defects.
 
 The first pass changed no application source. The signing and path-traversal findings (S1, S2,
-S3, S8) and the round-2 findings (G1, G1b) were then fixed; everything else below is still open.
+S3, S8) the round-2 findings (G1, G1b), the markdown/table escaping (S4) and the small blackjack bugs (G5, G6, phantom refill) were then fixed; everything else below is still open.
 
 ## Security
 
@@ -22,10 +22,10 @@ S3, S8) and the round-2 findings (G1, G1b) were then fixed; everything else belo
 | S1 | ~~`create-session` `action: "sign"` signed any `clientId` for any caller~~ so anyone could impersonate another player. **Fixed:** the server now mints identities itself (`create-session` `issue`; `neon-create-user` returns a signature for the player id it creates) and the `sign` action is gone, so a signature proves the id was issued by the server. | **fixed**: `create-session.test.ts`, `neon-create-user.test.ts`, `shengji-game-room.test.ts` |
 | S2 | ~~An unset `SESSION_SECRET` silently became an empty HMAC key.~~ **Fixed:** signing throws and verifying returns false when the secret is missing; signatures are compared in constant time. | **fixed**: `create-session.test.ts` |
 | S3 | ~~`firebase-collection-query` spliced `loc` into a file path unchecked.~~ **Fixed:** `loc` must match `[A-Za-z0-9_-]+` (400 otherwise) and is joined onto the data directory. Still open: the `col` parameter lets callers read any Firestore collection. | **fixed** (traversal): `firebase-collection-query.test.ts` |
-| S4 | `parseMarkdown` escapes nothing and `TextParser` assigns the result to `innerHTML`; raw HTML runs, and link URLs can break out of `href` (`onmouseover=...`). Fed by Firestore content and the problem tables. | pinned: `parse.test.ts`, `TextParser.test.tsx` |
+| S4 | ~~`parseMarkdown` escaped nothing and `TextParser` assigns the result to `innerHTML`; raw HTML ran and link URLs could break out of `href`.~~ **Fixed:** input is HTML-escaped before any markup is added; math and link URLs are protected from the emphasis rules; links get `rel="noopener noreferrer"`. The Codeforces and USACO tables interpolated remote strings into HTML cells the same way; they now use `escapeHtml`/`linkHtml` (`src/utils/html.ts`), which also restricts hrefs to http(s). | **fixed**: `parse.test.ts`, `html.test.ts`, `TextParser.test.tsx` |
 | S5 | `shengji-game-room` rate-limits **before** verifying the signature, keyed by the claimed `clientId`: unsigned requests can burn a real player's budget (1 request/s per action). | pinned: `shengji-game-room.test.ts` |
 | S6 | `speed_draw` / `speed` ("for testing") are live and never check that the caller is a seated player. | pinned: `shengji-game-room.test.ts` |
-| S7 | `neon-create-user` mints a funded account per unauthenticated call; `refill` adds 1000 at any balance and reports success for a player row that does not exist. | pinned (phantom refill); account minting documented |
+| S7 | `neon-create-user` mints a funded account per unauthenticated call; `refill` adds 1000 at any balance. ~~`refill` reported money for a player that does not exist.~~ **Fixed** (phantom refill: now "Player not found"). Open: account minting and unlimited refill. | phantom refill **fixed**; rest documented |
 | S8 | ~~`getIdentity` treated the server's `200 {valid:false}` as valid.~~ **Fixed** as part of the identity rewrite: only `valid === true` reuses a stored identity. | **fixed**: `verify.test.ts` |
 
 ## Game logic
@@ -37,8 +37,8 @@ S3, S8) and the round-2 findings (G1, G1b) were then fixed; everything else belo
 | G2 | When the trump rank is 2 (always, in round 1) the small joker is not "next to" the big joker, so a joker-pair tractor (SJ SJ BJ BJ) is not recognised. | pinned: `comparison.test.ts` |
 | G3 | Following a pair lead does not force a player holding a pair to play it (two loose cards of the suit are accepted). Tractor leads *do* enforce it. | pinned: `comparison.test.ts` |
 | G4 | Shuai (throw): a short follower has no legal reply at all (mixed-suit padding is rejected) while a 1-card reply to a 3-card throw is accepted; and `isBeatable` counts a lone single as beating a pair, so almost no throw is valid. The source already carries a `FIXME`. | pinned: `comparison.test.ts` |
-| G5 | Blackjack: a **tie loses the bet** (anything but a player win is charged as a loss). Starting a new hand while one is unfinished is allowed and unfinished hands are never charged, so a bad deal can be abandoned for free. Concurrent `stand` requests could also double-settle (read-modify-write on `money`); not tested. | tie and abandon pinned: `blackjack-game-room.test.ts` |
-| G6 | `RNG(0)` is stuck at zero (xorshift fixed point), so one blackjack game in a million is dealt from a fixed shoe; `blackjack Deck.deserialize` returns a base `Deck`; `Hand.deserialize` aliases the source's per-suit maps. | pinned |
+| G5 | ~~Blackjack: a **tie lost the bet**.~~ **Fixed** (a push returns the bet). ~~Starting a new hand while one was unfinished was allowed and unfinished hands are never charged, so a bad deal could be abandoned for free.~~ **Fixed** (409 "Finish your current hand first"; the open hand is resumed with Load). Still open: concurrent `stand` requests could double-settle (read-modify-write on `money`); not tested. | tie and abandon **fixed**: `blackjack-game-room.test.ts` |
+| G6 | ~~`RNG(0)` was stuck at zero~~ (**fixed**); ~~`blackjack Deck.deserialize` returned a base `Deck`~~ (**fixed**); `Hand.deserialize` aliases the source's per-suit maps (open). | partly **fixed** |
 | G7 | `testcase.ts` can generate a trump of rank 1 (a joker's rank survives the suit swap). | pinned |
 
 ## Client utilities and components
@@ -68,5 +68,7 @@ S3, S8) and the round-2 findings (G1, G1b) were then fixed; everything else belo
 * Fixes: `netlify/functions/create-session.ts`, `neon-create-user.ts`, `firebase-collection-query.ts`,
   `src/utils/verify.ts` (`getIdentity` now takes a generator that returns a server-issued identity;
   new `issueIdentity`), and the two `GameRoom` components that call it.
+* Escaping: `src/utils/parse.ts`, new `src/utils/html.ts`, the two table components.
+* Blackjack: `netlify/functions/blackjack-game-room.ts`, `src/entities/rng.ts`, `src/entities/card.ts` (`Deck.deserialize`).
 * Round-2 fix: `src/shengji/core/game.ts` (`endTrick`, `endRound`).
 * `.gitignore` and `eslint.config.js`: ignore the generated `coverage/` folder.

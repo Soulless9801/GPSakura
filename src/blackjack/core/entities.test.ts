@@ -112,14 +112,28 @@ describe("Deck", () => {
         expect(deck.draw()).toBeNull();
     });
 
-    // `static deserialize` delegates to the base class, which builds its object from
-    // `Deck.prototype` of the *base* class. The result is typed as a blackjack Deck but is
-    // not one: it can still deal jokers and has no getSeed().
-    it.fails("KNOWN BUG: deserialize() returns a blackjack Deck", () => {
-        const original = new Deck(1, 9);
+    // `static deserialize` delegates to the base class, which used to build its object from the
+    // base `Deck.prototype`: the result was typed as a blackjack Deck but could still deal
+    // jokers and had no getSeed().
+    it("deserialize() returns a blackjack Deck that keeps its seed", () => {
         const copy = Deck.deserialize({ cards: [card("jokers", 1), card("spades", 2)], seed: 9 });
         expect(copy).toBeInstanceOf(Deck);
         expect(copy.getSeed()).toBe(9);
-        expect(original.getSeed()).toBe(9);
+    });
+
+    it("a deserialized deck still skips jokers", () => {
+        const copy = Deck.deserialize({ cards: [card("spades", 2), card("jokers", 1), card("jokers", 2)], seed: 1 });
+        // cards are drawn from the end: both jokers are skipped, then the 2 comes out
+        expect(copy.draw()).toEqual(card("spades", 2));
+        expect(copy.draw()).toBeNull();
+    });
+
+    it("a deserialized deck deals exactly what the original would have", () => {
+        const original = new Deck(1, 123);
+        const data = { cards: [] as Card[], seed: 123 };
+        const probe = new Deck(1, 123);
+        for (let c = probe.draw(); c; c = probe.draw()) {data.cards.unshift(c);}
+        const copy = Deck.deserialize(data);
+        for (let i = 0; i < 52; i++) {expect(copy.draw()).toEqual(original.draw());}
     });
 });
