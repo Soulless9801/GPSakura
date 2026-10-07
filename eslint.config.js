@@ -102,7 +102,7 @@ const naming_rules = {
 }
 
 export default defineConfig([
-    globalIgnores(['dist', 'scripts', '.netlify', 'node_modules']),
+    globalIgnores(['dist', 'scripts', '.netlify', 'node_modules', 'coverage']),
     {
         files: ['**/*.{js,jsx,ts,tsx}'],
         plugins: {

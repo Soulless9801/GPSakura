@@ -22,7 +22,7 @@ import Card from "/src/components/tools/Card/Card";
 
 import './GameRoom.css';
 import type { Identity} from "/src/utils/verify";
-import { getIdentity } from "/src/utils/verify";
+import { getIdentity, issueIdentity } from "/src/utils/verify";
 
 // Specific Request
 
@@ -361,8 +361,6 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     );
 }
 
-const gen = (): Promise<string> => Promise.resolve(`player_${Math.random().toString(36).substring(2, 10)}`);
-
 export default function GameRoom({ roomId, username }: { roomId: string, username: string }) {
 
     // Ably config
@@ -379,7 +377,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     useEffect(() => {
 
         const identify = async () => {
-            await getIdentity("create-session", "ablyClientId", "ablySignature", gen, false).then((id) => {
+            await getIdentity("ablyClientId", "ablySignature", issueIdentity, false).then((id) => {
                 if (!id) {return;}
                 setIdentity(id);
             });

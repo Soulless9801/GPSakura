@@ -4,6 +4,22 @@ A passion project manifested
 
 - [Netlify](https://gpsakura.netlify.app) build
 
+## Testing
+
+```bash
+npm run test:run   # run every test once
+npm test           # watch mode
+npm run coverage   # tests + coverage, enforces the floors in vite.config.ts
+```
+
+Tests live next to the code (`*.test.ts`, `*.test.tsx`) and under `netlify/functions`. Component
+tests opt in to jsdom with a `// @vitest-environment jsdom` comment on the first line; everything
+else runs in plain Node. Shared helpers for the Shengji engine are in `src/test/`.
+
+A test written as `it.fails("KNOWN BUG: ...")` documents a defect that is still present: it asserts
+the *correct* behaviour, passes while the bug exists, and fails once it is fixed, at which point the
+`.fails` should be removed. [AUDIT.md](AUDIT.md) lists them all.
+
 ## Credits
 
 ### Core Framework

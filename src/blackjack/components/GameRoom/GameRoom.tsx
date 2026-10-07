@@ -29,7 +29,7 @@ const BJRequest = async (request: GameRequest) => clientRequest(request, "bjg-bu
 //     return "[" + cards.map(cardToString).join(", ") + "]";
 // }
 
-const gen = async () => {
+const gen = async (): Promise<Identity | null> => {
     const res = await fetch("/.netlify/functions/neon-create-user", {
         method: "POST",
         headers: {
@@ -44,10 +44,10 @@ const gen = async () => {
     const des_data = deserialize(data);
     if (!des_data || typeof des_data !== "object") {return null;}
 
-    const ret = des_data as { player_id: string };
-    if (!ret.player_id) {return null;}
+    const ret = des_data as { player_id?: number | string; signature?: string };
+    if (!ret.player_id || !ret.signature) {return null;}
 
-    return ret.player_id;
+    return { clientId: String(ret.player_id), signature: ret.signature };
 }
 
 export default function GameRoom() {
@@ -58,7 +58,7 @@ export default function GameRoom() {
 
     useEffect(() => {
         const identify = async () => {
-            await getIdentity("create-session", "bjClientId", "bjSignature", gen, false).then((id) => {
+            await getIdentity("bjClientId", "bjSignature", gen, false).then((id) => {
                 if (!id) {return;}
                 setIdentity(id);
             });

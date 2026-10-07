@@ -71,3 +71,6 @@ TODO.txt
 # Firebase #
 ############
 service_account.json
+
+# Test coverage output
+coverage

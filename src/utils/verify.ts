@@ -5,51 +5,59 @@ export interface Identity {
     signature: string;
 }
 
-export async function getIdentity(functionName: string, clidntIdLoc: string, sigLoc: string, gen: () => Promise<string | null>, forceNew: boolean = false): Promise<Identity | null> {
-
-    let clientId = localStorage.getItem(clidntIdLoc);
-    let signature = localStorage.getItem(sigLoc);
-
-    const ver = await fetch("/.netlify/functions/create-session", {
+// ask the server to mint a fresh, signed identity (Shengji players)
+export async function issueIdentity(): Promise<Identity | null> {
+    const res = await fetch("/.netlify/functions/create-session", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-            action: "verify",
-            clientId,
-            signature,
-        }),
+        body: JSON.stringify({ action: "issue" }),
     });
+    if (!res.ok) {return null;}
 
-    if (!ver.ok || forceNew) {
+    const data = await res.text();
+    if (!data) {return null;}
 
-        clientId = await gen();
-        if (!clientId) {return null;}
-        localStorage.setItem(clidntIdLoc, clientId);
+    const des_data = deserialize(data);
+    if (!des_data || typeof des_data !== "object") {return null;}
 
-        const res = await fetch(`/.netlify/functions/${functionName}`, {
+    const ret = des_data as Partial<Identity>;
+    if (!ret.clientId || !ret.signature) {return null;}
+
+    return { clientId: ret.clientId, signature: ret.signature };
+}
+
+// reuse the stored identity while the server still accepts it, otherwise get a new one from `gen`
+export async function getIdentity(clientIdLoc: string, sigLoc: string, gen: () => Promise<Identity | null>, forceNew: boolean = false): Promise<Identity | null> {
+
+    const clientId = localStorage.getItem(clientIdLoc);
+    const signature = localStorage.getItem(sigLoc);
+
+    if (clientId && signature && !forceNew) {
+        const ver = await fetch("/.netlify/functions/create-session", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                action: "sign",
+                action: "verify",
                 clientId,
+                signature,
             }),
         });
-        if (!res.ok) {return null;}
 
-        const data = await res.text();
-        if (!data) {return null;}
-
-        const des_data = deserialize(data);
-        if (!des_data || typeof des_data !== "object") {return null;}
-
-        const ret = des_data as { signature: string | null };
-        signature = ret.signature;
-        localStorage.setItem(sigLoc, signature || "");
+        if (ver.ok) {
+            const data = deserialize<{ valid?: boolean } | null>(await ver.text());
+            if (data?.valid === true) {return { clientId, signature };}
+        }
     }
 
-    return { clientId: clientId || "", signature: signature || "" };
+    const identity = await gen();
+    if (!identity) {return null;}
+
+    localStorage.setItem(clientIdLoc, identity.clientId);
+    localStorage.setItem(sigLoc, identity.signature);
+
+    return identity;
 }

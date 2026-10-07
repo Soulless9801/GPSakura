@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+  schedule:
+    # new advisories appear even when nobody is pushing
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -13,7 +17,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  lint:
+    name: Lint and typecheck
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -27,11 +33,89 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test -- --run
+
+  test:
+    name: Unit tests and coverage
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Runs every *.test.ts(x) under src/ and netlify/, then enforces the per-directory
+      # coverage floors configured in vite.config.ts.
+      - name: Run tests with coverage
+        run: npm run coverage -- --reporter=default --reporter=github-actions --coverage.reporter=text --coverage.reporter=text-summary --coverage.reporter=lcov
+
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            {
+              echo "### Coverage"
+              echo
+              echo '```'
+              node -e '
+                const lines = require("fs").readFileSync("coverage/lcov.info", "utf8").split("\n");
+                let found = 0, hit = 0;
+                for (const line of lines) {
+                  if (line.startsWith("LF:")) found += Number(line.slice(3));
+                  if (line.startsWith("LH:")) hit += Number(line.slice(3));
+                }
+                console.log(`Lines: ${hit}/${found} (${(100 * hit / found).toFixed(1)}%)`);
+              '
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+          retention-days: 14
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Fails on high and critical advisories in any dependency, direct or transitive.
+      - run: npm audit --audit-level=high
+
+  build:
+    name: Production build
+    if: github.event_name != 'schedule'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
       - run: npm run build
 
       - uses: actions/upload-pages-artifact@v5
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           path: dist
-          

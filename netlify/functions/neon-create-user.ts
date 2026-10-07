@@ -8,6 +8,7 @@ import type { HandlerEvent } from '@netlify/functions';
 import { players } from "../../db/schema.ts";
 
 import { errorJSON, successJSON } from './data/json.ts';
+import { sign } from './create-session';
 
 const sql = neon(process.env.NEON_DATABASE_URL ?? "");
 
@@ -35,9 +36,12 @@ export async function handler(_event: HandlerEvent) {
 
         const ret = result[0];
 
+        // the player id is the client id the game rooms authenticate, so the server signs it
+        // here, at creation, instead of signing whatever id a client later asks about
         return successJSON({
             player_id: ret.player_id,
             money: ret.money,
+            signature: sign(String(ret.player_id)),
         });
         
     } catch (error) {

@@ -70,8 +70,12 @@ export async function handler(event: HandlerEvent) {
         });
 
     } catch {
+        // `loc` names a file in the data directory. Allow only a bare name so it cannot
+        // contain a separator or `..` and walk out of that directory.
+        if (!/^[A-Za-z0-9_-]+$/.test(loc)) {return errorJSON("firebase-collection-query: Invalid loc", 400);}
+
         try {
-            const filePath = path.resolve(`./netlify/functions/data/${loc}.json`);
+            const filePath = path.join(path.resolve('./netlify/functions/data'), `${loc}.json`);
             collection = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             // Timestamps should already be in ISO format
         } catch (error) {
