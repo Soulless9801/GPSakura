@@ -76,13 +76,15 @@ export interface RoundLog {
     plays: number;
     rejected: number;
     trickPoints: number[];
+    /** every card put down this round, in order */
+    played: Card[];
 }
 
 /** Play random legal moves until the round counter moves on (or `limit` plays pass). */
 export function playRound(table: Table, rng: RNG, limit = 400): RoundLog {
     const { game, players, state } = table;
     const startRound = state.round;
-    const log: RoundLog = { plays: 0, rejected: 0, trickPoints: [] };
+    const log: RoundLog = { plays: 0, rejected: 0, trickPoints: [], played: [] };
 
     while (state.round === startRound && !state.over && log.plays < limit) {
         const player = players[state.turn];
@@ -99,11 +101,13 @@ export function playRound(table: Table, rng: RNG, limit = 400): RoundLog {
         }
 
         const pointsBefore = state.points;
-        if (!game.tryPlay(player, { cards: rng.pick(moves), suit: null })) {
+        const move = rng.pick(moves);
+        if (!game.tryPlay(player, { cards: move, suit: null })) {
             log.rejected++;
             break;
         }
         log.plays++;
+        log.played.push(...move);
         log.trickPoints.push(state.points - pointsBefore);
     }
 

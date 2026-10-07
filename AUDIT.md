@@ -13,7 +13,7 @@ Items marked **reported** came from a static read of the UI code and are *not* c
 Treat them as leads, not confirmed defects.
 
 The first pass changed no application source. The signing and path-traversal findings (S1, S2,
-S3, S8) were then fixed; everything else below is still open.
+S3, S8) and the round-2 findings (G1, G1b) were then fixed; everything else below is still open.
 
 ## Security
 
@@ -32,7 +32,8 @@ S3, S8) were then fixed; everything else below is still open.
 
 | # | Finding | Status |
 |---|---------|--------|
-| G1 | After round 1 the next deal starts with the player who won the last trick instead of the new zhuang (`endTrick` overwrites the `turn` set by `endRound`). Simulating random legal rounds, **139 of 200** rounds then deal uneven hands (24 vs 25 cards) and a kitty of 9-11 cards instead of 8. | pinned: `game.test.ts` (Shengji) |
+| G1 | ~~After round 1 the next deal started with the winner of the last trick instead of the new zhuang~~ (`endTrick` overwrote the `turn` set by `endRound`), which dealt uneven hands (24 vs 25 cards) and a 9-11 card kitty in 139 of 200 simulated rounds, then made legal moves fail. **Fixed:** `endTrick` hands over to `endRound` and stops; `endRound` also resets `chu`/`lead`. | **fixed**: `game.test.ts` (Shengji) |
+| G1b | ~~`state.discard` was never cleared between rounds.~~ `GameRoom` passes it to the advisor as the cards already seen, so from round 2 the advisor saw more copies than the pack holds and refused to give advice. **Fixed:** cleared in `endRound`. The trump suit is also reset to none each round, so a suit is only trump for the round it was declared in. | **fixed**: `game.test.ts` (Shengji) |
 | G2 | When the trump rank is 2 (always, in round 1) the small joker is not "next to" the big joker, so a joker-pair tractor (SJ SJ BJ BJ) is not recognised. | pinned: `comparison.test.ts` |
 | G3 | Following a pair lead does not force a player holding a pair to play it (two loose cards of the suit are accepted). Tractor leads *do* enforce it. | pinned: `comparison.test.ts` |
 | G4 | Shuai (throw): a short follower has no legal reply at all (mixed-suit padding is rejected) while a 1-card reply to a 3-card throw is accepted; and `isBeatable` counts a lone single as beating a pair, so almost no throw is valid. The source already carries a `FIXME`. | pinned: `comparison.test.ts` |
@@ -67,4 +68,5 @@ S3, S8) were then fixed; everything else below is still open.
 * Fixes: `netlify/functions/create-session.ts`, `neon-create-user.ts`, `firebase-collection-query.ts`,
   `src/utils/verify.ts` (`getIdentity` now takes a generator that returns a server-issued identity;
   new `issueIdentity`), and the two `GameRoom` components that call it.
+* Round-2 fix: `src/shengji/core/game.ts` (`endTrick`, `endRound`).
 * `.gitignore` and `eslint.config.js`: ignore the generated `coverage/` folder.

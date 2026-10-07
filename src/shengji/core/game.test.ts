@@ -18,6 +18,7 @@ import type { Table } from "/src/test/shengji";
 import { Game, baseGame } from "./game";
 import { pointValue } from "./entities";
 import { handToCards } from "./convert";
+import { analyse } from "/src/shengji/advisor/advisor";
 
 const H = (rank: number) => card("hearts", rank);
 const S = (rank: number) => card("spades", rank);
@@ -308,6 +309,16 @@ describe("callTrump", () => {
             expect(six.game.callTrump("p0", { suit: "jokers", rank: 2 })).toBe(true);
             expect(six.state.declare).toBe(3);
         });
+    });
+});
+
+describe("declaring in a later round", () => {
+    it("a suit can be declared again after the previous round's suit was cleared", () => {
+        const table = craft({ hands: {}, overrides: { draw: true, round: 2, zhuang: 1, trump: { suit: null, rank: 3 } } });
+        table.game.getHand("p0")?.addCard(H(3));
+        expect(table.game.callTrump("p0", { suit: "hearts", rank: 3 })).toBe(true);
+        expect(table.state.trump.suit).toBe("hearts");
+        expect(table.state.zhuang).toBe(1); // the zhuang only moves by declaring in round 1
     });
 });
 
@@ -702,12 +713,38 @@ describe("end of round scoring", () => {
             expect(table.state.whodec).toBe(table.state.zhuang);
         });
 
-        // endRound sets turn = zhuang so the next deal starts with the zhuang, but endTrick then
-        // runs `turn = chu = lead` (the winner of the final trick) afterwards.
-        it.fails("KNOWN BUG: the next deal starts with the new zhuang", () => {
+        // endTrick used to run `turn = chu = lead` after endRound had set `turn = zhuang`, so
+        // the next deal started with whoever won the final trick.
+        it("the next deal starts with the new zhuang, whoever won the last trick", () => {
             const table = finishWith(60, false); // defenders win the last trick: seat 0 leads
             expect(table.state.zhuang).toBe(2);
             expect(table.state.turn).toBe(2);
+            expect(table.state.chu).toBe(2);
+            expect(table.state.lead).toBe(2);
+            expect(table.state.shuai).toBe(false);
+        });
+
+        it("also when the attackers win the last trick and the zhuang moves one seat", () => {
+            const table = finishWith(100, true);
+            expect(table.state.zhuang).toBe(1);
+            expect(table.state.turn).toBe(1);
+        });
+
+        it("clears the trump suit: a suit is only trump for the round it was declared in", () => {
+            const table = finishWith(60, false);
+            expect(table.state.trump.suit).toBeNull();
+            expect(table.state.trump.rank).toBe(4); // the new rank is kept
+        });
+
+        it("empties the discard pile so the next round starts with nothing 'seen'", () => {
+            const table = finishWith(60, false);
+            expect(table.state.discard).toEqual([]);
+        });
+
+        it("only the player whose turn it is (the new zhuang) may draw first", () => {
+            const table = finishWith(60, false);
+            expect(table.game.drawCard("p0")).toBe(false);
+            expect(table.game.drawCard("p2")).toBe(true);
         });
     });
 
@@ -862,19 +899,19 @@ describe("simulated rounds (random legal play)", () => {
         }
     });
 
-    it("every dealt card ends on the discard pile, exactly once", () => {
+    it("every dealt card is played exactly once", () => {
         for (const seed of SEEDS) {
-            const { table, hands } = simulate(seed);
+            const { table, log, hands } = simulate(seed);
             expect(table.state.round).toBe(2);
-            expect(table.state.discard).toHaveLength(100);
-            expect([...tally(table.state.discard)].sort()).toEqual([...tally(hands)].sort());
+            expect(log.played).toHaveLength(100);
+            expect([...tally(log.played)].sort()).toEqual([...tally(hands)].sort());
         }
     });
 
-    it("the points on the discard pile plus the kitty add up to the 200 in the pack", () => {
+    it("the points played plus the kitty add up to the 200 in the pack", () => {
         for (const seed of SEEDS) {
-            const { table, kitty } = simulate(seed);
-            const played = table.state.discard.reduce((a, c) => a + pointValue(c), 0);
+            const { log, kitty } = simulate(seed);
+            const played = log.played.reduce((a, c) => a + pointValue(c), 0);
             const kittyTotal = kitty.reduce((a, c) => a + pointValue(c), 0);
             expect(played + kittyTotal, `seed ${String(seed)}`).toBe(200);
         }
@@ -896,10 +933,14 @@ describe("simulated rounds (random legal play)", () => {
         }
     });
 
-    // The deal for round 2 begins at `turn`, which endTrick left on the last trick's winner.
-    // `drawCard` ends the deal when the turn comes back to the zhuang with the lap counter at
-    // 25, so a deal that starts elsewhere hands out uneven hands and a kitty of the wrong size.
-    it.fails("KNOWN BUG: after round 1 every player is dealt exactly 25 cards", () => {
+    it("round 2 begins with the new zhuang to draw", () => {
+        for (const seed of SEEDS) {
+            const { table } = simulate(seed);
+            expect(table.state.turn, `seed ${String(seed)}`).toBe(table.state.zhuang);
+        }
+    });
+
+    it("after round 1 every player is dealt exactly 25 cards", () => {
         for (const seed of SEEDS) {
             const { table } = simulate(seed);
             table.game.speedDraw();
@@ -909,11 +950,135 @@ describe("simulated rounds (random legal play)", () => {
         }
     });
 
-    it.fails("KNOWN BUG: after round 1 the kitty is exactly 8 cards", () => {
+    it("after round 1 the kitty is exactly 8 cards", () => {
         for (const seed of SEEDS) {
             const { table } = simulate(seed);
             table.game.speedDraw();
             expect(table.game.getDipai(table.players[table.state.zhuang])).toHaveLength(8);
+        }
+    });
+});
+
+describe("several rounds in a row", () => {
+    const ROUNDS = 6;
+
+    // the game mutates `over` behind the compiler's back, so read it through a function
+    const isOver = (table: Table): boolean => table.state.over;
+
+    /** play whole rounds until `rounds` have finished or the game ends */
+    function playRounds(seed: number, rounds: number, tableSize = 4) {
+        seedRandom(seed);
+        const table = newTable(tableSize);
+        const rng = new RNG(seed * 31);
+        const per = 25;
+        const kittySize = 54 * (tableSize / 2) - per * tableSize;
+        const finished: { round: number; log: ReturnType<typeof playRound> }[] = [];
+
+        for (let round = 1; round <= rounds && !table.state.over; round++) {
+            expect(table.state.round).toBe(round);
+            expect(table.state.draw, `round ${String(round)} starts in the draw phase`).toBe(true);
+            expect(table.state.turn, `round ${String(round)}: the zhuang draws first`).toBe(round === 1 ? 0 : table.state.zhuang);
+            expect(table.state.discard, `round ${String(round)}: nothing seen yet`).toEqual([]);
+            if (round > 1) {expect(table.state.trump.suit, `round ${String(round)}: no suit declared yet`).toBeNull();}
+
+            table.game.speedDraw();
+
+            for (const p of table.players) {
+                expect(handToCards(table.game.getHand(p) ?? buildHand([]), null), `round ${String(round)} hand of ${p}`).toHaveLength(per);
+            }
+            const zhuang = table.players[table.state.zhuang];
+            expect(table.game.getDipai(zhuang), `round ${String(round)} kitty`).toHaveLength(kittySize);
+            expect(table.state.turn).toBe(table.state.zhuang);
+
+            table.game.exchangeDipai(zhuang, [], []);
+            const log = playRound(table, rng);
+            expect(log.rejected, `round ${String(round)} had a rejected legal move`).toBe(0);
+            expect(log.played, `round ${String(round)} plays every dealt card`).toHaveLength(per * tableSize);
+            finished.push({ round, log });
+        }
+        return { table, finished };
+    }
+
+    it("every round deals evenly, starts at the zhuang and plays out cleanly (4 players)", () => {
+        for (let seed = 1; seed <= 15; seed++) {
+            const { finished } = playRounds(seed, ROUNDS);
+            expect(finished.length, `seed ${String(seed)}`).toBeGreaterThanOrEqual(2);
+        }
+    });
+
+    it("the same holds at other table sizes", () => {
+        for (const size of [2, 6, 8]) {
+            const { finished } = playRounds(3, 3, size);
+            expect(finished.length, `${String(size)} players`).toBeGreaterThanOrEqual(2);
+        }
+    });
+
+    it("the zhuang is always a valid seat and the rank never goes backwards", () => {
+        for (let seed = 1; seed <= 10; seed++) {
+            seedRandom(seed);
+            const table = newTable();
+            const rng = new RNG(seed);
+            let previousRank = 2;
+            for (let round = 1; round <= ROUNDS && !table.state.over; round++) {
+                dealAndSkipKitty(table);
+                playRound(table, rng);
+                expect(table.state.zhuang).toBeGreaterThanOrEqual(0);
+                expect(table.state.zhuang).toBeLessThan(4);
+                // the two sides track their own rank, so compare the larger of the pair
+                const best = Math.max(table.state.trump.rank, table.state.alt);
+                expect(best).toBeGreaterThanOrEqual(previousRank);
+                previousRank = best;
+            }
+        }
+    });
+
+    it("the discard pile is exactly the cards played so far in the current round", () => {
+        seedRandom(4);
+        const table = newTable();
+        const rng = new RNG(4);
+        for (let round = 1; round <= 3 && !table.state.over; round++) {
+            dealAndSkipKitty(table);
+            const startRound = table.state.round;
+            let tricks = 0;
+            while (table.state.round === startRound && !isOver(table)) {
+                const before = table.state.discard.length;
+                const log = playRound(table, rng, 1);
+                if (table.state.round !== startRound) {break;}
+                if (log.plays === 0) {break;}
+                if (table.state.discard.length !== before) {tricks++;}
+                expect(table.state.discard.length % 4).toBe(0);
+            }
+            expect(tricks).toBeGreaterThan(0);
+        }
+    });
+
+    // GameRoom hands `game.discard` to the advisor as the cards already seen. Before the pile
+    // was cleared between rounds, round 2 reported "appears 3 times, but only 2 decks" and the
+    // advisor refused to give advice.
+    it("the advisor accepts a position built from the live state in every round", () => {
+        seedRandom(8);
+        const table = newTable();
+        const rng = new RNG(8);
+        for (let round = 1; round <= 3 && !table.state.over; round++) {
+            dealAndSkipKitty(table);
+            const startRound = table.state.round;
+            let checked = 0;
+            while (table.state.round === startRound && !isOver(table)) {
+                const { state, game, players } = table;
+                const player = players[state.turn];
+                const hand = handToCards(game.getHand(player) ?? buildHand([]), state.trump);
+                const trick = players
+                    .map((_, i) => state.info.get(players[(state.chu + i) % 4])?.play?.cards ?? [])
+                    .slice(0, (state.turn - state.chu + 4) % 4)
+                    .filter((cards) => cards.length > 0);
+
+                const advice = analyse({ numPlayers: 4, decks: 2, trump: state.trump, hand, trick, seen: state.discard });
+                expect(advice.problems, `round ${String(round)}, ${String(hand.length)} cards left`).toEqual([]);
+                checked++;
+
+                if (playRound(table, rng, 1).rejected) {break;}
+            }
+            expect(checked).toBeGreaterThan(10);
         }
     });
 });

@@ -426,17 +426,24 @@ export class Game {
 
         this.state.count -= lead.cards.length;
 
-        if (this.state.count === 0) {this.endRound(team === this.state.atk ? lead.cards.length * 2 : 0);}
-
         for (const player of this.state.players){
             const pInfo = this.state.info.get(player);
             if (!pInfo) {continue;}
             for (const card of pInfo.play?.cards || []) {this.state.discard.push(card);}
         }
 
+        this.state.shuai = false; // reset shuai for next trick
+
+        if (this.state.count === 0) {
+            // endRound sets up the next deal (turn, zhuang, discard pile), so it must have the
+            // last word: running the lines below afterwards would hand the deal to whoever won
+            // the final trick instead of the new zhuang
+            this.endRound(team === this.state.atk ? lead.cards.length * 2 : 0);
+            return;
+        }
+
         this.state.chu = this.state.lead; // winner of the trick starts the next trick
         this.state.turn = this.state.chu;
-        this.state.shuai = false; // reset shuai for next trick
     }
 
     private swapTeams() : void {
@@ -492,8 +499,14 @@ export class Game {
         this.state.zhuang %= this.state.players.length; // new zhuang
 
         this.state.turn = this.state.zhuang;
+        this.state.chu = this.state.zhuang;
+        this.state.lead = this.state.zhuang;
 
         this.state.whodec = this.state.zhuang;
+
+        this.state.trump.suit = null; // a suit is only trump for the round it was declared in
+
+        this.state.discard = []; // the advisor reads this as "cards already seen this round"
     }
 
     endGame() : void {
