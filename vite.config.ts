@@ -7,7 +7,7 @@ export default defineConfig({
     apply: 'build',
     generateBundle() {
       // Inspect the actual module graph, so an accidental runtime import of a test fails CI.
-      const forbidden = /(?:\.(?:test|spec)\.[cm]?[jt]sx?$|\/src\/test\/|\/node_modules\/(?:vitest|@vitest|@testing-library)\/|\/shengji\/(?:components\/Test\/|core\/testcase\.ts$))/;
+      const forbidden = /(?:\.(?:test|spec)\.[cm]?[jt]sx?$|\/src\/test\/|\/node_modules\/(?:vitest|@vitest|@testing-library)\/)/;
       for (const id of this.getModuleIds()) {
         if (forbidden.test(id.split('?')[0])) {
           this.error(`Development-only module in production: ${id}`);

@@ -26,9 +26,9 @@ the application from `index.html` into `dist/`. Unit tests, specs, and `src/test
 from the production TypeScript roots. `npm run typecheck` still checks the full `src/` tree,
 including tests. Vitest configuration and coverage settings live separately in `vitest.config.ts`.
 
-Vite checks its actual production module graph and rejects test files, test libraries, test
-helpers, or the Shengji developer panel/generator if they are imported into the build. The Shengji
-test panel is lazy-loaded only in development. Existing application routes remain available.
+Vite checks its actual production module graph and rejects unit test files, test libraries and
+test helpers if they are imported into the build. The interactive Shengji Test panel and its
+test-case generator are application features and remain available in production, loaded on demand.
 
 Netlify discovers functions only in `netlify/entrypoints/`. That directory contains seven small
 handler re-exports; keep tests and implementation helpers in `netlify/functions/`, outside the

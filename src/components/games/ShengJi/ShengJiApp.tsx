@@ -4,14 +4,14 @@ import Join from "/src/shengji/components/Join/Join";
 
 import "./ShengJiApp.css";
 
-const Test = import.meta.env.DEV ? lazy(() => import("/src/shengji/components/Test/Test")) : null;
+const Test = lazy(() => import("/src/shengji/components/Test/Test"));
 
 export default function ShengJiApp() {
 
     return (
         <div className="sjWrapper">
             <Join />
-            {Test && <Suspense fallback={null}><hr /><Test /></Suspense>}
+            <Suspense fallback={null}><hr /><Test /></Suspense>
         </div>
     );
 }

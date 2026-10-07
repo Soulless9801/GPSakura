@@ -26,8 +26,9 @@ The pre-fix run of those ordinary tests failed exactly 14 times. Resolved items:
 * **DEP-1:** Hand and BlogApp import the declared `motion/react` entrypoint.
 
 Build settings now separate Vite and Vitest, exclude unit tests/helpers from production TypeScript
-roots, and reject development-only imports in Vite's production module graph. Shengji's developer
-panel is development-only. Netlify uses a clean `netlify/entrypoints/` directory with seven handlers:
+roots, and reject unit test imports in Vite's production module graph. The interactive Shengji
+Test panel and its generator remain in production, per the owner's preference. Netlify uses a
+clean `netlify/entrypoints/` directory with seven handlers:
 its previous directory also discovered seven `.test.ts` files as functions. All seven production
 archives were built locally and inspected: no test artifacts, and only the appropriate Firebase
 JSON or Codeforces CSV fallback assets. The production guard was tested with an intentionally
