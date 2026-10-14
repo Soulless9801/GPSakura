@@ -10,7 +10,6 @@
 
 .table-custom {
     width: 100%;
-    table-layout: fixed;
     --bs-table-color: var(--color-text);
     --bs-table-bg: var(--color-surface);
     --bs-table-hover-color: var(--color-text);

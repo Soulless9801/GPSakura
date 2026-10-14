@@ -25,7 +25,7 @@ export default function CodeforcesTable() {
 
     const [rows, setRows] = useState<string[][]>([]);
 
-    const columns = ['Rating', 'Problem Name', 'Submission'];
+    const columns = ['Rating', 'Problem', 'Submission'];
 
     useEffect(() => {
         void fetch('/.netlify/functions/codeforces-sheet-data')

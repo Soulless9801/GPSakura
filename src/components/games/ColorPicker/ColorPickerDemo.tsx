@@ -126,8 +126,8 @@ export default function ColorPickerDemo() {
         <div className='colorDemoWrapper'>
             <div className='demo-layout'>
                 <div className='demo-display'>
-                    <div className="row">
-                        <div className="col-6" style={{}}>
+                    <div className="row gy-3">
+                        <div className="col-12 col-md-6">
                             <ColorPicker
                                 className="ui-frame"
                                 width="100%"
@@ -135,7 +135,7 @@ export default function ColorPickerDemo() {
                                 color={targetColor}
                             />
                         </div>
-                        <div className="col-6">
+                        <div className="col-12 col-md-6">
                             <ColorPicker
                                 className="ui-frame"
                                 width="100%"

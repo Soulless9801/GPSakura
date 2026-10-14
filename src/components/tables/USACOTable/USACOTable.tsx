@@ -49,7 +49,7 @@ export default function USACOTable() {
 
     const [rows, setRows] = useState<string[][]>([]);
 
-    const columns = ['Division', 'Problem Name', 'Submission'];
+    const columns = ['Division', 'Porblem', 'Submission'];
 
     useEffect(() => {
         //fetch('/.netlify/functions/usaco-problems-data')
