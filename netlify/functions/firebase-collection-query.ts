@@ -65,7 +65,6 @@ export default async function handler(request: Request): Promise<Response> {
 
         collection = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         
-        // FIXME: modify all firestore Timestamp objects to ISO string
         collection.map((doc: Record<string, string | number | boolean | null | fireStore.Timestamp>) => {
             Object.keys(doc).forEach((key) => {
                 if (doc[key] instanceof fireStore.Timestamp){

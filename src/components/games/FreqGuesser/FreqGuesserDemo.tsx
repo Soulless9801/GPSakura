@@ -140,7 +140,6 @@ export default function FreqGuesserDemo() {
                         </div>
                     </div>
                 </div>
-                {/* TODO: add controls */}
                 <div className='demo-controls'>
                     <div className='ui-panel'>
                         <div className='ui-stack demo-controls'>

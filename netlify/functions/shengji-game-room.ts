@@ -67,7 +67,6 @@ function speedDrawEnabled(): boolean {
 }
 
 async function loadGame(redis: Redis, roomId: string) {
-    //TODO: figure out why this isn't returning as string
     const res = await redis.get(GAME_KEY_PREFIX + roomId);
     if (res === null) {return null;}
     return typeof res === "string" ? res : JSON.stringify(res);

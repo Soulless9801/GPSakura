@@ -241,6 +241,7 @@ describe("starting a hand", () => {
     it.each([
         ["zero", 0],
         ["negative", -5],
+        ["less than the minimum", 9],
         ["more than the bankroll", 1001],
         ["not a number", "lots"],
         ["infinite", "Infinity"],
@@ -255,7 +256,7 @@ describe("starting a hand", () => {
     });
 
     it("rejects a bet from an unknown player", async () => {
-        expect((await as(99, "start", { payload: { bet_amount: 5 } })).json.error).toBe("Invalid bet amount");
+        expect((await as(99, "start", { payload: { bet_amount: 10 } })).json.error).toBe("Invalid bet amount"); // id 2 is purposefully evicted from database for this purpose
     });
 
     it("accepts a bet up to and including the whole bankroll", async () => {
@@ -303,7 +304,7 @@ describe("starting a hand", () => {
         const res = await handler(post(JSON.stringify({
             action: "start",
             identity: { clientId: "1", signature: sign("1") },
-            payload: { bet_amount: 5 },
+            payload: { bet_amount: 10 },
         })));
         expect(await res.text()).not.toMatch(/deck_seed|4242/);
     });
@@ -314,8 +315,8 @@ describe("starting a hand", () => {
     });
 
     it("assigns increasing room ids", async () => {
-        const a = await as(1, "start", { payload: { bet_amount: 5 } });
-        const b = await as(2, "start", { payload: { bet_amount: 5 } });
+        const a = await as(1, "start", { payload: { bet_amount: 10 } });
+        const b = await as(2, "start", { payload: { bet_amount: 10 } });
         expect([a.json.id, b.json.id]).toEqual([1, 2]);
     });
 
@@ -373,22 +374,22 @@ describe("loading", () => {
     });
 
     it("returns the newest game of the caller", async () => {
-        const first = await as(1, "start", { payload: { bet_amount: 5 } });
+        const first = await as(1, "start", { payload: { bet_amount: 10 } });
         await as(1, "stand", { roomId: first.json.id });
-        const second = await as(1, "start", { payload: { bet_amount: 7 } });
+        const second = await as(1, "start", { payload: { bet_amount: 11 } });
         const loaded = await as(1, "load");
         expect(loaded.json.id).toBe(second.json.id);
     });
 
     it("never returns someone else's game", async () => {
-        await as(2, "start", { payload: { bet_amount: 5 } });
+        await as(2, "start", { payload: { bet_amount: 10 } });
         const res = await as(1, "load");
         expect(res.json.error).toBe("No games found for this player");
     });
 
     it("restores the exact hand mid-play", async () => {
         seedGame(777);
-        const started = await as(1, "start", { payload: { bet_amount: 5 } });
+        const started = await as(1, "start", { payload: { bet_amount: 10 } });
         const loaded = await as(1, "load");
         expect(loaded.json.player_cards).toEqual(started.json.player_cards);
         expect(loaded.json.dealer_cards).toEqual(started.json.dealer_cards);

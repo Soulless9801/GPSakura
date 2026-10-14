@@ -8,7 +8,6 @@ import type { Identity } from "../../src/utils/verify";
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-//TODO: add money and betting
 import { games, players } from "../../db/schema";
 
 import * as BJGame from "../../src/blackjack/core/game";
@@ -177,13 +176,13 @@ export default async function handler(request: Request): Promise<Response> {
             });
         }
 
-        const MIN_BET : number = 0; // TODO: set minimum bet amount
+        const MIN_BET : number = 10; 
 
         if (action === "start") { // ACTION: START GAME
 
             const bet : number = Number(payload.bet_amount);
 
-            if (money === null || isNaN(bet) || bet <= MIN_BET || bet > money) {return errorJSON("Invalid bet amount");}
+            if (money === null || isNaN(bet) || bet < MIN_BET || bet > money) {return errorJSON("Invalid bet amount");}
 
             // console.log('Starting game...');
 

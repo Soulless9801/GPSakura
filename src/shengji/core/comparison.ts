@@ -134,7 +134,7 @@ export function playToInfo(play: Play, trump: Trump): IPlay {
     }
 }
 
-// TODO: maybe move to sjconv?
+// FIXME: maybe move to sjconv?
 function playToHand(play: Play): Hand {
     const hand: Hand = new Hand();
     for (const card of play.cards) {hand.addCard(card);}
@@ -403,7 +403,6 @@ function isTrickValid(lead: number[], play: TrickUnit[], hand: TrickUnit[], trum
     let play_idx : number = play_max.length - 1;
     let hand_idx : number = hand_max.length - 1;
 
-    // TODO: determine ordering or reverse
     for (let i = 0; i < lead.length; i++){
         // console.log("Play Max:", play_max);
         // console.log("Hand Max:", hand_max);

@@ -572,8 +572,6 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
     }, [game]);
 
-    //TODO: add reconnecting
-
     useEffect(() => {
 
         if (!connectionKey || !identity) {return;}
