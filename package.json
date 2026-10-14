@@ -14,7 +14,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@fortawesome/fontawesome-free": "^7.3.1",
     "@neondatabase/serverless": "^1.1.0",
     "@netlify/database": "^1.0.0",
     "@netlify/functions": "^5.2.2",
@@ -29,7 +29,7 @@
     "drizzle-orm": "^0.45.2",
     "firebase": "^13.0.0",
     "jquery": "^3.7.1",
-    "katex": "^0.18.9",
+    "katex": "^0.19.0",
     "motion": "^12.23.7",
     "pg": "^8.21.0",
     "protobufjs": "^8.6.0",
