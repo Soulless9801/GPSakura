@@ -32,7 +32,7 @@ sorters['division-desc'] = (a: string, b: string): number => divisionRank(b) - d
 
 export default function USACOTable() {
 
-    const title = "USACO Porblem List";
+    const title = "USACO Problem List";
 
     const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -49,7 +49,7 @@ export default function USACOTable() {
 
     const [rows, setRows] = useState<string[][]>([]);
 
-    const columns = ['Division', 'Porblem', 'Submission'];
+    const columns = ['Division', 'Problem', 'Submission'];
 
     useEffect(() => {
         //fetch('/.netlify/functions/usaco-problems-data')

@@ -1,3 +1,4 @@
+import DemoFrame from '/src/components/tools/DemoFrame/DemoFrame';
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { loadValue } from '/src/utils/storage';
 import { generateTimeArray, composeSignal, randomComponent, defaultComponent, type SignalComponent } from "/src/entities/signal";
@@ -130,75 +131,69 @@ export default function FreqGuesserDemo() {
     return (
         <div className='freqDemoWrapper'>
             <div className='demo-layout'>
-                <div className='demo-display'>
-                    <div className="row gy-3">
-                        <div className="col-12">
-                            <FreqGuesser className="ui-frame" signal={targetSignal} width={"100%"} height={"30vh"} components={components} />
+                <div className="demo-display-pair">
+                    <DemoFrame>
+                        <FreqGuesser signal={targetSignal} width="100%" height="100%" components={components} />
+                    </DemoFrame>
+                    <DemoFrame>
+                        <FreqGuesser signal={guessSignal} width="100%" height="100%" components={components} />
+                    </DemoFrame>
+                </div>
+                <div className='ui-panel ui-stack demo-controls'>
+                    <div className='row g-3'>
+                        <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
+                    </div>
+                    <div>
+                        <label className="freqLabelR">Number of Components</label>
+                        <Form
+                            min={2}
+                            max={5}
+                            init={components}
+                            onChange={e => { setComponents(e); }}
+                        />
+                    </div>
+                    <div className='row g-3 freqRow'>
+                        {guessFreq.map((g, i) => (
+                            <div key={i} className="row g-2">
+                                <div className="col-6">
+                                    <label className="freqLabelR">a</label>
+                                    <Form
+                                        min={1}
+                                        max={3}
+                                        init={g.a}
+                                        onChange={e => { update(i, "a", e); }}
+                                    />
+                                </div>
+                                <div className="col-6">
+                                    <label className="freqLabelR">f</label>
+                                    <Form
+                                        min={1}
+                                        max={10}
+                                        init={g.f}
+                                        onChange={e => { update(i, "f", e); }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className='row g-3 freqRow'>
+                        <div className='col-6'>
+                            <button className='ui-full-width' onClick={() => { guess(); }}>
+                                Guess
+                            </button>
                         </div>
-                        <div className="col-12">
-                            <FreqGuesser className="ui-frame" signal={guessSignal} width={"100%"} height={"30vh"} components={components} />
+                        <div className='col-6'>
+                            <span className="freqText" style={{ color: win ? "var(--color-success)" : "var(--color-text)" }}>Guesses: {guesses}</span>
                         </div>
                     </div>
-                </div>
-                <div className='demo-controls'>
-                    <div className='ui-panel'>
-                        <div className='ui-stack demo-controls'>
-                            <div className='row g-3'>
-                                <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
-                            </div>
-                            <div>
-                                <label className="freqLabelR">Number of Components</label>
-                                <Form
-                                    min={2}
-                                    max={5}
-                                    init={components}
-                                    onChange={e => { setComponents(e); }}
-                                />  
-                            </div>
-                            <div className='row g-3 freqRow'>
-                                {guessFreq.map((g, i) => (
-                                    <div key={i} className="row g-2">
-                                        <div className="col-6">
-                                            <label className="freqLabelR">a</label>
-                                            <Form
-                                                min={1}
-                                                max={3}
-                                                init={g.a}
-                                                onChange={e => { update(i, "a", e); }}
-                                            />
-                                        </div>
-                                        <div className="col-6">
-                                            <label className="freqLabelR">f</label>
-                                            <Form
-                                                min={1}
-                                                max={10}
-                                                init={g.f}
-                                                onChange={e => { update(i, "f", e); }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className='row g-3 freqRow'>
-                                <div className='col-6'>
-                                    <button className='ui-full-width' onClick={() => { guess(); }}>
-                                        Guess
-                                    </button>
-                                </div>
-                                <div className='col-6'>
-                                    <span className="freqText" style={{ color: win ? "var(--color-success)" : "var(--color-text)" }}>Guesses: {guesses}</span>
-                                </div>
-                            </div>
-                            <div className='row g-3 freqRow'>
-                                <div className='col-6'>
-                                    <button className='ui-full-width' onClick={() => { reset(); }} >
-                                        Randomize
-                                    </button>
-                                </div>
-                                <div className='col-6'>
-                                    <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='ui-full-width'/>
-                                </div>
-                            </div>
+                    <div className='row g-3 freqRow'>
+                        <div className='col-6'>
+                            <button className='ui-full-width' onClick={() => { reset(); }} >
+                                Randomize
+                            </button>
+                        </div>
+                        <div className='col-6'>
+                            <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='ui-full-width'/>
                         </div>
                     </div>
                 </div>

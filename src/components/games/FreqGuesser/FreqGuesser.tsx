@@ -1,3 +1,4 @@
+import { observeElementSize } from '/src/utils/resize';
 import { useRef, useEffect, useCallback, type CSSProperties } from "react";
 import { readColor, rgbToCss, type RGB } from "/src/utils/colors";
 
@@ -136,9 +137,11 @@ export default function FreqGuesser({ signal, width, height, components, classNa
 		};
 
 		window.addEventListener("resize", handleResize);
+        const stopObservingSize = observeElementSize(wrapperRef.current, handleResize);
 
 		return () => {
 			window.removeEventListener("resize", handleResize);
+            stopObservingSize();
 		};
     }, [resizeCanvas, width, height, signal])
 

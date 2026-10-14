@@ -37,6 +37,14 @@
 
 .navbar-custom .navbar-collapse {
     flex-grow: 0;
+    order: 1;
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    order: 2;
 }
 
 .navbar-menu-content {
@@ -99,6 +107,10 @@
         max-height: calc(100dvh - 2 * var(--space-4));
         overflow-y: hidden;
     }
+    .navbar-actions {
+        order: 0;
+        margin-left: auto;
+    }
     .navbar-custom .navbar-collapse {
         flex-basis: 100%;
         min-width: 0;
@@ -108,18 +120,24 @@
         overflow: hidden;
         pointer-events: none;
         --component-transitions: grid-template-rows var(--disclosure-duration) ease,
-                    opacity var(--disclosure-duration) ease;
+                    opacity var(--disclosure-duration) ease,
+                    visibility var(--disclosure-duration) ease;
 
     }
     .navbar-custom .navbar-collapse.show {
         grid-template-rows: 1fr;
         opacity: 1;
+        visibility: visible;
         pointer-events: auto;
     }
     .navbar-custom .navbar-collapse:not(.show) {
         grid-template-rows: 0fr;
         opacity: 0;
+        visibility: hidden;
         pointer-events: none;
+    }
+    .navbar-collapse:not(.show) .customSelectOptions.show {
+        visibility: inherit;
     }
     .navbar-menu-content {
         min-height: 0;
@@ -127,6 +145,8 @@
         align-items: stretch;
         justify-content: flex-start;
         height: 100%;
+        max-height: calc(100dvh - 2 * var(--space-4) - var(--control-height) - 2 * var(--space-2) - 2px);
+        overflow-y: hidden;
         gap: var(--space-3);
     }
     .navbar-custom .navbar-nav {
@@ -168,8 +188,5 @@
     .navbar-custom .customSelectOptions:not(.show) {
         grid-template-rows: 0fr;
         pointer-events: none;
-    }
-    .navbar-custom .theme-toggle {
-        margin-bottom: var(--space-1);
     }
 }

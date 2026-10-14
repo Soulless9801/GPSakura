@@ -26,14 +26,26 @@ export default function Navbar() {
             <nav className="navbar navbar-expand-md navbar-custom">
                 <div className="container-fluid">
                     <Link className="navbar-brand" to="/" onClick={closeMenu}><img src={brand} data-theme-asset alt="Sakura home" className="me-2 navbar-logo" id="navIcon" /></Link>
-                    <button className="navbar-toggler" type="button" onClick={() => { setMenuOpen(open => !open); }} aria-controls="navbarNav" aria-expanded={menuOpen}>
-                        <span className="navbarLabel">Menu</span>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" id="navbarIcon">
-                            <rect y="4" width="24" height="2" rx="1" fill="currentColor" />
-                            <rect y="11" width="24" height="2" rx="1" fill="currentColor" />
-                            <rect y="18" width="24" height="2" rx="1" fill="currentColor" />
-                        </svg>
-                    </button>
+                    <div className="navbar-actions">
+                        <button
+                            id="darkModeToggle"
+                            type="button"
+                            className="theme-toggle"
+                            aria-label={`Switch to ${getNextTheme(theme).label} theme`}
+                            onClick={() => { void toggleTheme(setTheme); }}
+                            onMouseDown={e => { e.preventDefault(); }}
+                        >
+                            <i id="darkModeIcon" className={`navbar-icon fa-regular ${isDarkTheme() ? 'fa-moon' : 'fa-sun'}`} />
+                        </button>
+                        <button className="navbar-toggler" type="button" onClick={() => { setMenuOpen(open => !open); }} aria-controls="navbarNav" aria-expanded={menuOpen}>
+                            <span className="navbarLabel">Menu</span>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" id="navbarIcon">
+                                <rect y="4" width="24" height="2" rx="1" fill="currentColor" />
+                                <rect y="11" width="24" height="2" rx="1" fill="currentColor" />
+                                <rect y="18" width="24" height="2" rx="1" fill="currentColor" />
+                            </svg>
+                        </button>
+                    </div>
                     <div className={`navbar-collapse${menuOpen ? " show" : ""}`} id="navbarNav">
                         <div className="navbar-menu-content">
                             <ul className="navbar-nav">
@@ -88,15 +100,6 @@ export default function Navbar() {
                                     />
                                 </li>
                             </ul>
-                            <button
-                                id="darkModeToggle"
-                                className="theme-toggle"
-                                aria-label={`Switch to ${getNextTheme(theme).label} theme`}
-                                onClick={() => { void toggleTheme(setTheme); }}
-                                onMouseDown={e => { e.preventDefault(); }}
-                            >
-                                <i id="darkModeIcon" className={`navbar-icon fa-regular ${isDarkTheme() ? 'fa-moon' : 'fa-sun'}`} />
-                            </button>
                         </div>
                     </div>
                 </div>

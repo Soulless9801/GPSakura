@@ -134,11 +134,17 @@ The property resets on descendants. Use this hook instead of `transition` or
 
 ## Aligned simulation and advisor layouts
 
-Use `ExperimentDemo` for simulations. Its `.experiment-layout` stretches the
-canvas frame and controls to one shared grid row. The canvas lives in absolutely
-positioned `.experiment-display-content`, so its intrinsic size cannot force a
+Use `ExperimentDemo` for simulations. The shared `.demo-layout` stretches the
+canvas frame and controls to one shared grid row. `DemoFrame` puts canvas content
+in absolutely positioned `.demo-frame-content`, so its intrinsic size cannot force a
 larger row. The renderers observe their wrapper size through `observeElementSize`
 to refresh backing stores when controls change height, not only on window resize.
+
+`ColorPickerDemo` and `FreqGuesserDemo` use `.demo-display-pair` with two
+`DemoFrame` children and a control panel directly in the shared grid. The frames
+grow with the controls, including when more frequency components are added.
+Swatches stack on small screens; both games stack controls below the display on
+tablets and phones. Avoid nested control-panel wrappers and fixed canvas heights.
 
 The advisor uses paired grid rows for picker/inventory, trick/recommendation,
 and explanation/alternatives. Keep those panels as direct grid children so their
@@ -149,3 +155,7 @@ Test navigation and backend-dependent pages with `netlify dev` at
 `http://localhost:8080`, including the coding tables and blog. Plain Vite does
 not serve `/.netlify/functions/*`. The compact desktop navbar expands on mobile
 using grid-row transitions (`--disclosure-duration`), including its submenus.
+
+The mobile theme toggle lives beside the Menu button, outside the collapsible
+links. Closed links become hidden after the disclosure finishes so they cannot
+receive keyboard focus. The desktop navbar retains its compact width.

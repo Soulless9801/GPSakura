@@ -1,3 +1,4 @@
+import { MIN_BET } from '../../core/rules';
 import { useState, useCallback, useEffect } from "react";
 
 import type { GameRequest } from "/src/services/request";
@@ -74,7 +75,7 @@ export default function GameRoom() {
     const [status, setStatus] = useState<string | null>(null);
 
     const [money, setMoney] = useState<number>(0);
-    const [bet, setBet] = useState<number>(0);
+    const [bet, setBet] = useState<number>(MIN_BET);
 
     async function getMoney() {
         const res = await BJRequest({
@@ -197,10 +198,10 @@ export default function GameRoom() {
                 <button onClick={() => { void loadGame().catch(() => undefined); }} className="bjg-button">
                     Load Game
                 </button>
-                <button onClick={() => { void startGame().catch(() => undefined); }} className="bjg-button">
+                <button onClick={() => { void startGame().catch(() => undefined); }} disabled={!identity || bet < MIN_BET || bet > money} className="bjg-button">
                     Start Game
                 </button>
-                <Form init={bet} min={1} max={Math.max(money, 1)} onChange={setBet} />
+                <Form init={bet} min={MIN_BET} max={Math.max(money, MIN_BET)} onChange={setBet} />
                 <button onClick={() => { void hit().catch(() => undefined); }} className="bjg-button">
                     Hit
                 </button>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import './ExperimentDemo.css';
+import DemoFrame from '../tools/DemoFrame/DemoFrame';
 
 interface ExperimentDemoProps {
     display: ReactNode;
@@ -8,10 +8,8 @@ interface ExperimentDemoProps {
 
 export default function ExperimentDemo({ display, controls }: ExperimentDemoProps) {
     return (
-        <section className="demo-layout experiment-layout">
-            <figure className="ui-frame experiment-display">
-                <div className="experiment-display-content">{display}</div>
-            </figure>
+        <section className="demo-layout">
+            <DemoFrame>{display}</DemoFrame>
             <section className="ui-panel ui-stack demo-controls">{controls}</section>
         </section>
     );

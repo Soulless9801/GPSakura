@@ -1,3 +1,4 @@
+import DemoFrame from '/src/components/tools/DemoFrame/DemoFrame';
 import { useState, useCallback, useEffect, useRef } from "react";
 import { readColor, rgbToCss, rgbToHex, type RGB } from '/src/utils/colors';
 import { loadValue } from '/src/utils/storage';
@@ -125,65 +126,49 @@ export default function ColorPickerDemo() {
     return (
         <div className='colorDemoWrapper'>
             <div className='demo-layout'>
-                <div className='demo-display'>
-                    <div className="row gy-3">
-                        <div className="col-12 col-md-6">
-                            <ColorPicker
-                                className="ui-frame"
-                                width="100%"
-                                height="60vh"
-                                color={targetColor}
-                            />
+                <div className="demo-display-pair demo-display-pair--columns">
+                    <DemoFrame>
+                        <ColorPicker width="100%" height="100%" color={targetColor} />
+                    </DemoFrame>
+                    <DemoFrame>
+                        <ColorPicker width="100%" height="100%" color={guessColor} />
+                    </DemoFrame>
+                </div>
+                <div className='ui-panel ui-stack demo-controls'>
+                    <div className='row g-3'>
+                        <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
+                    </div>
+                    <div className='row g-3 colorRow'>
+                        <RGBInput
+                            value={rgbToHex(guessColor)}
+                            onChange={(index, nextValue) => {
+                                setCachedColor(prev => {
+                                    const nextColor: RGB = [prev[0], prev[1], prev[2]];
+                                    nextColor[index] = nextValue;
+                                    return nextColor;
+                                });
+                            }}
+                            getFieldStyle={(index) => ({ borderColor: colorFromDistance(rgbD[index]) })}
+                        />
+                    </div>
+                    <div className='row g-3 colorRow'>
+                        <div className='col-6'>
+                            <button className='ui-full-width' onClick={() => { guess(); }}>
+                                Guess
+                            </button>
                         </div>
-                        <div className="col-12 col-md-6">
-                            <ColorPicker
-                                className="ui-frame"
-                                width="100%"
-                                height="60vh"
-                                color={guessColor}
-                            />
+                        <div className='col-6'>
+                            <span className="colorText" style={{ color: win ? "var(--color-success)" : "var(--color-text)" }}>Guesses: {guesses}</span>
                         </div>
                     </div>
-                </div>
-                <div className='demo-controls'>
-                    <div className='ui-panel'>
-                        <div className='ui-stack demo-controls'>
-                            <div className='row g-3'>
-                                <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
-                            </div>    
-                            <div className='row g-3 colorRow'>
-                                <RGBInput
-                                    value={rgbToHex(guessColor)}
-                                    onChange={(index, nextValue) => {
-                                        setCachedColor(prev => {
-                                            const nextColor: RGB = [prev[0], prev[1], prev[2]];
-                                            nextColor[index] = nextValue;
-                                            return nextColor;
-                                        });
-                                    }}
-                                    getFieldStyle={(index) => ({ borderColor: colorFromDistance(rgbD[index]) })}
-                                />
-                            </div>
-                            <div className='row g-3 colorRow'>
-                                <div className='col-6'>
-                                    <button className='ui-full-width' onClick={() => { guess(); }}>
-                                        Guess
-                                    </button>
-                                </div>
-                                <div className='col-6'>
-                                    <span className="colorText" style={{ color: win ? "var(--color-success)" : "var(--color-text)" }}>Guesses: {guesses}</span>
-                                </div>
-                            </div>
-                            <div className='row g-3 colorRow'>
-                                <div className='col-6'>
-                                    <button className='ui-full-width' onClick={() => { gen(); }} >
-                                        Randomize
-                                    </button>
-                                </div>
-                                <div className='col-6'>
-                                    <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='ui-full-width'/>
-                                </div>
-                            </div>
+                    <div className='row g-3 colorRow'>
+                        <div className='col-6'>
+                            <button className='ui-full-width' onClick={() => { gen(); }} >
+                                Randomize
+                            </button>
+                        </div>
+                        <div className='col-6'>
+                            <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='ui-full-width'/>
                         </div>
                     </div>
                 </div>

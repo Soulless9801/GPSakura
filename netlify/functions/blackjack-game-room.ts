@@ -1,3 +1,4 @@
+import { MIN_BET } from '../../src/blackjack/core/rules';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -175,8 +176,6 @@ export default async function handler(request: Request): Promise<Response> {
                 status: game.checkWinner(),
             });
         }
-
-        const MIN_BET : number = 10; 
 
         if (action === "start") { // ACTION: START GAME
 

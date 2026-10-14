@@ -1,3 +1,4 @@
+import { observeElementSize } from '/src/utils/resize';
 import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { rgbToCss } from "/src/utils/colors";
 
@@ -29,7 +30,7 @@ export default function ColorPicker({ width, height, color, style = {}, classNam
         const dpr = window.devicePixelRatio || 1;
         const cssW = canvas.clientWidth || wrapper.clientWidth;
         const cssH = canvas.clientHeight || wrapper.clientHeight;
-        canvas.width = Math.floor(cssW * dpr / 2);
+        canvas.width = Math.floor(cssW * dpr);
         canvas.height = Math.floor(cssH * dpr);
         const ctx = canvas.getContext("2d");
         ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -63,9 +64,11 @@ export default function ColorPicker({ width, height, color, style = {}, classNam
 		};
 
 		window.addEventListener("resize", handleResize);
+        const stopObservingSize = observeElementSize(wrapperRef.current, handleResize);
 
 		return () => {
 			window.removeEventListener("resize", handleResize);
+            stopObservingSize();
 		};
 
     }, [color, resizeCanvas]);   
