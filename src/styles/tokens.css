@@ -53,7 +53,28 @@
     --bs-link-hover-color: var(--color-accent);
 }
 
-:root, [data-theme='light'] {
+:root, [data-theme='cherry-blossom'] {
+    --theme-label: Cherry Blossom;
+    color-scheme: light;
+    --color-text: #3c1e2b;
+    --color-muted: #6e4a5e;
+    --color-disabled: #8c6b7d;
+    --color-page: #fff0f5;
+    --color-surface: #fff5f9;
+    --color-hover: #ffe6f2;
+    --color-border: #d9b3c6;
+    --color-border-strong: #c08099;
+    --color-accent: #ff66b2;
+    --color-on-accent: #ffffff;
+    --color-success: #4caf50;
+    --color-warning: #ff9800;
+    --color-caution: #ff9800;
+    --color-danger: #f44336;
+    --color-backdrop: rgb(20 20 18 / 45%);
+    --shadow-popover: 0 8px 24px rgb(30 28 24 / 10%);
+}
+
+[data-theme='light'] {
     --theme-label: Light;
     color-scheme: light;
     --color-text: #292824;
@@ -77,7 +98,7 @@
     --shadow-popover: 0 8px 24px rgb(30 28 24 / 10%);
 }
 
-[data-theme='dark'] {
+/* [data-theme='dark'] {
     --theme-label: Dark;
     color-scheme: dark;
     --color-text: #e8e5de;
@@ -94,6 +115,69 @@
     --color-warning: #dfb373;
     --color-caution: #d3c17e;
     --color-danger: #ed9b8f;
+    --color-backdrop: rgb(0 0 0 / 65%);
+    --shadow-popover: 0 8px 24px rgb(0 0 0 / 25%);
+} */
+
+[data-theme='tokyo-night'] {
+    --theme-label: Tokyo Night;
+    color-scheme: dark;
+    --color-text: #c0caf5;
+    --color-muted: #565f89;
+    --color-disabled: #565f89;
+    --color-page: #1a1b26;
+    --color-surface: #24283b;
+    --color-hover: #2a2e3e;
+    --color-border: #414868;
+    --color-border-strong: #565f89;
+    --color-accent: #7aa2f7;
+    --color-on-accent: #1a1b26;
+    --color-success: #9ece6a;
+    --color-warning: #e0af68;
+    --color-caution: #e0af68;
+    --color-danger: #f7768e;
+    --color-backdrop: rgb(0 0 0 / 65%);
+    --shadow-popover: 0 8px 24px rgb(0 0 0 / 25%);
+}
+
+[data-theme='high-contrast'] {
+    --theme-label: High Contrast;
+    color-scheme: dark;
+    --color-text: #ffffff;
+    --color-muted: #ffffff;
+    --color-disabled: #ffffff;
+    --color-page: #000000;
+    --color-surface: #000000;
+    --color-hover: #000000;
+    --color-border: #ffffff;
+    --color-border-strong: #ffffff;
+    --color-accent: #ffffff;
+    --color-on-accent: #000000;
+    --color-success: #a3c592;
+    --color-warning: #dfb373;
+    --color-caution: #d3c17e;
+    --color-danger: #ed9b8f;
+    --color-backdrop: rgb(0 0 0 / 65%);
+    --shadow-popover: 0 8px 24px rgb(0 0 0 / 25%);
+}
+
+[data-theme='dracula'] {
+    --theme-label: Dracula;
+    color-scheme: dark;
+    --color-text: #f8f8f2;
+    --color-muted: #6272a4;
+    --color-disabled: #6272a4;
+    --color-page: #282a36;
+    --color-surface: #44475a;
+    --color-hover: #6272a4;
+    --color-border: #6272a4;
+    --color-border-strong: #6272a4;
+    --color-accent: #ff79c6;
+    --color-on-accent: #282a36;
+    --color-success: #50fa7b;
+    --color-warning: #ffb86c;
+    --color-caution: #ffb86c;
+    --color-danger: #ff5555;
     --color-backdrop: rgb(0 0 0 / 65%);
     --shadow-popover: 0 8px 24px rgb(0 0 0 / 25%);
 }

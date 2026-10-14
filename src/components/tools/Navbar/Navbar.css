@@ -98,6 +98,11 @@
     cursor: pointer;
 }
 
+.nav-link-wrapper {
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+}
+
 @media (max-width: 767.98px) {
     .navbar-custom > .container-fluid {
         align-content: flex-start;

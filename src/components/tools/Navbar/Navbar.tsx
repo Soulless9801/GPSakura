@@ -49,8 +49,8 @@ export default function Navbar() {
                     <div className={`navbar-collapse${menuOpen ? " show" : ""}`} id="navbarNav">
                         <div className="navbar-menu-content">
                             <ul className="navbar-nav">
-                                <li className="nav-item"><Link className="nav-link" to="/" onClick={closeMenu}>Home</Link></li>
-                                <li className="nav-item"><Link className="nav-link" to="/blog" onClick={closeMenu}>Blog</Link></li>
+                                <li className="nav-item"><div className="nav-link-wrapper"><Link className="nav-link" to="/" onClick={closeMenu}>Home</Link></div></li>
+                                <li className="nav-item"><div className="nav-link-wrapper"><Link className="nav-link" to="/blog" onClick={closeMenu}>Blog</Link></div></li>
                                 <li className="nav-item">
                                     <Select
                                         key={pathname}
