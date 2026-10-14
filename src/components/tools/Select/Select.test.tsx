@@ -80,6 +80,18 @@ describe("Select", () => {
         expect(screen.getByText("right")).toBeTruthy();
     });
 
+    it("closes with Escape and returns focus to its trigger", () => {
+        const { container } = render(<Select options={options} onChange={vi.fn()} />);
+        const trigger = container.querySelector<HTMLButtonElement>(".customSelectSelected");
+        if (!trigger) {throw new Error("Missing select trigger");}
+        fireEvent.click(trigger);
+        const option = screen.getByRole("button", { name: "Gamma" });
+        option.focus();
+        fireEvent.keyDown(option, { key: "Escape" });
+        expect(trigger.getAttribute("aria-expanded")).toBe("false");
+        expect(document.activeElement).toBe(trigger);
+    });
+
     it("removes its document listener on unmount", () => {
         const remove = vi.spyOn(document, "removeEventListener");
         const { unmount } = render(<Select options={options} onChange={vi.fn()} />);

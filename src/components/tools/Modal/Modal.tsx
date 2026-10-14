@@ -42,7 +42,7 @@ function ModalContent({ open, onClose, onExited, children, scrollable = true }: 
             <div className="modalBackdrop" onClick={onClose} />
 
             <div
-                className={`modalPanel ${scrollable ? "scrollable" : "nonScrollable"}`}
+                className={`ui-panel modalPanel ${scrollable ? "scrollable" : "nonScrollable"}`}
                 onClick={(e: React.MouseEvent<HTMLDivElement>) => { e.stopPropagation(); }}
             >
                 <button className="modalClose" onClick={onClose}>✕</button>

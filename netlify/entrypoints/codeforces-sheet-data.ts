@@ -1,1 +1,1 @@
-export { handler } from "../functions/codeforces-sheet-data";
+export { default } from "../functions/codeforces-sheet-data";

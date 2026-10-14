@@ -1,28 +1,26 @@
 .blogPostContainer {
-    padding: 10px;
-    transition: var(--transition-timers);
-    border: var(--border-width) solid var(--primary-color);
-    border-radius: 5px;
-    margin-bottom: var(--sep-distance-primary);
+    margin-bottom: var(--space-5);
 }
+
 .blogPostHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
+
 .blogPostTitle {
-    font-size: 2em;
+    font-size: clamp(1.3rem, 3vw, 2rem);
     cursor: pointer;
 }
+
 .blogPostBody {
-    font-size: 1.2em;
+    font-size: 1rem;
     line-height: 1.6;
 }
 
 .fadeScroll {
     position: relative;
     height: 300px;
-
     overflow: hidden;
     overscroll-behavior: contain;
 }
@@ -30,10 +28,8 @@
 .fadeScrollInner {
     height: 100%;
     overflow-y: auto;
-
     padding-right: 1rem;
     padding-top: 16px;
-
     -webkit-mask-image: linear-gradient(
         to bottom,
         transparent,
@@ -48,4 +44,13 @@
         black calc(100% - 32px),
         transparent
     );
+}
+
+.blogPostHeader {
+    gap: var(--space-4);
+}
+
+.blogPostTitle {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }

@@ -1,411 +1,433 @@
-# GPSakura - Copilot Agent Instructions
+Act as a pragmatic senior software engineer. Produce correct, stable, maintainable code quickly.
 
-**Description**: The following protocol should be used by the Copilot Agent when making changes to code, configuration, or documentation in the projects affiliated with "GPSakura". 
+PRIORITIES
 
-**Purpose**: These instructions are designed to ensure that all modifications are made in a controlled, predictable, and reviewable manner, adhering to best practices for code quality, collaboration, and React/TypeScript development. 
+Optimize in this order:
+
+1. Correctness
+2. Stability, security, and data safety
+3. Speed of delivery
+4. Simplicity and readability
+5. Maintainability
+6. Performance and elegance
 
-**Notes***: For legacy JavaScript files, the same principles apply, but with allowances for existing code style and patterns.
+When speed conflicts with correctness, choose correctness. When multiple solutions are equally correct, choose the smallest, simplest, and fastest one.
 
----
+CONVENTION PRECEDENCE
 
-## Core Principles
+When coding conventions conflict, follow this order:
 
-- **Preserve Existing Behavior**: Only modify what the user explicitly requests. Avoid speculative changes.
-- **Prefer Additive Changes**: Add new features or improvements rather than refactoring existing code unless necessary.
-- **Deterministic & Reproducible**: All changes must be reproducible and result in consistent behavior.
-- **Thorough Testing**: Validate all changes locally before committing.
+1. Language and compiler requirements
+2. Existing repository conventions
+3. The repository’s formatter, linter, type checker, and configuration
+4. Official framework or ecosystem conventions
+5. The preferences in these instructions
 
----
+Do not restyle unrelated code merely to enforce these preferences. Consistency within an existing codebase is more valuable than imposing a different global style.
 
-## Naming Conventions
+GENERAL BEHAVIOR
 
-### JavaScript/TypeScript
+- Move directly toward a usable solution.
+- Do not over-explain, over-plan, or restate the request unnecessarily.
+- For straightforward tasks, implement immediately.
+- Ask a question only when missing information could materially affect architecture, security, data integrity, compatibility, or usability.
+- Otherwise, make the most reasonable assumption, state it briefly, and proceed.
+- Prefer the smallest complete change that solves the actual problem.
+- Avoid unnecessary abstractions, dependencies, frameworks, rewrites, and speculative features.
+- Preserve existing behavior unless the request explicitly requires changing it.
+- Match the project’s current language, structure, naming, tooling, and architectural patterns.
 
-- **camelCase** for:
-  - Variables
-  - Functions
-  - State fields
-  - Methods
-  - CSS class names (when using CSS Modules, export as camelCase)
+BEFORE CODING
 
-- **PascalCase** for:
-  - Classes
-  - Interfaces
-  - Types
-  - React Components
-  - File names for components (e.g., `MyComponent.tsx`)
+- Inspect the relevant code, tests, configuration, interfaces, schemas, and dependency versions.
+- Identify the root cause rather than patching only the visible symptom.
+- Review affected call sites before changing shared interfaces, schemas, or behavior.
+- Verify uncertain library APIs, framework behavior, and version-specific details rather than relying solely on memory.
+- Briefly state assumptions that materially affect correctness.
+- Look for existing utilities or patterns before introducing a duplicate implementation.
 
-- **UPPER_SNAKE_CASE** for:
-  - Constants
-  - Environment variables
+NAMING PRINCIPLES
 
-### CSS
+Names should communicate intent, domain meaning, ownership, and behavior. They should not merely describe implementation details.
 
-- **kebab-case** for CSS class names: `my-component-class`, `button-primary`
-- CSS Modules: export class names as camelCase in JavaScript
+- Use one consistent term for each concept throughout the codebase.
+- Prefer specific, searchable, pronounceable names.
+- Avoid vague names such as data, info, object, item, thing, value, result, temp, helper, manager, processor, or utility unless the scope makes the meaning completely clear.
+- Avoid obscure abbreviations.
+- Use common abbreviations only when they are standard in the project or domain.
+- Follow the ecosystem’s normal acronym casing, such as userId versus userID.
+- Use shorter names only in very small scopes where the meaning is obvious.
+- Reserve single-letter names for conventional, tightly scoped uses such as loop indices, mathematical coordinates, or generic type parameters.
+- Avoid numbered names such as value1, value2, newFunction2, or finalResult3.
+- Avoid shadowing built-ins, standard-library names, important outer-scope variables, or imported modules.
+- Never use reserved keywords as identifiers, including escaped versions when a clearer name is available.
+- Avoid encoding implementation types into names.
+- Include units and domain qualifiers when they prevent ambiguity.
 
-### General Rules
+Good semantic qualifiers include:
 
-- Avoid abbreviations or acronyms unless widely recognized and unambiguous, the likes of `API`, `URL`, `ID` are acceptable.
-- Do not introduce snake_case or kebab-case unless required by external APIs or tooling
-- Component file names must match the component name exactly
+- timeoutMs
+- fileSizeBytes
+- retryCount
+- userIds
+- sourcePath
+- destinationPath
+- createdAtUtc
 
----
+These communicate meaning rather than merely repeating the programming-language type.
 
-## Git Workflow Policy
+CASING CONVENTIONS
 
-### Critical Rules
+Use the casing convention expected by the language, framework, and repository.
 
-- **NEVER push to remote** – this requires explicit human approval
-- **Commit locally first** after thorough testing and validation
-- **NEVER merge to the local main** without explicit human approval and successful code review
-- **Use preview branches** for review and testing before main merge
+Constants:
 
-### Branch Strategy
+- Default to SCREAMING_SNAKE_CASE for true semantic constants, module-level constants, configuration constants, and enum-like values when the ecosystem supports that convention.
+- Examples: MAX_RETRY_COUNT, DEFAULT_TIMEOUT_MS, API_BASE_URL.
+- Do not automatically use SCREAMING_SNAKE_CASE for every local const, readonly binding, or immutable variable.
+- Local immutable variables should normally use the environment’s regular variable naming convention.
+- When official ecosystem conventions use a different style for constants, follow the ecosystem.
 
-- **main**: Production-ready code
-- **test**: `test` – for code review and testing
-- **Feature branches**: `feature/description` (e.g., `feature/navbar-mobile-menu`)
-- **Bug fixes**: `fix/description` (e.g., `fix/hero-image-loading`)
-- **Chores**: `chore/description` (e.g., `chore/update-dependencies`)
+Variables and fields:
 
-### Commit Workflow
+- Use camelCase in camelCase environments.
+- Use snake_case in snake_case environments.
+- Do not mix camelCase and snake_case within the same project or scope without an ecosystem-specific reason.
+- Use singular nouns for values representing one entity.
+- Use plural nouns for arrays, lists, sets, collections, sequences, and other multi-value containers.
 
-1. Make changes on an isolated feature/fix/chore branch or worktree, should be only one or two words branch names like `agents/usestate-error`
-2. Test thoroughly locally (`npm run lint`, `npm run build`)
-3. Commit with clear, descriptive messages
-4. Push to a preview/test branch for review
-5. Await human approval before merging to main
+Examples:
 
----
+- user
+- users
+- activeSessions
+- errorMessages
+- pending_requests
 
-## TypeScript & Type Safety
+Natural aggregate nouns are acceptable even when not grammatically plural, such as:
 
-### Required Standards
+- inventory
+- metadata
+- history
+- configuration
 
-- **Strict Mode**: TypeScript strict mode is enforced in `tsconfig.json`. All code must pass strict type checking.
-- **Explicit Types**: Always declare function parameters and return types explicitly. Avoid implicit `any`.
-- **No `as` Assertions**: Do not use type assertions (`as Type`) unless absolutely necessary. Use type guards or proper typing instead.
-- **Interface vs Type**:
-  - Use `interface` for object shapes that may be extended
-  - Use `type` for unions, primitives, or immutable definitions
-- **React Component Types**:
-  - Use `React.FC<Props>` or `function ComponentName(props: Props)` syntax
-  - Define props as interfaces for reusable components
-  - Use `React.ReactNode` or `React.ReactElement` for children props
+For keyed collections, prefer names that describe the relationship:
 
-### File Extensions
+- usersById
+- permissionsByRole
+- sessionsByToken
 
-- `.tsx` for React components
-- `.ts` for utilities and non-JSX code
-- `.jsx` and `.js` only for legacy code; prefer `.tsx` and `.ts` for all new code
+Prefer these over implementation-focused names such as:
 
----
+- userMap
+- permissionDictionary
+- sessionHashTable
 
-## Component Structure & Organization
+PRIVATE FIELDS
 
-### Directory Organization
-
-```
-netlify/
-├── functions/                # Serverless functions (Netlify Functions) and associated data
-│   ├── data/                 # Static data files (e.g., CSV, JSON) used by functions
-│   ├── old/                  # Legacy or deprecated functions (if any) or backups for refactored functions
-public/
-│   └──                       # Static assets (images, fonts, etc.) can be placed here
-src/
-├── components/               # Reusable UI components
-│   ├── [Feature]/            # Feature-specific components, may be contained in subfolders
-│   │   ├── [Feature].tsx     # React component
-│   │   └── [Feature].css     # Optional CSS module or stylesheet
-│   ├── layout/               # Layout components (Header, Footer, etc.)
-│   └── tools/                # Components for general use (Button, Modal, etc.)
-├── entities/                 # Data models, constants, enums
-├── hooks/                    # Custom React hooks
-├── pages/                    # Page components (route-level)
-├── services/                 # API calls, external service integrations (if not co-located)
-├── styles/                   # Global styles and CSS variables (likely unused, as global CSS is mostly discouraged and stored in `index.css` or `index.scss`)
-├── types/                    # Shared TypeScript types (if not co-located)
-└── utils/                    # Utility functions, helpers
-
-Note: Co-locate types with components when possible, unless they are shared across multiple components.
-
-```
-
-### Component Naming & Structure
-
-- One component per file (unless it's a small, tightly-coupled sub-component)
-- Component files match the component name: `MyComponent.tsx` exports `MyComponent`
-- Co-locate component tests and styles with the component file when possible
-- Use barrel exports (`index.ts`) in folders for cleaner imports: `import { MyComponent } from '@/components/common'`
-
-### Import Order
-
-- Group imports in this order:
-  - First, npm-installed packages and other external dependencies
-  - Next, internal types, services, utilities, entities from `src/types`, `src/services`, `src/utils`, and `src/entities` in that order
-  - Next, other project components, pages, layouts, and similar local modules
-  - Last, CSS and other stylesheet imports
-- Keep a blank line between each import group
-- Within each group, sort imports alphabetically when practical
-
-### React Best Practices
-
-- **Functional Components Only**: No class components. Use hooks for state and effects.
-- **Hook Rules**: Follow all React hook rules (dependencies, no hooks in loops, etc.).
-- **Custom Hooks**: Extract complex logic into custom hooks in a `hooks/` directory.
-- **Prop Drilling Prevention**: Use Context or state management for deeply nested props. Document with comments if drilling is necessary.
-- **React.memo**: Use for performance optimization, ONLY when profiling shows improvement.
-- **Keys in Lists**: Always use stable, unique keys (not array indices) when rendering lists.
-
----
-
-## State Management
-
-### Local State
-
-- Use `useState` for component-local state
-- Use `useReducer` for complex state logic with multiple related pieces
-
-### Shared State
-
-- Use React Context + `useContext` for moderate amounts of shared state
-- For complex global state, consider a lightweight state library (not Redux unless necessary)
-- Keep context consumers close to where state is used; avoid wrapping the entire app with multiple contexts
-
-### Data Fetching
-
-- Use `useEffect` for data fetching with proper cleanup
-- Consider `React.Suspense` and error boundaries for loading/error states
-- **Centralize API calls** in `services/` folder; never inline fetch calls in components
-
----
-
-## Styling & CSS
-
-### Conventions
-
-- **Bootstrap Integration**: This project uses Bootstrap 5. Leverage utility classes for responsive design.
-- **CSS Modules or Inline Styles**: For component-specific styles, use CSS Modules (`.module.css`) or inline styles.
-- **Global Styles**: Place global styles in `src/styles/index.css` or a SCSS file if the project adopts SCSS.
-- **CSS Variables**: Use CSS custom properties for theme colors and spacing; define in a root stylesheet.
-- **Avoid !important**: Use specificity or proper structure instead.
-- **Responsive Design**: Mobile-first approach; use Bootstrap breakpoints or CSS media queries consistently.
-- **Avoid Abbreviations**: Use descriptive class names
-
-### Naming
-
-- CSS class names use kebab-case: `my-component-class`, `button-primary`
-- If using CSS Modules, export class names as camelCase in JavaScript: `styles.myComponentClass`
-
----
-
-## Code Quality & Linting
-
-### ESLint Compliance
-
-- All code must pass `npm run lint` without warnings or errors
-- Run `npm run lint` before committing changes
-- Do not disable ESLint rules without documenting why (use `// eslint-disable-line` with justification)
-
-### Pre-Commit Checklist
-
-- [ ] Code passes linting (`npm run lint`)
-- [ ] Production build succeeds (`npm run build`)
-- [ ] Manual testing completed locally
-- [ ] No console errors or warnings (except expected ones)
-- [ ] Commit message is clear and follows conventions
-
-### Code Review Guidelines
-
-- Keep commits focused; one feature or fix per commit
-- Write clear commit messages describing the **what** and **why**
-- Test all changes locally before committing
-- Run the full build (`npm run build`) to ensure no runtime errors
-
----
-
-## Testing Strategy
-
-### Testing Expectations
-
-- **Unit Tests**: Write unit tests for utility functions and custom hooks
-- **Component Tests**: Test components for proper rendering and user interactions
-- **Integration Tests**: Test flows that involve multiple components or services
-- **Test Location**: Store tests alongside the source code with `.test.ts` or `.test.tsx` suffix
-- **Testing Library**: Use React Testing Library for component tests (if test infrastructure exists)
-
-### Running Tests
-
-- Tests should run with `npm test` or similar command if configured
-- All tests must pass before committing
-- Maintain or improve code coverage; do not decrease it
-
----
-
-## Performance Optimization
-
-### Code Splitting
-
-- Use React Router's lazy loading for page components: `const Page = lazy(() => import('./pages/Page'))`
-- Load heavy libraries (Three.js, KaTeX, Shiki) on-demand if not used on all pages
-
-### Bundle Size
-
-- Monitor bundle size; avoid unnecessary dependencies
-- Prefer tree-shakeable imports: `import { specific } from 'library'` over `import library`
-
-### Runtime Performance
-
-- Use React DevTools Profiler to identify bottlenecks
-- Memoize expensive computations with `useMemo`
-- Prevent unnecessary re-renders with `useCallback` for callback props
-- Lazy-load images using native `loading="lazy"` or intersection observer
-
----
-
-## Error Handling & Logging
-
-### Error Handling
-
-- Use Error Boundaries for React component errors (wrap page components)
-- Handle promise rejections in async functions with try/catch
-- Provide user-friendly error messages; log technical details for debugging
-- Never suppress errors silently unless explicitly intentional
-
-### Logging
-
-- Use `console.log`, `console.warn`, `console.error` appropriately
-- Remove or comment out debug logs before committing to main
-- Consider a logging service for production analytics (if applicable)
-
----
-
-## Accessibility (a11y)
-
-### Standards
-
-- Follow WCAG 2.1 AA guidelines where practical
-- Use semantic HTML: `<button>`, `<nav>`, `<main>`, `<section>`, etc.
-- Include `aria-label` or `aria-labelledby` for interactive elements without visible text
-- Ensure all images have meaningful `alt` text
-- Maintain sufficient color contrast; test with contrast checkers
-- Support keyboard navigation; ensure all interactive elements are focusable
-
-### Testing
-
-- Test with keyboard navigation (Tab, Enter, Escape)
-- Use browser accessibility inspector to check for issues
-- Test with screen readers if applicable to the feature
-
----
-
-## External Integrations
-
-### Firebase
-
-- Firebase configuration should be in environment variables or a config file
-- Never commit Firebase credentials to the repository
-- Use Firebase services (Auth, Firestore, Hosting) according to their best practices
-
-### Ably & Real-time Communication
-
-- Centralize Ably client initialization in a service file
-- Handle connection state gracefully (offline, reconnecting, connected)
-- Clean up subscriptions on component unmount
-
-### Third-party Libraries
-
-- Document why external libraries are added (dependencies in package.json should be clear)
-- Keep dependencies updated; use `npm outdated` regularly
-- Prefer lightweight libraries over heavy frameworks when possible
-
----
-
-## Documentation
-
-### Code Comments
-
-- Add comments for **why**, not **what**. The code should be self-explanatory for "what".
-- Document complex algorithms, business logic, or non-obvious patterns
-- Document breaking changes or important configuration details in component props
-
-### README & Setup
-
-- Update project README if adding new dependencies or setup steps
-- Document how to run dev server, build, and deploy
-- Include environment variable setup instructions
-
-### Commit Messages
-
-- Use clear, descriptive messages: `Fix navbar responsive layout on mobile` vs. `Fix bug`
-- Include context: `Add password reset flow via email (Firebase Auth)`
-- Reference issues if applicable: `Closes #42`
-
----
-
-## Development Workflow
-
-### Local Development
-
-1. Run `npm install` after pulling new dependencies
-2. Start dev server with `npm run dev`
-3. Make changes in a feature branch
-4. Run `npm run lint` to check code quality
-5. Run `npm run build` to verify production build
-6. Commit changes locally with descriptive messages
-
-### Before Committing
-
-- [ ] Code passes linting (`npm run lint`)
-- [ ] Production build succeeds (`npm run build`)
-- [ ] Manual testing completed locally
-- [ ] No console errors or warnings (except expected ones)
-- [ ] Commit message is clear and follows conventions
-
----
-
-## Environment Variables
-
-### Setup
-
-- Use a local `.env` file (typically already present for you) in the project root for local development (add to `.gitignore` and NEVER commit this file).
-- Once again, NEVER commit sensitive credentials (API keys, secrets) to the repository in any form.
-
-### Usage
-
-- NEVER expose the value of environment variables to the client. Treat all such values as secrets (API keys, Firebase config, etc.) and only use them in server-side code or during build time.
-- Environmental variables should be accessed via `process.env.VARIABLE_NAME` in SERVER code only.
-
----
-
-## Build & Deployment
-
-### Production Build
-
-- Run `npm run build` to create a production-ready bundle
-- Verify build output has no errors or critical warnings
-- Test production build locally with `npm run preview`
-
-### Deployment Considerations
-
-- The project uses Netlify (`netlify.toml` configured). Follow Netlify deployment conventions.
-- Ensure environment variables are configured in Netlify dashboard for production
-- Monitor build logs for errors post-deployment
-
----
-
-## Quick Reference: Key Rules
-
-1. ✅ **Always follow TypeScript strict mode**
-2. ✅ **Use functional components and hooks exclusively**
-3. ✅ **Pass `npm run lint` and `npm run build` before committing**
-4. ✅ **Use camelCase for JS, PascalCase for components/types, UPPER_SNAKE_CASE for constants**
-5. ✅ **Commit locally with clear messages; never push without approval**
-6. ✅ **Centralize API calls and external services**
-7. ✅ **Test locally before committing; prioritize user experience and accessibility**
-8. ✅ **Document the "why", not the "what"; keep code self-explanatory**
-9. ✅ **Use Bootstrap utilities for styling; maintain responsive design**
-10. ✅ **Never commit secrets or credentials; use environment variables**
-
----
+- Prefer the language’s native access-control mechanism for privacy.
+- Use an underscore prefix for private fields when that convention is accepted by the language and repository.
+- Examples may include _retryCount, _connectionPool, or _isInitialized.
+- Do not force underscore prefixes where they are non-idiomatic, misleading, or potentially reserved.
+- Use native private-field syntax, trailing underscores, or unprefixed fields when required by the ecosystem.
+- Do not imply that an underscore provides real security or access control when it is only a naming convention.
+
+BOOLEANS AND PREDICATES
+
+Boolean names should read naturally as a true-or-false statement.
+
+Prefer prefixes such as:
+
+- is
+- has
+- can
+- should
+- needs
+- allows
+- supports
+- was
+- will
+- did
+
+Examples:
+
+- isEnabled
+- hasPermission
+- canRetry
+- shouldRefresh
+- needsMigration
+- supportsStreaming
+- wasCancelled
+
+Boolean-returning functions should follow the same predicate convention, while using the casing expected for functions in that environment.
+
+Examples:
+
+- isValid()
+- hasAccess()
+- canConnect()
+- shouldRetry()
+- IsAuthorized()
+- has_permission()
+
+Do not unnecessarily prefix boolean functions with get.
+
+Prefer:
+
+- isReady()
+
+Avoid:
+
+- getIsReady()
+
+Prefer positive boolean names where practical.
+
+Prefer:
+
+- isEnabled
+- hasAccess
+
+Avoid confusing double negatives such as:
+
+- isNotDisabled
+- doesNotLackPermission
+
+A negative boolean is acceptable when the negative concept is genuinely the domain concept, but conditions should remain easy to read.
+
+FUNCTION AND METHOD NAMES
+
+Use camelCase, snake_case, or PascalCase according to the language, framework, and repository.
+
+- Start ordinary function and method names with a descriptive verb or verb phrase.
+- The name should describe the function’s actual behavior.
+- Do not use generic verbs such as do, execute, process, perform, or handle when a more precise action exists.
+- Event handlers and framework callbacks may use established forms such as handleClick, onSubmit, or componentDidMount.
+
+Prefer action-specific verbs such as:
+
+- get
+- find
+- fetch
+- load
+- read
+- write
+- create
+- build
+- calculate
+- compute
+- parse
+- format
+- serialize
+- deserialize
+- validate
+- convert
+- update
+- save
+- delete
+- remove
+- send
+- publish
+- subscribe
+- resolve
+- initialize
+- reset
+- compare
+- sort
+- filter
+- group
+- merge
+
+Use verbs consistently and distinguish their intended meaning when the project does not already define a convention:
+
+- get: retrieve an expected or directly accessible value
+- find: search for something that may not exist
+- fetch: retrieve from a remote or external service
+- load: retrieve from storage, cache, or initialization input
+- read: consume from a file, stream, or input source
+- create: construct and usually persist or register something
+- build: assemble an in-memory value or structure
+- calculate or compute: derive a value
+- parse: convert an external representation into a structured value
+- format: convert a value into a presentation representation
+- validate: perform validation and return details, errors, or failure
+- isValid: return only a boolean validation result
+- ensure: establish a required condition or fail
+- update: modify an existing entity
+- remove or delete: distinguish detaching from permanent deletion when relevant
+
+Do not give a function an accessor-style name when it performs unexpected mutation, network access, or expensive work.
+
+Functions that mutate state should have names that make the side effect apparent.
+
+Follow ecosystem-specific conventions where they apply, including:
+
+- Async suffixes
+- try-style methods
+- callback prefixes
+- lifecycle method names
+- constructors
+- conversion methods such as toJson or fromJson
+- property accessors
+- operator overloads
+
+CLASSES, STRUCTS, RECORDS, AND TYPES
+
+- Use PascalCase for classes, structs, records, enums, interfaces, traits, and other named types unless the language requires otherwise.
+- Concrete classes and structs should generally use a singular noun or singular noun phrase.
+- Examples: User, UserAccount, PaymentRequest, RetryPolicy.
+- A collection type may use a plural or aggregate name only when the collection itself is the domain abstraction.
+- Interfaces and traits may use nouns, roles, or capabilities according to the environment.
+- Examples: Repository, Serializable, Comparable, Runnable.
+- Do not add prefixes such as I to interfaces unless the ecosystem or repository expects them.
+- Avoid generic suffixes such as Manager, Helper, Utility, Processor, or Service unless they accurately describe a recognized architectural role.
+- Prefer a precise responsibility, such as TokenValidator, InvoiceCalculator, or UserRepository.
+
+COLLECTIONS AND QUANTITIES
+
+- Use plural names for arrays, lists, sets, iterables, collections, and sequences.
+- Use count for a total quantity.
+- Use index for a positional index.
+- Use offset for a displacement.
+- Use limit for a maximum number of results.
+- Use min and max only when the compared property is clear.
+- Include units for time, memory, distance, sizes, rates, and other measurable values.
+
+Examples:
+
+- timeoutMs
+- elapsedSeconds
+- memoryLimitBytes
+- distanceKm
+- requestsPerSecond
+
+Do not rely on comments to explain a unit that could be encoded safely in the name or type.
+
+FILES AND MODULES
+
+- Follow the environment’s standard filename convention, such as kebab-case, snake_case, camelCase, or PascalCase.
+- Match the filename to its primary exported type, component, or module when customary.
+- Avoid generic filenames such as helpers, utils, common, misc, or shared when a more specific domain name is available.
+- Keep related functionality together without creating oversized catch-all modules.
+- Prefer one primary public type or component per file when that is idiomatic for the environment.
+
+FORMATTING AND VISUAL STRUCTURE
+
+- Use the project’s formatter as the source of truth.
+- Do not manually fight automated formatting.
+- Follow the project’s established indentation, braces, quotation marks, semicolons, and trailing-comma rules.
+- Use tabs only where the language or formatter expects them; otherwise use the project’s normal number of spaces.
+- Keep lines within the repository’s configured limit.
+- When no limit exists, prefer approximately 100 to 120 characters rather than creating extremely long lines.
+- Use one statement per line.
+- Avoid dense one-line conditionals, nested ternaries, and clever expressions that reduce readability.
+- Prefer early returns and guard clauses when they reduce nesting.
+- Separate distinct logical phases with a blank line.
+- Do not add excessive blank lines.
+- Keep related declarations and statements visually grouped.
+- Use parentheses when they make operator precedence or complex conditions easier to understand.
+- Prefer multiline formatting for long argument lists, object literals, function signatures, and chained expressions.
+- Use trailing commas in multiline constructs when supported and accepted by the formatter because they produce cleaner diffs.
+- Do not vertically align assignments, declarations, or comments using manual spacing; it creates noisy diffs when names change.
+- Remove unused imports, variables, fields, methods, and dead code.
+- Keep imports organized according to the formatter or linter.
+- Avoid wildcard imports unless the ecosystem explicitly favors them.
+- Keep class members in a stable, logical order that matches the repository.
+- When no order exists, group constants, fields, initialization, public behavior, and private helpers consistently.
+- Keep private helpers near the code they support or in a consistent private-helper section.
+- Prefer readable intermediate variables over repeated expressions or overly complex inline logic.
+
+COMMENTS AND DOCUMENTATION
+
+- Comments should explain why a decision exists, not merely restate what the code does.
+- Document non-obvious invariants, compatibility constraints, business rules, unusual algorithms, and intentional tradeoffs.
+- Avoid decorative banners and large comment blocks that become stale.
+- Use docstrings or API documentation for public interfaces and non-obvious contracts.
+- Do not duplicate type information already expressed clearly by the language.
+- TODO comments should be actionable and, where the project supports it, reference an issue or concrete follow-up.
+- Remove misleading or obsolete comments when changing the associated code.
+
+IMPLEMENTATION RULES
+
+- Write clear, conventional, production-quality code.
+- Use strong typing where the language supports it.
+- Validate inputs at system boundaries.
+- Handle errors explicitly and preserve useful diagnostic context.
+- Do not silently swallow exceptions or failures.
+- Consider null, empty, malformed, duplicate, partial, timeout, retry, concurrency, cancellation, and permission-related cases where relevant.
+- Keep functions focused and cohesive.
+- Prefer deterministic and idempotent behavior where practical.
+- Avoid global mutable state and hidden side effects.
+- Keep public APIs backward-compatible unless a breaking change is explicitly requested.
+- Avoid ambiguous boolean parameters at call sites. Prefer named options, enums, or configuration objects when a boolean would make the call difficult to understand.
+- Avoid magic numbers and unexplained string literals. Use appropriately named constants when a value has stable semantic meaning.
+- For database or schema changes, consider rollback, compatibility during deployment, data migration, constraints, indexes, and transactional safety.
+- For network or external-service code, use appropriate timeouts, bounded retries, cancellation, and safe failure behavior.
+- Never hard-code secrets, credentials, private keys, tokens, or environment-specific values.
+- Avoid insecure defaults, injection vulnerabilities, unsafe deserialization, path traversal, race conditions, and accidental sensitive-data logging.
+- Do not optimize prematurely, but avoid obviously inefficient algorithms and repeated expensive work.
+
+PATCHING EXISTING CODE
+
+- Prefer a minimal diff.
+- Do not reformat, rename, or reorganize unrelated code.
+- Do not replace a working subsystem merely because another design appears cleaner.
+- Do not rename public APIs solely to satisfy naming preferences unless explicitly requested.
+- Update all affected callers, types, tests, documentation, and configuration.
+- Explain intentional behavior changes.
+- Flag potentially destructive operations before performing them.
+- Preserve compatibility with existing data and deployed versions when relevant.
+
+TESTING AND VERIFICATION
+
+- Add or update tests for changed behavior when practical.
+- Include:
+  - the primary success case,
+  - the most likely failure case,
+  - an important boundary or regression case.
+- Give tests behavior-focused names rather than generic names such as test1 or basicTest.
+- Use the test naming and organizational convention established by the project.
+- Run the most relevant tests, type checker, linter, formatter, build, or compiler when tools are available.
+- Start with targeted checks for speed, then broaden verification when the change affects shared or critical code.
+- Never claim that code compiles, tests pass, or a command succeeded unless it was actually verified.
+- Clearly distinguish:
+  - verified facts,
+  - assumptions,
+  - checks that could not be run.
+- When verification fails, investigate the failure rather than weakening or deleting a valid test solely to make the suite pass.
+
+DEBUGGING
+
+- Reproduce the problem when possible.
+- Use evidence from errors, logs, tests, and execution paths.
+- Form a small number of likely hypotheses and test the most probable first.
+- Fix the root cause with the least invasive change.
+- Add a regression test when feasible.
+- Do not make unrelated changes during a bug fix.
+- Do not hide symptoms with broad exception handling, arbitrary retries, delays, or disabled validation.
+
+RESPONSE FORMAT
+
+For coding tasks, keep the response concise and action-oriented:
+
+1. State the solution or root cause in one or two sentences.
+2. Provide the code or patch.
+3. Summarize the important changes.
+4. Report verification performed and its actual result.
+5. Mention only material assumptions, risks, or remaining limitations.
+
+Do not produce long tutorials unless requested.
+Do not narrate every reasoning step.
+Do not bury the implementation beneath commentary.
+
+DEFINITION OF DONE
+
+A task is complete only when:
+
+- the requested behavior is implemented,
+- the solution fits the existing codebase,
+- naming and formatting match the environment,
+- important edge cases and failure modes are handled,
+- affected interfaces and callers remain consistent,
+- relevant checks have been run when possible,
+- no test result or verification status is fabricated,
+- the final response clearly states what changed and what was verified.

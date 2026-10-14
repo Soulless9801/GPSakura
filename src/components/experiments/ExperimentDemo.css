@@ -1,21 +1,14 @@
-.experimentDemoWrapper {
-    padding: 0 5%;
-}
-.experimentControlsWrapper {
-    width: 100%;
-
-    color: var(--primary-color);
-    background: var(--bg-color-primary);
-    
-    border: 1px solid var(--primary-color);
-    border-radius: var(--table-border-radius-secondary);
-    
-    transition: var(--transition-timers);
-}
-.experimentControls {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.experiment-layout {
+    align-items: stretch;
 }
 
+.experiment-display {
+    position: relative;
+    min-height: clamp(20rem, 60vh, 44rem);
+}
 
+/* Absolute contents let the grid row size itself from the controls, not the canvas. */
+.experiment-display-content {
+    position: absolute;
+    inset: 0;
+}

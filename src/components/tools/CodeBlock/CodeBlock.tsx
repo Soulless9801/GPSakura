@@ -8,11 +8,16 @@ interface CodeBlockProps {
     theme?: string;
 }
 
-export default function CodeBlock({ code, lang = "cpp", theme = "github-dark" }: CodeBlockProps) {
+export default function CodeBlock({ code, lang = "cpp", theme }: CodeBlockProps) {
 
     return (
 
-        <ShikiHighlighter language={lang} theme={theme} className="code-block">
+        <ShikiHighlighter
+            language={lang}
+            theme={theme ?? { light: "github-light", dark: "github-dark" }}
+            defaultColor={theme ? undefined : "light-dark()"}
+            className="code-block"
+        >
             {code ? code.trim() : "// No Solution"}
         </ShikiHighlighter>
 

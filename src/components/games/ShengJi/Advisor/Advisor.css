@@ -1,21 +1,17 @@
-/* The advisor page. Everything is driven by the theme variables in /src/index.css, so
-   light and dark both come for free. */
+/* Advisor-specific layouts. Shared panels and controls live in styles/primitives.css. */
 
 .advWrapper {
-    padding: 0 5% 4rem;
-    color: var(--primary-color);
-    transition: var(--transition-timers);
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    color: var(--color-text);
 }
 
 /* ---------- shared shell ---------- */
 
 .advPanel {
-    background: var(--bg-color-secondary);
-    border: var(--border-width) solid var(--secondary-color);
-    border-radius: var(--table-border-radius-secondary);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    transition: var(--transition-timers);
+    margin: 0;
+    min-width: 0;
 }
 
 .advPanel__head {
@@ -24,6 +20,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
+    min-height: var(--control-height);
 }
 
 .advPanel__head h3 {
@@ -35,7 +32,7 @@
 
 .advPanel__head h3 em {
     font-style: normal;
-    color: var(--border-highlight-color);
+    color: var(--color-accent);
 }
 
 .advPanel h4 {
@@ -43,30 +40,30 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--secondary-color);
+    color: var(--color-muted);
     margin: 1.25rem 0 0.5rem;
 }
 
 .advCount {
     margin-right: auto;
     font-size: 0.85rem;
-    color: var(--secondary-color);
+    color: var(--color-muted);
 }
 
 .advNote {
     font-size: 0.85rem;
-    color: var(--secondary-color);
+    color: var(--color-muted);
     margin: 0 0 0.75rem;
     line-height: 1.5;
 }
 
 .advEmpty {
     font-size: 0.85rem;
-    color: var(--disabled-color);
+    color: var(--color-disabled);
 }
 
 .advRed {
-    color: #d32f2f;
+    color: var(--color-danger);
 }
 
 /* ---------- steps ---------- */
@@ -78,9 +75,13 @@
     list-style: none;
     counter-reset: adv-step;
     padding: 0;
-    margin: 0 0 1.5rem;
+    margin: 0;
     font-size: 0.9rem;
-    color: var(--secondary-color);
+    color: var(--color-muted);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+    font-size: 0.8rem;
 }
 
 .advSteps li {
@@ -98,10 +99,10 @@
     width: 1.5rem;
     height: 1.5rem;
     flex: 0 0 auto;
-    border: var(--border-width) solid var(--secondary-color);
-    border-radius: 50%;
+    border: var(--border-width) solid var(--color-muted);
+    border-radius: var(--radius-control);
     font-size: 0.75rem;
-    color: var(--primary-color);
+    color: var(--color-text);
 }
 
 /* ---------- setup ---------- */
@@ -123,13 +124,14 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--secondary-color);
+    color: var(--color-muted);
 }
 
 .advSetup__actions {
     display: flex;
     gap: 0.5rem;
     margin-left: auto;
+    flex-wrap: wrap;
 }
 
 .advSegmented {
@@ -143,37 +145,50 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.85rem;
     line-height: 1.2;
-    border-color: var(--secondary-color);
+    border-color: var(--color-muted);
 }
 
 .advSeg.active {
-    background-color: var(--bg-color-hover);
-    border-color: var(--border-highlight-color);
-    box-shadow: 0 0 0 1px var(--border-highlight-color);
-}
-
-button.active {
-    color: var(--border-highlight-color);;
-    background-color: var(--bg-color-hover);
-    border-color: var(--border-highlight-color);
-    box-shadow: 0 0 0 1px var(--border-highlight-color);
+    background-color: var(--color-hover);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent);
 }
 
 /* ---------- layout ---------- */
 
-.advGrid {
+.advWorkbench, .advAnalysis, .advReasoning {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 1rem;
-    align-items: start;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: stretch;
 }
 
-.advColumn {
-    min-width: 0;
+.advPanel > :last-child {
+    margin-bottom: 0;
 }
 
-@media (max-width: 900px) {
-    .advGrid {
+.advHand, .advTable, .advResult {
+    overflow-wrap: anywhere;
+}
+
+.advResult > h3, .advReasons > h3, .advAlternatives > h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 var(--space-3);
+}
+
+.advCaveat summary {
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    cursor: pointer;
+}
+
+.advCaveat[open] summary {
+    margin-bottom: var(--space-4);
+}
+
+@media (max-width: 69.99rem) {
+    .advWorkbench, .advAnalysis, .advReasoning {
         grid-template-columns: minmax(0, 1fr);
     }
 }
@@ -193,9 +208,9 @@ button.active {
     align-items: baseline;
     justify-content: center;
     gap: 1px;
-    background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    background: var(--color-card);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-border-strong);
     font-weight: 700;
     line-height: 1;
     user-select: none;
@@ -214,11 +229,11 @@ button.active {
 }
 
 .advCard--red {
-    color: #d32f2f;
+    color: var(--color-card-red);
 }
 
 .advCard--black {
-    color: #111;
+    color: var(--color-card-black);
 }
 
 .advCard__suit {
@@ -237,17 +252,17 @@ button.active {
 }
 
 .advChip:hover {
-    border-color: #d32f2f;
+    border-color: var(--color-danger);
     background: transparent;
 }
 
 .advChip__x {
     font-size: 0.75rem;
-    color: var(--disabled-color);
+    color: var(--color-disabled);
 }
 
 .advChip:hover .advChip__x {
-    color: #d32f2f;
+    color: var(--color-danger);
 }
 
 /* ---------- the trick ---------- */
@@ -259,20 +274,20 @@ button.active {
     gap: 0.5rem;
     padding: 0.5rem 0.6rem;
     border: var(--border-width) solid transparent;
-    border-left: 3px solid var(--secondary-color);
-    border-radius: var(--table-border-radius-secondary);
+    border-left: 3px solid var(--color-muted);
+    border-radius: var(--radius-control);
     margin-bottom: 0.4rem;
-    transition: var(--transition-timers);
+    margin-bottom: var(--space-2);
 }
 
 .advSeat--winning {
-    border-left-color: var(--border-highlight-color);
-    background: var(--bg-color-hover);
+    border-left-color: var(--color-accent);
+    background: var(--color-hover);
 }
 
 .advSeat--you {
     border-left-style: dashed;
-    border-left-color: var(--primary-color);
+    border-left-color: var(--color-text);
 }
 
 .advSeat__who {
@@ -280,6 +295,8 @@ button.active {
     align-items: center;
     gap: 0.4rem;
     min-width: 11rem;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .advSeat__name {
@@ -294,6 +311,7 @@ button.active {
 .advSeat__actions {
     display: flex;
     gap: 0.35rem;
+    margin-left: auto;
 }
 
 .advSeat__actions button {
@@ -305,48 +323,33 @@ button.active {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 1px 5px;
-    border: var(--border-width) solid var(--secondary-color);
-    border-radius: 999px;
-    color: var(--secondary-color);
+    border: var(--border-width) solid var(--color-muted);
+    border-radius: var(--radius-control);
+    color: var(--color-muted);
     white-space: nowrap;
 }
 
 .advTag--partner {
-    border-color: #2e7d32;
-    color: #2e7d32;
+    border-color: var(--color-success);
+    color: var(--color-success);
 }
 
 .advTag--opponent {
-    border-color: #c62828;
-    color: #c62828;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 .advTag--winning,
 .advTag--you {
-    border-color: var(--border-highlight-color);
-    color: var(--border-highlight-color);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
 }
 
 .advTag--warn {
-    border-color: #b26a00;
-    color: #b26a00;
+    border-color: var(--color-warning);
+    color: var(--color-warning);
     margin-left: 0.4rem;
     cursor: help;
-}
-
-[data-theme="dark"] .advTag--partner {
-    border-color: #7bc47f;
-    color: #7bc47f;
-}
-
-[data-theme="dark"] .advTag--opponent {
-    border-color: #ef9a9a;
-    color: #ef9a9a;
-}
-
-[data-theme="dark"] .advTag--warn {
-    border-color: #e0a458;
-    color: #e0a458;
 }
 
 /* ---------- the answer ---------- */
@@ -356,6 +359,7 @@ button.active {
     align-items: center;
     gap: 0.5rem;
     padding: 1rem 0 1.25rem;
+    padding-top: var(--space-2);
 }
 
 .advStats {
@@ -363,7 +367,8 @@ button.active {
     grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
     gap: 0.75rem;
     padding-top: 0.5rem;
-    border-top: var(--border-width) solid var(--secondary-color);
+    border-top: var(--border-width) solid var(--color-muted);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .advStat {
@@ -382,7 +387,7 @@ button.active {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--secondary-color);
+    color: var(--color-muted);
 }
 
 .advRules,
@@ -397,7 +402,7 @@ button.active {
     display: flex;
     gap: 0.75rem;
     padding: 0.45rem 0;
-    border-bottom: var(--border-width) solid var(--bg-color-hover);
+    border-bottom: var(--border-width) solid var(--color-hover);
 }
 
 .advRule__delta {
@@ -409,19 +414,11 @@ button.active {
 }
 
 .advRule__delta--up {
-    color: #2e7d32;
+    color: var(--color-success);
 }
 
 .advRule__delta--down {
-    color: #c62828;
-}
-
-[data-theme="dark"] .advRule__delta--up {
-    color: #7bc47f;
-}
-
-[data-theme="dark"] .advRule__delta--down {
-    color: #ef9a9a;
+    color: var(--color-danger);
 }
 
 .advRule__body {
@@ -434,12 +431,12 @@ button.active {
 .advRule__id {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.78rem;
-    color: var(--primary-color);
+    color: var(--color-text);
 }
 
 .advRule__plain {
     font-size: 0.82rem;
-    color: var(--secondary-color);
+    color: var(--color-muted);
     line-height: 1.45;
 }
 
@@ -448,7 +445,8 @@ button.active {
     align-items: center;
     gap: 0.6rem;
     padding: 0.4rem 0;
-    border-bottom: var(--border-width) solid var(--bg-color-hover);
+    border-bottom: var(--border-width) solid var(--color-hover);
+    flex-wrap: wrap;
 }
 
 .advAlt__score {
@@ -462,47 +460,45 @@ button.active {
     flex: 0 0 auto;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.7rem;
-    color: var(--secondary-color);
+    color: var(--color-muted);
     max-width: 12rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 100%;
 }
 
 .advProblems li {
     font-size: 0.9rem;
-    color: #c62828;
+    color: var(--color-danger);
     padding: 0.2rem 0;
-}
-
-[data-theme="dark"] .advProblems li {
-    color: #ef9a9a;
 }
 
 .advCaveat p {
     font-size: 0.82rem;
     line-height: 1.6;
-    color: var(--secondary-color);
+    color: var(--color-muted);
     margin: 0 0 0.6rem;
 }
 
 .advCaveat code {
     font-size: 0.78rem;
-    color: var(--primary-color);
+    color: var(--color-text);
 }
 
 /* ---------- picker ---------- */
 
 .advPickRow {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1.5rem repeat(13, minmax(0, 1fr));
     align-items: center;
     gap: 3px;
     margin-bottom: 4px;
+    row-gap: var(--space-2);
 }
 
 .advPickRow__suit {
-    width: 1.75rem;
+    width: 1.5rem;
     font-size: 1.1rem;
     text-align: center;
     flex: 0 0 auto;
@@ -510,19 +506,20 @@ button.active {
 
 .advPick {
     position: relative;
-    min-width: 2.35rem;
+    min-width: 0;
     padding: 0.35rem 0.3rem;
     font-size: 0.85rem;
     line-height: 1.2;
-    border-color: var(--secondary-color);
+    border-color: var(--color-muted);
 }
 
 .advPick--used {
-    border-color: var(--border-highlight-color);
+    border-color: var(--color-accent);
 }
 
-.advPick--joker {
-    min-width: 2.8rem;
+.advPicker .advPickRow:last-child {
+    grid-template-columns: 1.5rem repeat(2, minmax(2.5rem, 1fr));
+    max-width: 8rem;
 }
 
 .advPick__used {
@@ -532,10 +529,61 @@ button.active {
     min-width: 14px;
     height: 14px;
     padding: 0 3px;
-    border-radius: 999px;
-    background: var(--border-highlight-color);
-    color: var(--bg-color-primary);
+    border-radius: var(--radius-control);
+    background: var(--color-accent);
+    color: var(--color-page);
     font-size: 0.6rem;
     line-height: 14px;
     text-align: center;
+}
+
+@media (max-width: 47.99rem) {
+    .advSteps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .advSetup {
+        gap: var(--space-4);
+    }
+    .advSetup__actions {
+        width: 100%;
+        margin-left: 0;
+    }
+    .advSetup__actions button {
+        flex: 1;
+    }
+    .advPickRow {
+        grid-template-columns: 1.5rem repeat(7, minmax(0, 1fr));
+    }
+    .advPickRow__suit {
+        grid-row: span 2;
+        align-self: stretch;
+        display: grid;
+        place-items: center;
+    }
+    .advPicker .advPickRow:last-child .advPickRow__suit {
+        grid-row: auto;
+    }
+}
+
+.advInventory {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.advHand {
+    flex: 1;
+}
+
+.advSeen {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-4);
+}
+
+.advSeen > :last-child {
+    margin-bottom: 0;
+}
+
+.advReasoning--single {
+    grid-template-columns: minmax(0, 1fr);
 }

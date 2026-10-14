@@ -1,9 +1,8 @@
 import crypto from "node:crypto";
 
-import type { HandlerEvent } from "@netlify/functions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { handler as AblyHandler } from "./ably-auth";
+import type AblyHandler from "../entrypoints/ably-auth";
 
 vi.mock("dotenv", () => ({ default: { config: vi.fn() } }));
 
@@ -32,11 +31,11 @@ async function load(): Promise<Handler> {
     vi.resetModules();
     vi.stubEnv("SESSION_SECRET", SECRET);
     vi.stubEnv("ABLY_API_KEY_CLIENT", "app.key:secret");
-    return (await import("./ably-auth")).handler;
+    return (await import("../entrypoints/ably-auth")).default;
 }
 
-const request = (params?: Record<string, string>): HandlerEvent =>
-    ({ queryStringParameters: params }) as unknown as HandlerEvent;
+const request = (params?: Record<string, string>): Request =>
+    new Request(`http://localhost/.netlify/functions/ably-auth?${new URLSearchParams(params)}`);
 
 describe("ably-auth", () => {
     let handler: Handler;
@@ -54,8 +53,8 @@ describe("ably-auth", () => {
 
     it("issues a token request for a correctly signed client", async () => {
         const res = await handler(request({ clientId: "alice", signature: sign("alice") }));
-        expect(res?.statusCode).toBe(200);
-        expect(JSON.parse(res?.body ?? "")).toEqual({ keyName: "app.key", mac: "m" });
+        expect(res?.status).toBe(200);
+        expect(await res.json()).toEqual({ keyName: "app.key", mac: "m" });
     });
 
     it("binds the token to the verified client id", async () => {
@@ -74,7 +73,7 @@ describe("ably-auth", () => {
 
     it("rejects a request with no query string", async () => {
         const res = await handler(request());
-        expect(res?.statusCode).toBe(400);
+        expect(res?.status).toBe(400);
         expect(ably.createTokenRequest).not.toHaveBeenCalled();
     });
 
@@ -84,20 +83,20 @@ describe("ably-auth", () => {
         [{ clientId: "", signature: "abc" }],
     ])("rejects missing parameters %j with 400", async (params) => {
         const res = await handler(request(params));
-        expect(res?.statusCode).toBe(400);
+        expect(res?.status).toBe(400);
         expect(ably.createTokenRequest).not.toHaveBeenCalled();
     });
 
     it("rejects a bad signature with 403 and issues nothing", async () => {
         const res = await handler(request({ clientId: "alice", signature: sign("bob") }));
-        expect(res?.statusCode).toBe(403);
+        expect(res?.status).toBe(403);
         expect(ably.createTokenRequest).not.toHaveBeenCalled();
     });
 
     it("reports Ably failures as a 500 naming the function", async () => {
         ably.createTokenRequest.mockRejectedValue(new Error("ably down"));
         const res = await handler(request({ clientId: "alice", signature: sign("alice") }));
-        expect(res?.statusCode).toBe(500);
-        expect(JSON.parse(res?.body ?? "").error).toMatch(/ably-auth: Internal server error ably down/);
+        expect(res?.status).toBe(500);
+        expect((await res.json()).error).toMatch(/ably-auth: Internal server error ably down/);
     });
 });

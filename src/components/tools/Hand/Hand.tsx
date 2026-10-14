@@ -72,7 +72,7 @@ const Hand = forwardRef<HandRef, HandProps>(function Hand({ cards, className = "
 
     return (
         <div className={`card-hand__wrapper ${className}`.trim()}>
-            <div className="card-hand" key={handKey}>
+            <div className="card-hand" key={handKey} style={{ width: Math.max(100, (cards.length - 1) * 24 + 100) }}>
                 {cards.map((card, index) => {
                     if (!layout || !layout[index]) {return null;}
                     return (

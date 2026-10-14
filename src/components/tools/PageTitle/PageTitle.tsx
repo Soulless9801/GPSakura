@@ -7,9 +7,9 @@ interface PageTitleProps {
 
 export default function PageTitle({title, description}: PageTitleProps) {
 	return (
-		<section className="container-fluid pageIntroContainer">
-			<div className="pageTitle">{title}</div>
-			<div className="pageDescript">{description}</div>
+		<section className="pageIntroContainer">
+			<h1 className="pageTitle">{title}</h1>
+			<p className="pageDescript">{description}</p>
 			<hr className="pageIntroDiv"/>
 		</section>
 	);

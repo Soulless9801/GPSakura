@@ -58,7 +58,6 @@ export default function ParticleNetworkDemo() {
 			pointerRadius={mouseRadius}
 			pointerStrength={mouseStrength}
 			interactive={interactive}
-			style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
 		/>
 	);
 

@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import Ably from 'ably';
-import type { HandlerEvent } from '@netlify/functions';
 import { Redis } from '@upstash/redis';
 
 import { verify } from "./create-session";
@@ -83,7 +82,7 @@ const RATE_LIMIT_RULES: Record<string, [number, number]> = { // TODO: fine-tune 
     default: [1, 1],
 };
 
-export const handler = async(event: HandlerEvent) => {
+export default async function handler(request: Request): Promise<Response> {
 
     const redis = getRedis();
 
@@ -93,7 +92,7 @@ export const handler = async(event: HandlerEvent) => {
 
         // get action data
 
-        const body = JSON.parse(event.body || '{}');
+        const body = JSON.parse((await request.text()) || '{}');
 
         const identity : Identity | null = body.identity || null;
         if (!identity) {return errorJSON("Missing identity", 400);}
@@ -227,7 +226,7 @@ export const handler = async(event: HandlerEvent) => {
 
             await savePublish(game);
 
-            const hand : SJCore.Hand = game.getHand(clientId);
+            const hand : SJCore.Hand | null = game.getHand(clientId);
             return successJSON({ hand });
         }
 
@@ -262,7 +261,7 @@ export const handler = async(event: HandlerEvent) => {
             const game = currentGame;
             if (!(game instanceof SJGame.Game)) {return errorJSON("Game not found");}
 
-            const hand : SJCore.Hand = game.getHand(clientId);
+            const hand : SJCore.Hand | null = game.getHand(clientId);
 
             if (!hand) {return errorJSON("Failed to get hand");}
 
@@ -315,7 +314,7 @@ export const handler = async(event: HandlerEvent) => {
 
             await savePublish(game);
 
-            const hand : SJCore.Hand = game.getHand(clientId);
+            const hand : SJCore.Hand | null = game.getHand(clientId);
             return successJSON({ hand });
         }
 
@@ -331,7 +330,7 @@ export const handler = async(event: HandlerEvent) => {
 
             await savePublish(game);
 
-            const hand : SJCore.Hand = game.getHand(clientId);
+            const hand : SJCore.Hand | null = game.getHand(clientId);
             return successJSON({ hand });
         }
 
@@ -347,7 +346,7 @@ export const handler = async(event: HandlerEvent) => {
 
             await savePublish(game);
 
-            const hand : SJCore.Hand = game.getHand(clientId);
+            const hand : SJCore.Hand | null = game.getHand(clientId);
             return successJSON({ hand });
         }
 

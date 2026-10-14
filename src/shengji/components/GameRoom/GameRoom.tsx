@@ -36,15 +36,15 @@ function PlayerList({ players, teams }: { players: string[], teams: number[] }) 
     const b = players.filter((_, i) => teams[i] === 1);
 
     return (
-        <div className="sjg-player__wrapper">
+        <div className="ui-panel ui-stack sjg-player__wrapper">
             <p>Teams</p>
             <div className="sjg-player__list">
-                <div className="sjg-player__team">
+                <div className="ui-panel ui-stack sjg-player__team">
                     {a.map((p, i) => (
                         <div key={i} className="sjg-player__player">{p}</div>
                     ))}
                 </div>
-                <div className="sjg-player__team">
+                <div className="ui-panel ui-stack sjg-player__team">
                     {b.map((p, i) => (
                         <div key={i} className="sjg-player__player">{p}</div>
                     ))}
@@ -59,7 +59,7 @@ function CardAdvice({ cards }: { cards: SJCore.Card[] | undefined }) {
     if (!cards || cards.length === 0) {return <p>No advice available</p>;}
 
     return (
-        <div className="sjg-advice__wrapper">
+        <div className="ui-stack sjg-advice__wrapper">
             <h3>Recommended Play</h3>
             {cards.map((card, i) => (
                 <Card key={i} card={card} />
@@ -252,7 +252,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
     const actionDisabled = game.paused;
 
     return (
-        <div className="sjg-phase">
+        <div className="ui-panel ui-stack sjg-phase">
             {phase !== "over" && (
                 <div>
                     {game.paused && missing && missing.length > 0 && (
@@ -263,8 +263,8 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                             ))}
                         </div>
                     )}
-                    <div className="sjg-info__area">
-                        <div className="sjg-trump">
+                    <div className="ui-panel sjg-info__area">
+                        <div className="ui-stack sjg-trump">
                             <p>Trump</p>
                             <Card card={SJConv.trumpToCard(game.trump)} />
                             <p>Declared <strong>{game.declare}</strong>x by <strong>{game.info.get(game.players[game.whodec])?.username}</strong></p>
@@ -284,8 +284,8 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                     </div>
                     <hr />
                     {phase === "play" && (
-                        <div className="sjg-play">
-                            <div className="sjg-plays">
+                        <div className="ui-stack sjg-play">
+                            <div className="ui-panel sjg-plays">
                                 {game.players.map((player, i) => (
                                     <div key={i} className={`sjg-play__player${i === game.turn ? ' active' : ''}${i === game.lead ? ' lead' : ''}`}>
                                         <p>{game.info.get(player)?.username}'s Play</p>
@@ -296,7 +296,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                         </div>
                     )}
                     {phase === "dipai" && (
-                        <div className="sjg-dipai">
+                        <div className="ui-stack sjg-dipai">
                             {identity?.clientId === game.players[game.zhuang] && (
                                 <>
                                     <p>Dipai (底牌)</p>
@@ -314,13 +314,13 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                     {team !== -1 && (
                         <div className="sjg-team">
                             {phase === "draw" && (
-                                <div className="sjg-draw">
+                                <div className="ui-stack sjg-draw">
                                     <div className="sjg-button__group">
                                         <button className="sjg-button__game" onClick={() => { runAsync(drawCard); }} disabled={actionDisabled}>Draw Card</button>
                                     </div>
                                 </div>
                             )}
-                            <div className="sjg-hand">
+                            <div className="ui-stack sjg-hand">
                                 <hr />
                                 <Hand ref={handRef} cards={hand ? SJConv.handToCards(hand, game.trump) : []} className="sjg-hand__wrapper"/>
                                 <div className="sjg-button__group">
@@ -337,7 +337,7 @@ function GameInfo({ identity, roomId, team, game, missing }: { identity: Identit
                                 </div>
                             </div>
                             {help && (
-                                <div className="sjg-advice">
+                                <div className="ui-stack sjg-advice">
                                     <CardAdvice cards={advice?.candidates[0]?.move} />
                                 </div>
                             )}
@@ -593,7 +593,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
     }, [connectionKey, roomId, identity]);
 
     return (
-        <div className="sjg-room">
+        <div className="ui-stack sjg-room">
             <div className="sjg-room__info">
                 <p>Room: <strong>{roomId}</strong></p>
                 <p>Username: <strong>{username}</strong></p>
@@ -602,7 +602,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
             </div>
             <button className="sjg-button__game" onClick={() => { runAsync(endGame); }}>End Game</button>
             {!game && (
-                <div className="sjg-lobby">
+                <div className="ui-panel ui-stack sjg-lobby">
                     <PlayerList players={players} teams={teams} />
                     <div className="sjg-button__group">
                         <button onClick={() => { setTeam(p => 1 - Math.abs(p)); }}>{team === -1 ? `Join Game` : `Switch Team`}</button>

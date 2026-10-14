@@ -1,3 +1,4 @@
+import { observeElementSize } from "/src/utils/resize";
 import { useRef, useEffect, useCallback, type CSSProperties } from "react";
 import { rgbToCss, readColor, type RGB } from "/src/utils/colors"
 
@@ -25,7 +26,7 @@ interface ChaosProps {
     yaw?: number;
     speed?: number;
     lineWidth?: number;
-    colorTransition?: number;
+
     refresh?: boolean;
     className?: string;
     style?: CSSProperties;
@@ -41,7 +42,6 @@ export default function Chaos({
     yaw = 0,
     speed = 1,
     lineWidth = 1,
-    colorTransition = 300,
     className = "",
     style = {},
 }: ChaosProps) {
@@ -77,31 +77,17 @@ export default function Chaos({
     // Render Refs
 
     const rafRef = useRef<number | null>(null);
-    const lastColorTimeRef = useRef(performance.now());
     const lastChaosTimeRef = useRef(performance.now());
 
     // Color Refs
 
-    const colorRafRef = useRef<number | null>(null);
 
     const currentColorRef = useRef<RGB>([0, 0, 0]);
-    const targetColorRef = useRef<RGB>([0, 0, 0]);
-    const transitionProgressRef = useRef(1);
 
     useEffect(() => {
         const rgb = readColor();
         currentColorRef.current = rgb[0];
-        targetColorRef.current = rgb[0];
-
-        const onStorage = () => {
-            const rgb = readColor();
-            targetColorRef.current = rgb[0];
-            transitionProgressRef.current = 0;
-        };
-        window.addEventListener("themeStorage", onStorage);
-        return () => { window.removeEventListener("themeStorage", onStorage); };
-
-    }, [readColor]);
+    }, []);
 
     // Position Ref
 
@@ -135,7 +121,7 @@ export default function Chaos({
         return { ctx, width: W, height: H };
     }
 
-    const fillChaos = () => {
+    const fillChaos = useCallback(() => {
         
         const canvasState = getCTX();
         if (!canvasState) {return;}
@@ -147,7 +133,7 @@ export default function Chaos({
         ctx.fillRect(0, 0, W, H);
 
         ctx.globalCompositeOperation = "source-over";
-    };
+    }, []);
 
     const setupChaos = () => {
         
@@ -237,50 +223,25 @@ export default function Chaos({
 		};
 
 		window.addEventListener("resize", handleResize);
+        const stopObservingSize = observeElementSize(wrapperRef.current, handleResize);
 
 		return () => {
 			window.removeEventListener("resize", handleResize);
+            stopObservingSize();
 			if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 		};
 
 	}, [drawChaos, resizeCanvas]);
 
     useEffect(() => {
-    
-        lastColorTimeRef.current = performance.now();
-
-        const loop = (now: number): void => {
-            const last = lastColorTimeRef.current || now;
-            const dt = now - last;
-            lastColorTimeRef.current = now;
-
-            if (transitionProgressRef.current < 1) {
-                const inc = colorTransition > 0 ? dt / colorTransition : 1;
-                transitionProgressRef.current = Math.min(1, transitionProgressRef.current + inc);
-
-                const t = transitionProgressRef.current;
-                const a = currentColorRef.current;
-                const b = targetColorRef.current;
-
-                currentColorRef.current = [
-                    a[0] + (b[0] - a[0]) * t,
-                    a[1] + (b[1] - a[1]) * t,
-                    a[2] + (b[2] - a[2]) * t,
-                ];
-
-                fillChaos();
-            }
-
-            colorRafRef.current = window.requestAnimationFrame(loop);
+        const repaintTheme = () => {
+            const rgb = readColor();
+            currentColorRef.current = rgb[0];
+            fillChaos();
         };
-
-        colorRafRef.current = window.requestAnimationFrame(loop);
-
-        return () => {
-            if (colorRafRef.current) {cancelAnimationFrame(colorRafRef.current);}
-        };
-
-    }, [colorTransition]);
+        window.addEventListener('themeStorage', repaintTheme);
+        return () => { window.removeEventListener('themeStorage', repaintTheme); };
+    }, [fillChaos]);
 
     return (
         <div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

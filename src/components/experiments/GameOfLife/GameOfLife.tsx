@@ -1,3 +1,4 @@
+import { observeElementSize } from "/src/utils/resize";
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle, memo, type CSSProperties } from "react";
 import { rgbToCss, readColor, type RGB } from "/src/utils/colors";
 import { debounce } from "/src/utils/debounce";
@@ -19,7 +20,7 @@ interface GameOfLifeProps {
 	interactive?: boolean;
 	initialRandom?: boolean;
 	randomProbability?: number;
-	colorTransition?: number;
+	gridTransition?: number;
 	style?: CSSProperties;
 	className?: string;
 }
@@ -43,7 +44,7 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 		interactive = true,
 		initialRandom = false,
 		randomProbability = 0.18,
-		colorTransition = 300,
+		gridTransition = 300,
 		style = {},
 		className = "",
 	}: GameOfLifeProps,
@@ -108,11 +109,8 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 	// Color Refs
 
 	const currentPrimary = useRef<RGB>([0, 0, 0]);
-	const targetPrimary = useRef<RGB>([0, 0, 0]);
 	const currentSecondary = useRef<RGB>([0, 0, 0]);
-	const targetSecondary = useRef<RGB>([0, 0, 0]);
 
-	const transitionProgressRef = useRef(1);
 	const opacityProgressRef = useRef(1);
 
 	const borderWidth = useRef(1);
@@ -120,21 +118,9 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 	useEffect(() => {
 		const rgb = readColor();
 		currentPrimary.current = rgb[0];
-		targetPrimary.current = rgb[0];
 		currentSecondary.current = rgb[1];
-		targetSecondary.current = rgb[1];
-		transitionProgressRef.current = 1;
 
 		if (!showGrid) {opacityProgressRef.current = 0;}
-
-		const onStorage = () => {
-			const rgb = readColor();
-			targetPrimary.current = rgb[0];
-			targetSecondary.current = rgb[1];
-			transitionProgressRef.current = 0;
-		};
-		window.addEventListener("themeStorage", onStorage);
-		return () => { window.removeEventListener("themeStorage", onStorage); };
 
 	}, []);
 
@@ -253,7 +239,16 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 		ctx.restore();
 	}, [rows, cols, cellSize]);
 
-	// Render + Transition Loop
+    useEffect(() => {
+        const repaintTheme = () => {
+            [currentPrimary.current, currentSecondary.current] = readColor();
+            draw();
+        };
+        window.addEventListener('themeStorage', repaintTheme);
+        return () => { window.removeEventListener('themeStorage', repaintTheme); };
+    }, [draw]);
+
+	// Render + grid visibility loop
 
 	useEffect(() => {
 		const stepInterval = speed > 0 ? 1000 / speed : Infinity; //updates per second
@@ -273,7 +268,7 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 				}
 			}
 
-			const inc = colorTransition > 0 ? dt / colorTransition : 1;
+			const inc = gridTransition > 0 ? dt / gridTransition : 1;
 
 			if (opacityProgressRef.current < 1 && showGrid) {
 				opacityProgressRef.current = Math.min(1, opacityProgressRef.current + inc);
@@ -282,25 +277,6 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 			if (opacityProgressRef.current > 0 && !showGrid) {
 				opacityProgressRef.current = Math.max(0, opacityProgressRef.current - inc);
 			}
-
-			if (transitionProgressRef.current < 1) {
-                transitionProgressRef.current = Math.min(1, transitionProgressRef.current + inc);
-                const t = transitionProgressRef.current;
-                const aP = currentPrimary.current;
-                const bP = targetPrimary.current;
-				const aS = currentSecondary.current;
-				const bS = targetSecondary.current;
-                currentPrimary.current = [
-                    aP[0] + (bP[0] - aP[0]) * t,
-                    aP[1] + (bP[1] - aP[1]) * t,
-                    aP[2] + (bP[2] - aP[2]) * t,
-                ];
-				currentSecondary.current = [
-					aS[0] + (bS[0] - aS[0]) * t,
-					aS[1] + (bS[1] - aS[1]) * t,
-					aS[2] + (bS[2] - aS[2]) * t,
-				];
-            }
 
 			draw();
 			rafRef.current = requestAnimationFrame(loop);
@@ -373,6 +349,7 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 		window.addEventListener("pointermove", handlePointerMove);
 		window.addEventListener("pointerup", handlePointerUp);
 		window.addEventListener("resize", debouncedResize);
+        const stopObservingSize = observeElementSize(wrapperRef.current, debouncedResize);
 		
 		return () => {
 			debouncedResize.cancel();
@@ -380,6 +357,7 @@ export default memo(forwardRef<GameOfLifeRef, GameOfLifeProps>(function GameOfLi
 			window.removeEventListener("pointermove", handlePointerMove);
 			window.removeEventListener("pointerup", handlePointerUp);
 			window.removeEventListener("resize", debouncedResize);
+            stopObservingSize();
 		};
 	}, [toggleCellAt]);
 

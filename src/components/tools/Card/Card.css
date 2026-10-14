@@ -3,51 +3,39 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 2.5 / 3.5;
-    width: 100px; /* 140 px height */
-    border-radius: 8px;
-    background-color: #fff !important;
+    width: 100px;
+    height: 140px;
+    padding: 0;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
     position: relative;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-    font-weight: bold;
+    font-weight: 600;
     user-select: none;
-    border: none !important;
     translate: 0 0;
-    transition: translate 0.3s ease, box-shadow 0.3s ease, color 0s !important;
+    --component-transitions: translate var(--interaction-duration) ease;
 }
 
-.sj-card.selected {
-    border-color: 1px solid var(--border-highlight-color);
-    box-shadow: 0 0 2px 2px var(--border-highlight-color);
+.sj-card.selected, .sj-card.selected:hover {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent);
     translate: 0 -10px;
 }
 
+.sj-card__red, .sj-card__red:hover:not(:disabled) {
+    color: var(--color-card-red);
+    background: var(--color-card);
+}
+
+.sj-card__black, .sj-card__black:hover:not(:disabled) {
+    color: var(--color-card-black);
+    background: var(--color-card);
+}
+
 @media (hover: hover) {
-    .sj-card:hover, .sj-card.selected:hover {
+    .sj-card:hover {
         translate: 0 -10px;
     }
-    .sj-card__red:hover,
-    .sj-card__red.selected:hover
-    {
-        color: #d32f2f !important;
-    }
-    .sj-card__black:hover,
-    .sj-card__black.selected:hover
-    {
-        color: #000 !important;
-    }
-}
-
-.sj-card__red,
-.sj-card__red.selected
-{
-    color: #d32f2f !important;
-}
-
-.sj-card__black,
-.sj-card__black.selected
-{
-    color: #000 !important;
 }
 
 .sj-card__corner {
@@ -55,7 +43,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     gap: 2px;
     top: 6px;
     left: 6px;
@@ -71,7 +58,7 @@
     transform: rotate(180deg);
 }
 
-.sj-card__rank, .sj-card__suit {
+.sj-card__corner .sj-card__rank, .sj-card__corner .sj-card__suit {
     font-size: 12px;
 }
 
@@ -79,6 +66,5 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 52px;
-    opacity: 0.8;
+    font-size: 40px;
 }

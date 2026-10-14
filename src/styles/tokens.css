@@ -1,0 +1,107 @@
+/* Theme palette. Keep colors here; components consume semantic tokens below. */
+
+:root {
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+    --content-width: 84rem;
+    --page-gutter: clamp(1rem, 4vw, 3rem);
+    --panel-padding: clamp(1rem, 2vw, 1.5rem);
+    --radius-panel: 2px;
+    --radius-control: 2px;
+    --radius-card: 3px;
+    --control-height: 2.5rem;
+    --border-width: 1px;
+    --motion-duration: 300ms;
+    --motion-easing: ease;
+    --interaction-duration: 160ms;
+    --disclosure-duration: 240ms;
+
+    --dropdown-timers: opacity var(--disclosure-duration) ease, transform var(--disclosure-duration) ease;
+    /* Compatibility tokens used by renderers and existing integrations. */
+    --primary-color: var(--color-text);
+    --secondary-color: var(--color-muted);
+    --disabled-color: var(--color-disabled);
+    --bg-color-primary: var(--color-page);
+    --bg-color-secondary: var(--color-surface);
+    --bg-color-hover: var(--color-hover);
+    --border-highlight-color: var(--color-accent);
+    --table-border-radius-primary: var(--radius-panel);
+    --table-border-radius-secondary: var(--radius-control);
+    --slider-filled-color: var(--color-text);
+    --slider-bg-color: var(--color-border);
+    --slider-thumb-color: var(--color-text);
+    --slider-thumb-radius: 14px;
+    --slider-border-radius: 3px;
+    --sep-distance-primary: var(--space-5);
+    --sep-distance-secondary: var(--space-2);
+    --padding-dropdown: var(--space-2) var(--space-3);
+    /* Bootstrap utilities inherit the same theme. */
+    --bs-body-font-family: var(--font-body);
+    --bs-body-color: var(--color-text);
+    --bs-body-bg: var(--color-page);
+    --bs-border-color: var(--color-border);
+    --bs-border-radius: var(--radius-control);
+    --bs-link-color: var(--color-text);
+    --bs-link-hover-color: var(--color-accent);
+}
+
+:root, [data-theme='light'] {
+    --theme-label: Light;
+    color-scheme: light;
+    --color-text: #292824;
+    --color-muted: #706d66;
+    --color-disabled: #89857e;
+    --color-page: #f7f5f0;
+    --color-surface: #fdfcf9;
+    --color-hover: #eeeae2;
+    --color-border: #d5d0c6;
+    --color-border-strong: #aaa398;
+    --color-accent: #526653;
+    --color-on-accent: #ffffff;
+    --color-success: #387043;
+    --color-warning: #94600c;
+    --color-caution: #927619;
+    --color-danger: #b03e36;
+    --color-card: #fffdf8;
+    --color-card-red: #b73232;
+    --color-card-black: #272622;
+    --color-backdrop: rgb(20 20 18 / 45%);
+    --shadow-popover: 0 8px 24px rgb(30 28 24 / 10%);
+}
+
+[data-theme='dark'] {
+    --theme-label: Dark;
+    color-scheme: dark;
+    --color-text: #e8e5de;
+    --color-muted: #b0aca3;
+    --color-disabled: #817e77;
+    --color-page: #1c1d1b;
+    --color-surface: #242622;
+    --color-hover: #30332d;
+    --color-border: #41453d;
+    --color-border-strong: #686e60;
+    --color-accent: #bacba9;
+    --color-on-accent: #1c1d1b;
+    --color-success: #a3c592;
+    --color-warning: #dfb373;
+    --color-caution: #d3c17e;
+    --color-danger: #ed9b8f;
+    --color-backdrop: rgb(0 0 0 / 65%);
+    --shadow-popover: 0 8px 24px rgb(0 0 0 / 25%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-duration: 0ms;
+        --interaction-duration: 0ms;
+        --disclosure-duration: 0ms;
+    }
+}

@@ -4,7 +4,6 @@ dotenv.config();
 
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import type { HandlerEvent } from '@netlify/functions';
 import { players } from "../../db/schema.ts";
 
 import { errorJSON, successJSON } from './data/json.ts';
@@ -16,7 +15,7 @@ const db = drizzle(sql);
 
 // request a new entry in player schema to be created
 
-export async function handler(_event: HandlerEvent) {
+export default async function handler(_request: Request): Promise<Response> {
 
     try {
 

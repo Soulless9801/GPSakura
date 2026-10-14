@@ -27,8 +27,8 @@ export default function Test() {
     // const checkSelected = () => testCardRef.current?.getActiveCards();
 
     return (
-        <div className="sjTest">
-            <div className="sjTestForm">
+        <div className="ui-panel ui-stack sjTest">
+            <div className="ui-cluster sjTestForm">
                 <button onClick={newTestCase}>Generate Testcase</button>
                 <button onClick={() => { setTestCase(null); }}>Clear Testcase</button>
             </div>

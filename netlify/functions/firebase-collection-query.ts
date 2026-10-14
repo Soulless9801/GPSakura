@@ -4,7 +4,6 @@ import path from 'node:path';
 
 import * as firebase from 'firebase/app';
 import * as fireStore from 'firebase/firestore';
-import type { HandlerEvent } from '@netlify/functions';
 
 import { errorJSON, successJSON } from './data/json.ts';
 
@@ -33,11 +32,11 @@ export const firebaseConfig = {
 
 dotenv.config();
 
-export async function handler(event: HandlerEvent) {
+export default async function handler(request: Request): Promise<Response> {
 
     let body;
     try {
-        body = JSON.parse(event.body || '{}');
+        body = JSON.parse((await request.text()) || '{}');
         if (body === null || typeof body !== "object" || Array.isArray(body)) {return errorJSON("Invalid request body", 400);}
     } catch {
         return errorJSON("Invalid JSON", 400);
@@ -93,4 +92,4 @@ export async function handler(event: HandlerEvent) {
     if (id) {return successJSON(collection.find((doc: { id?: string }) => doc.id === id) || null);}
 
     return successJSON(collection);
-};
+}

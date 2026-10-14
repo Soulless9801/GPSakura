@@ -1,13 +1,13 @@
 import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { HandlerEvent } from '@netlify/functions';
+import { errorJSON } from './data/json.ts';
 
 dotenv.config();
 
 const { SPREADSHEET_ID } = process.env;
 
-export const handler = async (_event: HandlerEvent) => {
+export default async function handler(_request: Request): Promise<Response> {
 
     let csv;
 
@@ -30,17 +30,12 @@ export const handler = async (_event: HandlerEvent) => {
             csv = fs.readFileSync(filePath, 'utf8');
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            return {
-                statusCode: 500,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ error: `codeforces-sheet-data: Internal server error ${message}` }),
-            };
+            return errorJSON(`codeforces-sheet-data: Internal server error ${message}`, 500);
         }
     }
 
-    return {
-        statusCode: 200,
+    return new Response(csv, {
+        status: 200,
         headers: { 'Content-Type': 'text/csv' },
-        body: csv,
-    };
-};
+    });
+}

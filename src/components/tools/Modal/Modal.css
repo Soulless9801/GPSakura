@@ -3,54 +3,44 @@
     inset: 0;
     z-index: 1000;
     pointer-events: none;
+    visibility: hidden;
 }
 
 .modalRoot.open {
     pointer-events: auto;
+    visibility: visible;
 }
 
 .modalBackdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--color-backdrop);
     opacity: 0;
-    pointer-events: none;
-    transition: opacity 250ms ease;
+    --component-transitions: opacity var(--interaction-duration) ease;
 }
 
 .modalRoot.open .modalBackdrop {
     opacity: 1;
-    pointer-events: auto;
 }
 
 .modalPanel {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -40%);
+    transform: translate(-50%, -48%);
     opacity: 0;
-
-    background: var(--bg-color-secondary);
-    border-radius: 8px;
-    padding: 1.25rem;
-    min-width: 300px;
-    max-width: 90vw;
+    width: max-content;
+    min-width: min(20rem, calc(100vw - 2rem));
+    max-width: min(48rem, calc(100vw - 2rem));
+    padding-top: var(--space-7);
     overscroll-behavior: contain;
-    box-sizing: border-box;
-
-    transition: transform 250ms ease, opacity 250ms ease;
-
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    --component-transitions: transform var(--interaction-duration) ease, opacity var(--interaction-duration) ease;
+    box-shadow: var(--shadow-popover);
 }
 
-.modalPanel.scrollable {
-    max-height: calc(100vh - 2rem);
+.modalPanel.scrollable, .modalPanel.nonScrollable {
+    max-height: calc(100dvh - 2rem);
     overflow-y: auto;
-}
-
-.modalPanel.nonScrollable {
-    overflow: visible;
-    max-height: none;
 }
 
 .modalRoot.open .modalPanel {
@@ -58,12 +48,18 @@
     opacity: 1;
 }
 
+.modalPanel h2 {
+    font-size: 1.5rem;
+    padding-right: var(--space-6);
+}
+
 .modalClose {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    border: none;
+    top: var(--space-2);
+    right: var(--space-2);
+    border: 0;
     background: transparent;
-    font-size: 1.2rem;
-    cursor: pointer;
+    width: var(--control-height);
+    padding: 0;
+    font-size: 1.1rem;
 }

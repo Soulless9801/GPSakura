@@ -1,15 +1,28 @@
 .sjJoinTitle {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 10px;
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: var(--space-4);
 }
 
 .sjJoinForm {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
 }
+
 .sjRejoinCard {
-    padding: 12px 20px;
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 40rem) {
+    .sjJoinForm {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.sjRejoinCard {
+    overflow-wrap: anywhere;
+}
+
+.sjGame > button {
+    margin-bottom: var(--space-4);
 }

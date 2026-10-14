@@ -1,1 +1,1 @@
-export { handler } from "../functions/shengji-game-room";
+export { default } from "../functions/shengji-game-room";

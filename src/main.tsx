@@ -8,6 +8,9 @@ import { createRoot } from 'react-dom/client';
 import '/src/index.css';
 
 import App from './App';
+import { initializeTheme } from './services/theme';
+
+initializeTheme();
 
 const root = document.getElementById('root');
 

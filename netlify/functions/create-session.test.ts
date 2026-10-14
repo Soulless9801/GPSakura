@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 
-import type { HandlerEvent } from "@netlify/functions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { post } from "../../src/test/http";
 
 import type * as CreateSession from "./create-session";
 
@@ -22,13 +23,13 @@ async function load(secret: string | null = SECRET): Promise<Module> {
     return import("./create-session");
 }
 
-const event = (body: unknown): HandlerEvent =>
-    ({ body: typeof body === "string" ? body : JSON.stringify(body) }) as HandlerEvent;
+const event = (body: unknown): Request =>
+    post(typeof body === "string" ? body : JSON.stringify(body));
 
 async function call(mod: Module, body: unknown): Promise<{ statusCode: number; body: Record<string, unknown> }> {
-    const res = await mod.handler(event(body));
+    const res = await mod.default(event(body));
     if (!res) {throw new Error("handler returned nothing");}
-    return { statusCode: res.statusCode, body: JSON.parse(res.body) as Record<string, unknown> };
+    return { statusCode: res.status, body: (await res.json()) as Record<string, unknown> };
 }
 
 describe("verify", () => {
@@ -164,8 +165,8 @@ describe("handler: verify", () => {
 describe("handler: malformed requests", () => {
     it("an empty body has no action and is rejected", async () => {
         const mod = await load();
-        const res = await mod.handler({ body: null } as HandlerEvent);
-        expect(res?.statusCode).toBe(400);
+        const res = await mod.default(post(null));
+        expect(res?.status).toBe(400);
     });
 
     it("an unknown action gets a 400 response", async () => {

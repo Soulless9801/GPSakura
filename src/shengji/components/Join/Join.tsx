@@ -33,11 +33,11 @@ export default function Join() {
     return (
         <div className="sjJoin">
             {!roomId || !username ? (   
-                <div>
-                    <div className="sjJoinTitle">Play</div>
-                    <div className="sjJoinForm">
-                        <input type="text" placeholder="Username" value={username} onChange={(e) => { setUsername(e.target.value); }} />
-                        <input type="text" placeholder="Room ID" value={tempId} onChange={(e) => { setTempId(e.target.value); }} />
+                <div className="ui-panel">
+                    <h2 className="sjJoinTitle">Play</h2>
+                    <div className="ui-cluster sjJoinForm">
+                        <input type="text" aria-label="Username" placeholder="Username" value={username} onChange={(e) => { setUsername(e.target.value); }} />
+                        <input type="text" aria-label="Room ID" placeholder="Room ID" value={tempId} onChange={(e) => { setTempId(e.target.value); }} />
                         <button onClick={() => { joinRoom(); }}>Join Room</button>
                         {prevRoom && prevUser && (
                             <button onClick={() => { rejoinRoom(); }} className="sjRejoinCard">

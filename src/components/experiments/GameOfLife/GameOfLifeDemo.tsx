@@ -60,7 +60,7 @@ export default function GameOfLifeDemo() {
         <>
             <div className='row g-1'>
                 <div className='col-4'>
-                    <button className="cellButton col-4" onClick={() => {
+                    <button className="cellButton" onClick={() => {
                         setRunning(prev => !prev);
                     }}>
                         {running ? "Stop" : "Start"}
@@ -77,7 +77,7 @@ export default function GameOfLifeDemo() {
                     </button>
                 </div>
                 <div className='col-4'>
-                    <button className="cellButton col-4" onClick={() => {
+                    <button className="cellButton" onClick={() => {
                         if (gameRef.current) {gameRef.current.step();}
                     }}>
                         Step

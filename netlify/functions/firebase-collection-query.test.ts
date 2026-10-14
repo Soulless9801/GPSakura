@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { HandlerEvent } from "@netlify/functions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { post } from "../../src/test/http";
 
 vi.mock("dotenv", () => ({ default: { config: vi.fn() } }));
 
@@ -38,16 +39,16 @@ vi.mock("firebase/firestore", () => ({
     getDocs: fb.getDocs,
 }));
 
-import { handler } from "./firebase-collection-query";
+import handler from "../entrypoints/firebase-collection-query";
 
-const post = (body: unknown): HandlerEvent => ({ body: JSON.stringify(body) }) as HandlerEvent;
+const jsonPost = (body: unknown): Request => post(JSON.stringify(body));
 
 const snapshot = (docs: { id: string; data: () => Record<string, unknown> }[]) => ({
     empty: docs.length === 0,
     docs,
 });
 
-const parse = (res: { body: string }): unknown => JSON.parse(res.body);
+const parse = (res: Response): Promise<unknown> => res.json();
 
 describe("firebase-collection-query", () => {
     beforeEach(() => {
@@ -63,9 +64,9 @@ describe("firebase-collection-query", () => {
                     { id: "b", data: () => ({ title: "B" }) },
                 ]),
             );
-            const res = await handler(post({ col: "blogPosts", loc: "firebaseBlogPosts" }));
-            expect(res.statusCode).toBe(200);
-            expect(parse(res)).toEqual([
+            const res = await handler(jsonPost({ col: "blogPosts", loc: "firebaseBlogPosts" }));
+            expect(res.status).toBe(200);
+            expect(await parse(res)).toEqual([
                 { id: "a", title: "A" },
                 { id: "b", title: "B" },
             ]);
@@ -73,7 +74,7 @@ describe("firebase-collection-query", () => {
 
         it("queries the requested collection", async () => {
             fb.getDocs.mockResolvedValue(snapshot([{ id: "a", data: () => ({}) }]));
-            await handler(post({ col: "blogPosts", loc: "x" }));
+            await handler(jsonPost({ col: "blogPosts", loc: "x" }));
             expect(fb.collection).toHaveBeenCalledWith(expect.anything(), "blogPosts");
         });
 
@@ -81,7 +82,7 @@ describe("firebase-collection-query", () => {
             fb.getDocs.mockResolvedValue(
                 snapshot([{ id: "a", data: () => ({ created: new fb.Timestamp(Date.UTC(2024, 0, 2, 3, 4, 5)), n: 1 }) }]),
             );
-            const [doc] = parse(await handler(post({ col: "c", loc: "x" }))) as Record<string, unknown>[];
+            const [doc] = (await parse(await handler(jsonPost({ col: "c", loc: "x" })))) as Record<string, unknown>[];
             expect(doc.created).toBe("2024-01-02T03:04:05.000Z");
             expect(doc.n).toBe(1);
         });
@@ -93,8 +94,8 @@ describe("firebase-collection-query", () => {
                     { id: "b", data: () => ({ t: 2 }) },
                 ]),
             );
-            expect(parse(await handler(post({ col: "c", loc: "x", id: "b" })))).toEqual({ id: "b", t: 2 });
-            expect(parse(await handler(post({ col: "c", loc: "x", id: "zzz" })))).toBeNull();
+            expect((await parse(await handler(jsonPost({ col: "c", loc: "x", id: "b" }))))).toEqual({ id: "b", t: 2 });
+            expect((await parse(await handler(jsonPost({ col: "c", loc: "x", id: "zzz" }))))).toBeNull();
         });
 
         it("initialises Firebase once and reuses the app afterwards", async () => {
@@ -103,11 +104,11 @@ describe("firebase-collection-query", () => {
             fb.getDocs.mockResolvedValue(snapshot([{ id: "a", data: () => ({}) }]));
 
             fb.getApps.mockReturnValue([]);
-            await handler(post({ col: "c", loc: "x" }));
+            await handler(jsonPost({ col: "c", loc: "x" }));
             expect(fb.initializeApp).toHaveBeenCalledTimes(1);
 
             fb.getApps.mockReturnValue([{}]);
-            await handler(post({ col: "c", loc: "x" }));
+            await handler(jsonPost({ col: "c", loc: "x" }));
             expect(fb.initializeApp).toHaveBeenCalledTimes(1);
             expect(fb.getApp).toHaveBeenCalledTimes(1);
         });
@@ -119,35 +120,35 @@ describe("firebase-collection-query", () => {
 
         it("serves the bundled file when the collection is empty", async () => {
             fb.getDocs.mockResolvedValue(snapshot([]));
-            const res = await handler(post({ col: "blogPosts", loc: "firebaseBlogPosts" }));
-            expect(res.statusCode).toBe(200);
-            expect(parse(res)).toEqual(local("firebaseBlogPosts"));
+            const res = await handler(jsonPost({ col: "blogPosts", loc: "firebaseBlogPosts" }));
+            expect(res.status).toBe(200);
+            expect(await parse(res)).toEqual(local("firebaseBlogPosts"));
         });
 
         it("serves the bundled file when Firestore throws", async () => {
             fb.getDocs.mockRejectedValue(new Error("permission-denied"));
-            const res = await handler(post({ col: "usaco", loc: "firebaseUSACOProblems" }));
-            expect(parse(res)).toEqual(local("firebaseUSACOProblems"));
+            const res = await handler(jsonPost({ col: "usaco", loc: "firebaseUSACOProblems" }));
+            expect(await parse(res)).toEqual(local("firebaseUSACOProblems"));
         });
 
         it("still supports narrowing by id in the fallback", async () => {
             fb.getDocs.mockRejectedValue(new Error("offline"));
             const all = local("firebaseBlogPosts") as { id: string }[];
-            const res = await handler(post({ col: "c", loc: "firebaseBlogPosts", id: all[0].id }));
-            expect(parse(res)).toEqual(all[0]);
+            const res = await handler(jsonPost({ col: "c", loc: "firebaseBlogPosts", id: all[0].id }));
+            expect(await parse(res)).toEqual(all[0]);
         });
 
         it("answers 500 naming the fallback problem when the bundled file is missing", async () => {
             fb.getDocs.mockRejectedValue(new Error("offline"));
-            const res = await handler(post({ col: "c", loc: "doesNotExist" }));
-            expect(res.statusCode).toBe(500);
-            expect((parse(res) as { error: string }).error).toMatch(/firebase-collection-query: Error fetching collection/);
+            const res = await handler(jsonPost({ col: "c", loc: "doesNotExist" }));
+            expect(res.status).toBe(500);
+            expect(((await parse(res)) as { error: string }).error).toMatch(/firebase-collection-query: Error fetching collection/);
         });
 
         it("trims whitespace from the parameters", async () => {
             fb.getDocs.mockRejectedValue(new Error("offline"));
-            const res = await handler(post({ col: " c ", loc: " firebaseBlogPosts " }));
-            expect(res.statusCode).toBe(200);
+            const res = await handler(jsonPost({ col: " c ", loc: " firebaseBlogPosts " }));
+            expect(res.status).toBe(200);
         });
 
         // `loc` used to be spliced into a file path unchecked, so `../` walked out of the data
@@ -166,53 +167,52 @@ describe("firebase-collection-query", () => {
         ])("rejects the unsafe loc %j with 400 and reads no file", async (loc) => {
             fb.getDocs.mockRejectedValue(new Error("offline"));
             const read = vi.spyOn(fs, "readFileSync");
-            const res = await handler(post({ col: "c", loc }));
-            expect(res.statusCode).toBe(400);
-            expect((parse(res) as { error: string }).error).toMatch(/Invalid loc/);
+            const res = await handler(jsonPost({ col: "c", loc }));
+            expect(res.status).toBe(400);
+            expect(((await parse(res)) as { error: string }).error).toMatch(/Invalid loc/);
             expect(read).not.toHaveBeenCalled();
         });
 
         it("SECURITY: a traversal does not return repository files", async () => {
             fb.getDocs.mockRejectedValue(new Error("offline"));
-            const res = await handler(post({ col: "c", loc: "../../../package" }));
-            expect(res.body).not.toContain("gpsakura");
+            const res = await handler(jsonPost({ col: "c", loc: "../../../package" }));
+            expect(await res.text()).not.toContain("gpsakura");
         });
 
         it("only reads from inside the data directory", async () => {
             fb.getDocs.mockRejectedValue(new Error("offline"));
             const read = vi.spyOn(fs, "readFileSync");
-            await handler(post({ col: "c", loc: "firebaseBlogPosts" }));
+            await handler(jsonPost({ col: "c", loc: "firebaseBlogPosts" }));
             expect(read).toHaveBeenCalledTimes(1);
             expect(String(read.mock.calls[0][0])).toBe(path.resolve("./netlify/functions/data/firebaseBlogPosts.json"));
         });
 
         it("accepts names with digits, dashes and underscores", async () => {
             fb.getDocs.mockRejectedValue(new Error("offline"));
-            const res = await handler(post({ col: "c", loc: "no-such_file2" }));
-            expect(res.statusCode).toBe(500); // passed validation, then the file is simply missing
+            const res = await handler(jsonPost({ col: "c", loc: "no-such_file2" }));
+            expect(res.status).toBe(500); // passed validation, then the file is simply missing
         });
 
         it("does not validate `loc` when Firestore answers (it is only used for the fallback)", async () => {
             fb.getDocs.mockResolvedValue(snapshot([{ id: "a", data: () => ({}) }]));
-            const res = await handler(post({ col: "c", loc: "../../etc/passwd" }));
-            expect(res.statusCode).toBe(200);
+            const res = await handler(jsonPost({ col: "c", loc: "../../etc/passwd" }));
+            expect(res.status).toBe(200);
         });
     });
 
     describe("bad requests", () => {
         it.each(["null", "[]", "7", "\"text\""])("rejects a JSON body with the wrong shape: %s", async (body) => {
-            expect((await handler({ body } as HandlerEvent)).statusCode).toBe(400);
+            expect((await handler(post(body))).status).toBe(400);
         });
-        // JSON.parse sits outside the try block, so a bad body rejects the whole handler.
         it("malformed JSON is answered with a 4xx response", async () => {
-            const res = await handler({ body: "{oops" } as HandlerEvent);
-            expect(res.statusCode).toBe(400);
+            const res = await handler(post("{oops"));
+            expect(res.status).toBe(400);
         });
 
         it("an empty body queries the empty collection and is rejected for having no loc", async () => {
             fb.getDocs.mockRejectedValue(new Error("bad collection"));
-            const res = await handler({ body: null } as HandlerEvent);
-            expect(res.statusCode).toBe(400);
+            const res = await handler(post(null));
+            expect(res.status).toBe(400);
         });
     });
 });

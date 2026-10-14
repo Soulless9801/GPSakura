@@ -1,5 +1,4 @@
 .particleSliderLabel {
-    transition: var(--transition-timers);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -8,6 +7,5 @@
 }
 
 .particleSliderLabel.disabled {
-    color: var(--disabled-color);
+    color: var(--color-disabled);
 }
-

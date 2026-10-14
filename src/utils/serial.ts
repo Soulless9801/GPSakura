@@ -32,7 +32,7 @@ function reviver(_key: string, value: Serializable): Serializable {
     }
 }
 
-export function serialize(data: object): string {
+export function serialize(data: object | null): string {
     return JSON.stringify(data, replacer);
 }
 

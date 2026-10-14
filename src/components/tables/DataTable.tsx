@@ -45,11 +45,8 @@ export default function CustomDataTable({ title, rows, columns, options = {}, ht
     }
 
     return (
-        <section className="container-fluid table-wrapper">
-            <br/>
-            <h1>{title}</h1>
-            <hr/>
-            <br/><br/>
+        <section className="table-wrapper">
+            <h2 className="table-title">{title}</h2>
             <div className="table-header row row-cols-1 row-cols-md-2 gy-3 gy-md-0">
                 <div className="col text-center text-md-start">
                     <Select

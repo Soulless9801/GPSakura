@@ -1,1 +1,1 @@
-export { handler } from "../functions/blackjack-game-room";
+export { default } from "../functions/blackjack-game-room";

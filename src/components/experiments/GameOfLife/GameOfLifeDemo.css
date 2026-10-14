@@ -1,22 +1,21 @@
 .cellButton {
     width: 100%;
 }
+
 .cellOptionButtonRow {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
+    gap: var(--space-1);
 }
+
 .cellOptionLabel {
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 .cellOptionButton {
-    border: var(--border-width) solid var(--bg-color-primary);
-    box-sizing: border-box;
-    display: inline-block;
-    min-width: 1.5em;
-    padding: 0.5em 1em;
-    margin-left: 2px;
-    text-align: center;
-    text-decoration: none !important;
+    min-width: 2rem;
+    padding: var(--space-1);
 }

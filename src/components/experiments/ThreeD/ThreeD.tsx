@@ -32,7 +32,7 @@ export default function ThreeD() {
 
         const scene = new THREE.Scene();
         
-        const renderer = new THREE.WebGLRenderer({ canvas });
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
@@ -103,8 +103,8 @@ export default function ThreeD() {
     }, [color]);
 
     return (
-        <div className="threed-container d-flex flex-column flex-md-row align-items-center align-items-md-start gap-3">
-            <canvas ref={canvasRef} className="threed-canvas" />
+        <div className="demo-layout threed-container">
+            <div className="ui-frame threed-stage"><canvas ref={canvasRef} className="threed-canvas" /></div>
             <ColorSelector value={color} onChange={(newColor) => { setColor(newColor); }} />
         </div>
     );
@@ -135,7 +135,7 @@ export function Chaos3D({
 
         const scene = new THREE.Scene();
 
-        const renderer = new THREE.WebGLRenderer({ canvas });
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);

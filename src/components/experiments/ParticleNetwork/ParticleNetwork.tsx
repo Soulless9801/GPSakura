@@ -1,3 +1,4 @@
+import { observeElementSize } from "/src/utils/resize";
 import { useRef, useEffect, useCallback, memo, type CSSProperties } from "react";
 import { rgbToCss, readColor, type RGB } from "/src/utils/colors";
 import { debounce } from "/src/utils/debounce";
@@ -15,7 +16,7 @@ interface ParticleNetworkProps {
     interactive?: boolean;
     maxAccel?: number;
     pointerEvents?: boolean;
-    colorTransition?: number;
+
     style?: CSSProperties;
     className?: string;
 }
@@ -38,7 +39,6 @@ export default memo(function ParticleNetwork({
     interactive = false,
     maxAccel = 0.12,
     pointerEvents = false,
-    colorTransition = 300,
     style = {},
     className = "",
 }: ParticleNetworkProps) {
@@ -81,27 +81,13 @@ export default memo(function ParticleNetwork({
     // Color Refs
 
     const currentColorRef = useRef<RGB>([0, 0, 0]);
-    const targetColorRef = useRef<RGB>([0, 0, 0]);
-    const transitionProgressRef = useRef(1);
 
     // Theme
 
     useEffect(() => {
         const rgb = readColor();
         currentColorRef.current = rgb[0];
-        targetColorRef.current = rgb[0];
-        transitionProgressRef.current = 1;
     }, [readColor]);
-
-    useEffect(() => {
-        const onStorage = () => {
-            const rgb = readColor();
-            targetColorRef.current = rgb[0];
-            transitionProgressRef.current = 0;
-        };
-        window.addEventListener("themeStorage", onStorage);
-        return () => { window.removeEventListener("themeStorage", onStorage); };
-    }, []);
 
     // Update Particle
 
@@ -165,6 +151,7 @@ export default memo(function ParticleNetwork({
         const handlePointerUp = (): void => { pointerDown.current = false; };
 
         window.addEventListener("resize", debouncedResize);
+        const stopObservingSize = observeElementSize(wrapperRef.current, debouncedResize);
         wrapper.addEventListener("pointermove", handlePointerMove);
         wrapper.addEventListener("pointerleave", handlePointerLeave);
         wrapper.addEventListener('pointerdown', handlePointerDown);
@@ -173,6 +160,7 @@ export default memo(function ParticleNetwork({
         return () => {
             debouncedResize.cancel();
             window.removeEventListener("resize", debouncedResize);
+            stopObservingSize();
             wrapper.removeEventListener("pointerdown", handlePointerDown);
             wrapper.removeEventListener("pointermove", handlePointerMove);
             wrapper.removeEventListener("pointerup", handlePointerUp);
@@ -194,7 +182,6 @@ export default memo(function ParticleNetwork({
 
         const localPointer = pointerRef;
         const localParticles = particlesRef;
-        const localTarget = targetColorRef;
 
         const maxVel = Math.abs(speed) * 2;
         
@@ -205,21 +192,6 @@ export default memo(function ParticleNetwork({
             const w = canvasElement.clientWidth;
             const h = canvasElement.clientHeight;
             ctx.clearRect(0, 0, w, h);
-
-            // Transition Color
-
-            if (transitionProgressRef.current < 1) {
-                const inc = colorTransition > 0 ? dt / colorTransition : 1;
-                transitionProgressRef.current = Math.min(1, transitionProgressRef.current + inc);
-                const t = transitionProgressRef.current;
-                const a = currentColorRef.current;
-                const b = localTarget.current;
-                currentColorRef.current = [
-                    a[0] + (b[0] - a[0]) * t,
-                    a[1] + (b[1] - a[1]) * t,
-                    a[2] + (b[2] - a[2]) * t,
-                ];
-            }
 
             const fillCss = rgbToCss(currentColorRef.current);
             const strokeRgb = currentColorRef.current.map(v => Math.round(v)).join(",");
@@ -314,12 +286,18 @@ export default memo(function ParticleNetwork({
             rafRef.current = window.requestAnimationFrame(run);
         }
 
+        const repaintTheme = () => {
+            currentColorRef.current = readColor()[0];
+            step(0);
+        };
+        window.addEventListener('themeStorage', repaintTheme);
         rafRef.current = window.requestAnimationFrame(run);
 
         return () => {
+            window.removeEventListener('themeStorage', repaintTheme);
             if (rafRef.current !== null) {window.cancelAnimationFrame(rafRef.current);}
         };
-    }, [interactive, pointerEvents, colorTransition, connectionDistance, pointerRadius, pointerStrength, particleRadius, numParticles, speed, maxAccel]);
+    }, [interactive, pointerEvents, connectionDistance, pointerRadius, pointerStrength, particleRadius, numParticles, speed, maxAccel]);
 
     return (
         <div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center', touchAction: interactive ? 'none' : 'auto'  }}>

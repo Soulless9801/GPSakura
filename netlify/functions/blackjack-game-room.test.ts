@@ -1,8 +1,9 @@
 import crypto from "node:crypto";
 
-import type { HandlerEvent } from "@netlify/functions";
 import type * as DrizzleOrm from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { post } from "../../src/test/http";
 
 import { Game } from "../../src/blackjack/core/game";
 
@@ -101,7 +102,7 @@ vi.mock("drizzle-orm", async (importOriginal) => ({
     and: fake.and,
 }));
 
-import { handler } from "./blackjack-game-room";
+import handler from "../entrypoints/blackjack-game-room";
 
 const { store } = fake;
 
@@ -113,8 +114,8 @@ interface Reply {
 }
 
 async function call(body: Record<string, unknown>): Promise<Reply> {
-    const res = await handler({ body: JSON.stringify(body) } as HandlerEvent);
-    return { status: res.statusCode, json: JSON.parse(res.body) as Record<string, unknown> };
+    const res = await handler(post(JSON.stringify(body)));
+    return { status: res.status, json: (await res.json()) as Record<string, unknown> };
 }
 
 /** a request signed as player `id` */
@@ -189,8 +190,8 @@ describe("authentication and validation", () => {
     });
 
     it("reports unparseable bodies as a 500", async () => {
-        const res = await handler({ body: "{oops" } as HandlerEvent);
-        expect(res.statusCode).toBe(500);
+        const res = await handler(post("{oops"));
+        expect(res.status).toBe(500);
     });
 
     it("reports database failures as a 500 naming the function", async () => {
@@ -299,14 +300,12 @@ describe("starting a hand", () => {
 
     it("never leaks the shoe seed to the client", async () => {
         seedGame(4242);
-        const res = await handler({
-            body: JSON.stringify({
-                action: "start",
-                identity: { clientId: "1", signature: sign("1") },
-                payload: { bet_amount: 5 },
-            }),
-        } as HandlerEvent);
-        expect(res.body).not.toMatch(/deck_seed|4242/);
+        const res = await handler(post(JSON.stringify({
+            action: "start",
+            identity: { clientId: "1", signature: sign("1") },
+            payload: { bet_amount: 5 },
+        })));
+        expect(await res.text()).not.toMatch(/deck_seed|4242/);
     });
 
     it("does not take the bet until the hand is settled", async () => {

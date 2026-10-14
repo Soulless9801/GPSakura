@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { loadValue } from '/src/utils/storage';
-import { rgbToCss, readColor } from '/src/utils/colors';
 import { generateTimeArray, composeSignal, randomComponent, defaultComponent, type SignalComponent } from "/src/entities/signal";
 
 import Form from '/src/components/tools/Form/Form';
@@ -64,19 +63,6 @@ export default function FreqGuesserDemo() {
     useEffect(() => { localStorage.setItem(sumKey, JSON.stringify(sum)); }, [sum]);
     useEffect(() => { localStorage.setItem(countKey, JSON.stringify(count)); }, [count]);
     useEffect(() => { localStorage.setItem(giveUpKey, JSON.stringify(giveUp)); }, [giveUp]);
-
-    const [primary, setPrimary] = useState([0, 0, 0]);
-
-    useEffect(() => {
-        const col = readColor();
-        setPrimary(col[0]);
-        const onStorage = () => {
-            const col = readColor();
-            setPrimary(col[0]);
-        };
-        window.addEventListener("themeStorage", onStorage);
-        return () => { window.removeEventListener("themeStorage", onStorage); };
-    }, []);
 
     const reset = useCallback(() => {
         if (!win) {setGiveUp(prev => prev + 1);}
@@ -142,22 +128,22 @@ export default function FreqGuesserDemo() {
 
 
     return (
-        <div className='container-fluid freqDemoWrapper'>
-            <div className='row g-3 align-items-center'>
-                <div className='col-12 col-md-6 col-xl-8'>
+        <div className='freqDemoWrapper'>
+            <div className='demo-layout'>
+                <div className='demo-display'>
                     <div className="row gy-3">
                         <div className="col-12">
-                            <FreqGuesser signal={targetSignal} width={"100%"} height={"30vh"} components={components} />
+                            <FreqGuesser className="ui-frame" signal={targetSignal} width={"100%"} height={"30vh"} components={components} />
                         </div>
                         <div className="col-12">
-                            <FreqGuesser signal={guessSignal} width={"100%"} height={"30vh"} components={components} />
+                            <FreqGuesser className="ui-frame" signal={guessSignal} width={"100%"} height={"30vh"} components={components} />
                         </div>
                     </div>
                 </div>
                 {/* TODO: add controls */}
-                <div className='col-12 col-md-6 col-xl-4 d-flex'>
-                    <div className='p-3 freqControls'>
-                        <div className='container-fluid freqInputs'>
+                <div className='demo-controls'>
+                    <div className='ui-panel'>
+                        <div className='ui-stack demo-controls'>
                             <div className='row g-3'>
                                 <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
                             </div>
@@ -196,22 +182,22 @@ export default function FreqGuesserDemo() {
                             </div>
                             <div className='row g-3 freqRow'>
                                 <div className='col-6'>
-                                    <button className='freqButton' onClick={() => { guess(); }}>
+                                    <button className='ui-full-width' onClick={() => { guess(); }}>
                                         Guess
                                     </button>
                                 </div>
                                 <div className='col-6'>
-                                    <span className="freqText" style={{ color: win ? "#00ff00" : rgbToCss(primary) }}>Guesses: {guesses}</span>
+                                    <span className="freqText" style={{ color: win ? "var(--color-success)" : "var(--color-text)" }}>Guesses: {guesses}</span>
                                 </div>
                             </div>
                             <div className='row g-3 freqRow'>
                                 <div className='col-6'>
-                                    <button className='freqButton' onClick={() => { reset(); }} >
+                                    <button className='ui-full-width' onClick={() => { reset(); }} >
                                         Randomize
                                     </button>
                                 </div>
                                 <div className='col-6'>
-                                    <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='freqButton'/>
+                                    <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='ui-full-width'/>
                                 </div>
                             </div>
                         </div>

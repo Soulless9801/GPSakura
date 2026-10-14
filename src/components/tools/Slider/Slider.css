@@ -1,62 +1,58 @@
-.customSliderWrapper {
+.customSliderWrapper, .customSlider {
     width: 100%;
+    min-width: 0;
 }
 
 .customSlider {
-    width: 100%;
     user-select: none;
 }
 
 .customSlider.disabled {
     pointer-events: none;
-    cursor: default;
+    color: var(--color-disabled);
 }
 
 .customSliderRow {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
     width: 100%;
-    gap: 1rem; 
+    padding-bottom: var(--space-2);
 }
 
 .customSliderLabel {
-    transition: var(--transition-timers);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0; 
-    min-width: 150px; 
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: 0.9rem;
 }
 
 .customSliderTrackWrapper {
-    transition: opacity 0.3s linear;
-    flex: 1; /* take up remaining space */
-    touch-action: none; /* prevent scrolling */
+    touch-action: none;
     position: relative;
-    height: var(--slider-border-radius);
+    height: 1rem;
+    margin-inline: calc(var(--slider-thumb-radius) / 2);
 }
 
 .customSliderTrack {
     position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
     width: 100%;
     height: var(--slider-border-radius);
-    border-radius: var(--slider-border-radius);
-    display: flex;
     cursor: pointer;
 }
 
 .customSliderTrackActive {
     height: 100%;
-    background: var(--primary-color);
-    border-radius: var(--slider-border-radius);
-    transition: var(--transition-timers);
+    background: var(--slider-filled-color);
 }
 
 .customSliderTrackInactive {
     height: 100%;
-    background: var(--bg-color-hover);
-    border-radius: var(--slider-border-radius);
-    transition: var(--transition-timers);
+    background: var(--slider-bg-color);
 }
 
 .customSliderThumb {
@@ -65,17 +61,16 @@
     transform: translate(-50%, -50%);
     width: var(--slider-thumb-radius);
     height: var(--slider-thumb-radius);
-    border-radius: var(--slider-thumb-radius);
-    background: var(--primary-color);
-    transition: var(--transition-timers);
+    border-radius: var(--radius-control);
+    background: var(--slider-thumb-color);
     cursor: pointer;
 }
 
-.disabled .customSliderLabel {
-    color: var(--disabled-color);
+.disabled .customSliderTrackWrapper {
+    opacity: 0.3;
 }
 
-.disabled .customSliderTrackWrapper {
-    opacity: 0;
-    transition: opacity 0.3s linear;
+.customSliderLabel .customNumberInput {
+    margin-left: auto;
+    flex-shrink: 0;
 }

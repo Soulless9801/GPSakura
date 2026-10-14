@@ -1,7 +1,7 @@
 .sjTest {
-    gap: 1rem;
+    margin-top: var(--space-5);
 }
-.sjTestForm {
-    display: flex;
-    gap: 10px;
+
+.sjTestForm > input {
+    flex: 1 1 12rem;
 }

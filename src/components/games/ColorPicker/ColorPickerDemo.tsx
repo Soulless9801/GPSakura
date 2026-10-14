@@ -59,10 +59,10 @@ export default function ColorPickerDemo() {
 
     const colorFromDistance = useCallback((d: number): string => {
         if (d < 0) {return rgbToCss(primary);}
-        if (d === 0) {return "#00ff00";}
-        if (d < 10) {return "#ffff00";}
-        if (d < 100) {return "#ffa500";}
-        return "#ff0000";
+        if (d === 0) {return "var(--color-success)";}
+        if (d < 10) {return "var(--color-caution)";}
+        if (d < 100) {return "var(--color-warning)";}
+        return "var(--color-danger)";
     }, [primary]);
 
     const chk = useCallback(() => {
@@ -123,12 +123,13 @@ export default function ColorPickerDemo() {
     `;
 
     return (
-        <div className='container-fluid colorDemoWrapper'>
-            <div className='row g-3 align-items-center'>
-                <div className='col-12 col-md-6 col-xl-8'>
+        <div className='colorDemoWrapper'>
+            <div className='demo-layout'>
+                <div className='demo-display'>
                     <div className="row">
                         <div className="col-6" style={{}}>
                             <ColorPicker
+                                className="ui-frame"
                                 width="100%"
                                 height="60vh"
                                 color={targetColor}
@@ -136,6 +137,7 @@ export default function ColorPickerDemo() {
                         </div>
                         <div className="col-6">
                             <ColorPicker
+                                className="ui-frame"
                                 width="100%"
                                 height="60vh"
                                 color={guessColor}
@@ -143,9 +145,9 @@ export default function ColorPickerDemo() {
                         </div>
                     </div>
                 </div>
-                <div className='col-12 col-md-6 col-xl-4 d-flex'>
-                    <div className='p-3 colorControls'>
-                        <div className='container-fluid colorInputs'>
+                <div className='demo-controls'>
+                    <div className='ui-panel'>
+                        <div className='ui-stack demo-controls'>
                             <div className='row g-3'>
                                 <Modal title={"Rules"} description={ruleDescription} buttonText={"Rules"}/>
                             </div>    
@@ -164,22 +166,22 @@ export default function ColorPickerDemo() {
                             </div>
                             <div className='row g-3 colorRow'>
                                 <div className='col-6'>
-                                    <button className='colorButton' onClick={() => { guess(); }}>
+                                    <button className='ui-full-width' onClick={() => { guess(); }}>
                                         Guess
                                     </button>
                                 </div>
                                 <div className='col-6'>
-                                    <span className="colorText" style={{ color: win ? "#00ff00" : rgbToCss(primary) }}>Guesses: {guesses}</span>
+                                    <span className="colorText" style={{ color: win ? "var(--color-success)" : "var(--color-text)" }}>Guesses: {guesses}</span>
                                 </div>
                             </div>
                             <div className='row g-3 colorRow'>
                                 <div className='col-6'>
-                                    <button className='colorButton' onClick={() => { gen(); }} >
+                                    <button className='ui-full-width' onClick={() => { gen(); }} >
                                         Randomize
                                     </button>
                                 </div>
                                 <div className='col-6'>
-                                    <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='colorButton'/>
+                                    <Modal title={"Statistics"} description={statDescription} buttonText={"Statistics"} buttonClassName='ui-full-width'/>
                                 </div>
                             </div>
                         </div>

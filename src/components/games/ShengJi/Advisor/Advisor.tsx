@@ -55,7 +55,7 @@ function CardRow({ cards, size = "md" }: { cards: Card[]; size?: "sm" | "md" }) 
 }
 
 function Chips({ cards, onRemove }: { cards: Card[]; onRemove: (index: number) => void }) {
-    if (!cards.length) {return <span className="advEmpty">nothing yet</span>;}
+    if (!cards.length) { return <span className="advEmpty">nothing yet</span>; }
     return (
         <span className="advChips">
             {cards.map((card, i) => (
@@ -140,8 +140,8 @@ export default function Advisor() {
     }, [hand, trick, seen]);
 
     const addCard = (card: Card): void => {
-        if (target.kind === "hand") {setHand((prev) => [...prev, card]);}
-        else if (target.kind === "seen") {setSeen((prev) => [...prev, card]);}
+        if (target.kind === "hand") { setHand((prev) => [...prev, card]); }
+        else if (target.kind === "seen") { setSeen((prev) => [...prev, card]); }
         else {
             setTrick((prev) =>
                 prev.map((play, i) => (i === target.index ? [...play, card] : play)),
@@ -151,13 +151,13 @@ export default function Advisor() {
 
     const removeFrom = (where: Target, index: number): void => {
         const drop = (list: Card[]): Card[] => list.filter((_, i) => i !== index);
-        if (where.kind === "hand") {setHand(drop);}
-        else if (where.kind === "seen") {setSeen(drop);}
-        else {setTrick((prev) => prev.map((play, i) => (i === where.index ? drop(play) : play)));}
+        if (where.kind === "hand") { setHand(drop); }
+        else if (where.kind === "seen") { setSeen(drop); }
+        else { setTrick((prev) => prev.map((play, i) => (i === where.index ? drop(play) : play))); }
     };
 
     const addPlay = (): void => {
-        if (trick.length >= numPlayers - 1) {return;}
+        if (trick.length >= numPlayers - 1) { return; }
         setTrick((prev) => [...prev, []]);
         setTarget({ kind: "trick", index: trick.length });
     };
@@ -188,8 +188,8 @@ export default function Advisor() {
         target.kind === "hand"
             ? "your hand"
             : target.kind === "seen"
-              ? "cards seen earlier"
-              : `seat ${String(target.index + 1)}'s play`;
+                ? "cards seen earlier"
+                : `seat ${String(target.index + 1)}'s play`;
 
     const best = advice.candidates[0];
     const alternatives = advice.candidates.slice(1, 5);
@@ -203,8 +203,7 @@ export default function Advisor() {
                 <li>Read the play, and why.</li>
             </ol>
 
-            {/* game config/setup */}
-            <section className="advPanel advSetup">
+            <section className="ui-panel advPanel advSetup">
                 <div className="advField">
                     <span className="advField__label">Players</span>
                     <Segmented options={[4, 6, 8]} value={numPlayers} onChange={setNumPlayers} />
@@ -243,68 +242,64 @@ export default function Advisor() {
                     <button onClick={reset}>Clear</button>
                 </span>
             </section>
-
-            {/* card picker */}
-            <section className="advPanel advPicker">
-                <header className="advPanel__head">
-                    <h3>
-                        Adding to <em>{targetLabel}</em>
-                    </h3>
-                    <span className="advCount">
-                        {decks} decks &mdash; each card can appear {decks} times
-                    </span>
-                </header>
-
-                {CardModule.PLAY_SUITS.map((suit) => (
-                    <div key={suit} className="advPickRow">
-                        <span className={`advPickRow__suit${CardModule.isRed({ suit, rank: 2 }) ? " advRed" : ""}`}>
-                            {CardModule.SUIT_GLYPH[suit]}
+            <div className="advWorkbench">
+                <section className="ui-panel advPanel advPicker">
+                    <header className="advPanel__head">
+                        <h3>
+                            Adding to <em>{targetLabel}</em>
+                        </h3>
+                        <span className="advCount">
+                            {decks} decks &mdash; each card can appear {decks} times
                         </span>
-                        {CardModule.RANKS.map((rank) => {
-                            const card: Card = { suit, rank };
-                            const spent: number = used.get(cardKey(card)) || 0;
-                            return (
-                                <button
-                                    key={rank}
-                                    className={`advPick${spent ? " advPick--used" : ""}`}
-                                    disabled={spent >= decks}
-                                    onClick={() => { addCard(card); }}
-                                    title={`add ${CardModule.cardName(card)}`}
-                                >
-                                    {CardModule.RANK_LABEL[rank] || rank}
-                                    {spent > 0 && <span className="advPick__used">{spent}</span>}
-                                </button>
-                            );
-                        })}
+                    </header>
+
+                    {CardModule.PLAY_SUITS.map((suit) => (
+                        <div key={suit} className="advPickRow">
+                            <span className={`advPickRow__suit${CardModule.isRed({ suit, rank: 2 }) ? " advRed" : ""}`}>
+                                {CardModule.SUIT_GLYPH[suit]}
+                            </span>
+                            {CardModule.RANKS.map((rank) => {
+                                const card: Card = { suit, rank };
+                                const spent: number = used.get(cardKey(card)) || 0;
+                                return (
+                                    <button
+                                        key={rank}
+                                        className={`advPick${spent ? " advPick--used" : ""}`}
+                                        disabled={spent >= decks}
+                                        onClick={() => { addCard(card); }}
+                                        title={`add ${CardModule.cardName(card)}`}
+                                    >
+                                        {CardModule.RANK_LABEL[rank] || rank}
+                                        {spent > 0 && <span className="advPick__used">{spent}</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ))}
+
+                    <div className="advPickRow">
+                        <span className="advPickRow__suit">{CardModule.SUIT_GLYPH.jokers}</span>
+                        {allCards()
+                            .filter((card) => card.suit === "jokers")
+                            .map((card) => {
+                                const spent: number = used.get(cardKey(card)) || 0;
+                                return (
+                                    <button
+                                        key={card.rank}
+                                        className={`advPick advPick--joker${spent ? " advPick--used" : ""}${CardModule.isRed(card) ? " advRed" : ""}`}
+                                        disabled={spent >= decks}
+                                        onClick={() => { addCard(card); }}
+                                        title={`add the ${CardModule.cardName(card)}`}
+                                    >
+                                        {CardModule.rankLabel(card)}
+                                        {spent > 0 && <span className="advPick__used">{spent}</span>}
+                                    </button>
+                                );
+                            })}
                     </div>
-                ))}
-
-                <div className="advPickRow">
-                    <span className="advPickRow__suit">{CardModule.SUIT_GLYPH.jokers}</span>
-                    {allCards()
-                        .filter((card) => card.suit === "jokers")
-                        .map((card) => {
-                            const spent: number = used.get(cardKey(card)) || 0;
-                            return (
-                                <button
-                                    key={card.rank}
-                                    className={`advPick advPick--joker${spent ? " advPick--used" : ""}${CardModule.isRed(card) ? " advRed" : ""}`}
-                                    disabled={spent >= decks}
-                                    onClick={() => { addCard(card); }}
-                                    title={`add the ${CardModule.cardName(card)}`}
-                                >
-                                    {CardModule.rankLabel(card)}
-                                    {spent > 0 && <span className="advPick__used">{spent}</span>}
-                                </button>
-                            );
-                        })}
-                </div>
-            </section>
-
-            <div className="advGrid">
-                {/* current game state column*/}
-                <div className="advColumn">
-                    <section className="advPanel">
+                </section>
+                <div className="ui-panel advPanel advInventory">
+                    <section className="advHand">
                         <header className="advPanel__head">
                             <h3>Your hand</h3>
                             <span className="advCount">{hand.length} cards</span>
@@ -317,63 +312,7 @@ export default function Advisor() {
                         </header>
                         <Chips cards={hand} onRemove={(i) => { removeFrom({ kind: "hand" }, i); }} />
                     </section>
-
-                    <section className="advPanel">
-                        <header className="advPanel__head">
-                            <h3>On the table</h3>
-                            <span className="advCount">
-                                {trick.length ? `${String(advice.facts.potPoints)} pts in the trick` : "you are leading"}
-                            </span>
-                            <button onClick={addPlay} disabled={trick.length >= numPlayers - 1}>
-                                add a play
-                            </button>
-                        </header>
-
-                        {trick.map((play, i) => {
-                            const partner: boolean = (myPosition - i) % 2 === 0;
-                            const winning: boolean = advice.facts.winningPosition === i;
-                            return (
-                                <div key={i} className={`advSeat${winning ? " advSeat--winning" : ""}`}>
-                                    <span className="advSeat__who">
-                                        <span className="advSeat__name">
-                                            Seat {i + 1}
-                                            {i === 0 ? " (led)" : ""}
-                                        </span>
-                                        <span className={`advTag ${partner ? "advTag--partner" : "advTag--opponent"}`}>
-                                            {partner ? "partner" : "opponent"}
-                                        </span>
-                                        {winning && <span className="advTag advTag--winning">winning</span>}
-                                    </span>
-                                    <span className="advSeat__cards">
-                                        <Chips
-                                            cards={play}
-                                            onRemove={(index) => { removeFrom({ kind: "trick", index: i }, index); }}
-                                        />
-                                    </span>
-                                    <span className="advSeat__actions">
-                                        <button
-                                            className={
-                                                target.kind === "trick" && target.index === i ? "active" : ""
-                                            }
-                                            onClick={() => { setTarget({ kind: "trick", index: i }); }}
-                                        >
-                                            {target.kind === "trick" && target.index === i ? "adding" : "add"}
-                                        </button>
-                                        <button onClick={() => { removePlay(i); }}>remove</button>
-                                    </span>
-                                </div>
-                            );
-                        })}
-
-                        <div className="advSeat advSeat--you">
-                            <span className="advSeat__who">
-                                <span className="advSeat__name">You</span>
-                                <span className="advTag advTag--you">to play</span>
-                            </span>
-                        </div>
-                    </section>
-
-                    <section className="advPanel">
+                    <section className="advSeen">
                         <header className="advPanel__head">
                             <h3>Seen earlier this round</h3>
                             <span className="advCount">{seen.length} cards</span>
@@ -401,131 +340,192 @@ export default function Advisor() {
                         )}
                     </section>
                 </div>
-
-                {/* answer column */}
-                <div className="advColumn">
-                    <section className="advPanel advResult">
-                        {advice.problems.length > 0 ? (
-                            <>
-                                <h3>Not Enough Information</h3>
-                                <ul className="advProblems">
-                                    {advice.problems.map((problem) => (
-                                        <li key={problem}>{problem}</li>
-                                    ))}
-                                </ul>
-                            </>
-                        ) : (
-                            <>
-                                <h3>Play</h3>
-                                <div className="advBest">
-                                    <CardRow cards={best.move} />
-                                </div>
-
-                                <div className="advStats">
-                                    <span className="advStat">
-                                        <span className="advStat__value">
-                                            {Math.round((best.winProbability ?? 0) * 100)}%
-                                        </span>
-                                        <span className="advStat__label">your side holds it</span>
-                                    </span>
-                                    <span className="advStat">
-                                        <span className="advStat__value">{best.pointsAdded}</span>
-                                        <span className="advStat__label">points you commit</span>
-                                    </span>
-                                    <span className="advStat">
-                                        <span className="advStat__value">{best.takesTrick ? "yes" : "no"}</span>
-                                        <span className="advStat__label">takes the trick now</span>
-                                    </span>
-                                    <span className="advStat">
-                                        <span className="advStat__value">{advice.facts.legalMoveCount}</span>
-                                        <span className="advStat__label">legal plays</span>
-                                    </span>
-                                </div>
-
-                                <h4>Why</h4>
-                                {best.rules.length ? (
-                                    <ul className="advRules">
-                                        {best.rules.map((rule) => (
-                                            <li key={rule.id}>
-                                                <span
-                                                    className={`advRule__delta ${rule.delta >= 0 ? "advRule__delta--up" : "advRule__delta--down"}`}
-                                                >
-                                                    {rule.delta >= 0 ? "+" : ""}
-                                                    {rule.delta.toFixed(1)}
-                                                </span>
-                                                <span className="advRule__body">
-                                                    <span className="advRule__id">
-                                                        {rule.id}
-                                                        {HARMFUL_RULES[rule.id] && (
-                                                            <span
-                                                                className="advTag advTag--warn"
-                                                                title={HARMFUL_RULES[rule.id]}
-                                                            >
-                                                                measured harmful
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                    <span className="advRule__plain">{rule.plain}</span>
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="advNote">
-                                        No rule had anything to say here — every legal play scores the
-                                        same, so this one is arbitrary.
-                                    </p>
-                                )}
-
-                                {alternatives.length > 0 && (
-                                    <>
-                                        <h4>Next best</h4>
-                                        <ul className="advAlts">
-                                            {alternatives.map((candidate) => (
-                                                <li key={moveKey(candidate.move)}>
-                                                    <CardRow cards={candidate.move} size="sm" />
-                                                    <span className="advAlt__score">
-                                                        {candidate.score.toFixed(1)}
-                                                    </span>
-                                                    <span className="advAlt__why">
-                                                        {candidate.rules.length
-                                                            ? candidate.rules
-                                                                  .slice()
-                                                                  .sort((a, b) => a.delta - b.delta)[0].id
-                                                            : "nothing scored it"}
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </section>
-                </div>
             </div>
-            <div className="advPickRow">
-                    <section className="advPanel advCaveat">
-                        <h4>What this actually is</h4>
-                        <p>
-                            The legal plays come from{" "}
-                            <code>core/comparison.ts</code> &mdash; the same validator the game
-                            runs on &mdash; so nothing suggested here is an illegal move.
-                        </p>
-                        <p>
-                            The ranking is the playbook heuristic, ported from the offline bot. Over
-                            200 paired deals at 4 players it wins 48.5% against the strongest
-                            hand-written bot in this repo and 59.0% against the plain one. It is not
-                            a solver, and against perfect-information hindsight it picks the truly
-                            optimal move about a third of the time.
-                        </p>
-                        <p>
-                            The win-probability figure is an uncalibrated estimate, so treat{" "}
-                            {Math.round(PARAMETERS.trump_commit_threshold * 100)}% as a dial rather
-                            than a real probability.
-                        </p>
+            <div className="advAnalysis">
+                <section className="ui-panel advPanel advTable">
+                    <header className="advPanel__head">
+                        <h3>On the table</h3>
+                        <span className="advCount">
+                            {trick.length ? `${String(advice.facts.potPoints)} pts in the trick` : "you are leading"}
+                        </span>
+                        <button onClick={addPlay} disabled={trick.length >= numPlayers - 1}>
+                            add a play
+                        </button>
+                    </header>
+
+                    {trick.map((play, i) => {
+                        const partner: boolean = (myPosition - i) % 2 === 0;
+                        const winning: boolean = advice.facts.winningPosition === i;
+                        return (
+                            <div key={i} className={`advSeat${winning ? " advSeat--winning" : ""}`}>
+                                <span className="advSeat__who">
+                                    <span className="advSeat__name">
+                                        Seat {i + 1}
+                                        {i === 0 ? " (led)" : ""}
+                                    </span>
+                                    <span className={`advTag ${partner ? "advTag--partner" : "advTag--opponent"}`}>
+                                        {partner ? "partner" : "opponent"}
+                                    </span>
+                                    {winning && <span className="advTag advTag--winning">winning</span>}
+                                </span>
+                                <span className="advSeat__cards">
+                                    <Chips
+                                        cards={play}
+                                        onRemove={(index) => { removeFrom({ kind: "trick", index: i }, index); }}
+                                    />
+                                </span>
+                                <span className="advSeat__actions">
+                                    <button
+                                        className={
+                                            target.kind === "trick" && target.index === i ? "active" : ""
+                                        }
+                                        onClick={() => { setTarget({ kind: "trick", index: i }); }}
+                                    >
+                                        {target.kind === "trick" && target.index === i ? "adding" : "add"}
+                                    </button>
+                                    <button onClick={() => { removePlay(i); }}>remove</button>
+                                </span>
+                            </div>
+                        );
+                    })}
+
+                    <div className="advSeat advSeat--you">
+                        <span className="advSeat__who">
+                            <span className="advSeat__name">You</span>
+                            <span className="advTag advTag--you">to play</span>
+                        </span>
+                    </div>
+                </section>
+                <section className="ui-panel advPanel advResult">
+                    {advice.problems.length > 0 ? (
+                        <>
+                            <h3>Recommended play</h3>
+                            <p className="advNote">Add your hand and the current trick to see a recommendation.</p>
+                            <ul className="advProblems">
+                                {advice.problems.map((problem) => (
+                                    <li key={problem}>{problem}</li>
+                                ))}
+                            </ul>
+                        </>
+                    ) : (
+                        <>
+                            <h3>Recommended play</h3>
+                            <div className="advBest">
+                                <CardRow cards={best.move} />
+                            </div>
+
+                            <div className="advStats">
+                                <span className="advStat">
+                                    <span className="advStat__value">
+                                        {Math.round((best.winProbability ?? 0) * 100)}%
+                                    </span>
+                                    <span className="advStat__label">your side holds it</span>
+                                </span>
+                                <span className="advStat">
+                                    <span className="advStat__value">{best.pointsAdded}</span>
+                                    <span className="advStat__label">points you commit</span>
+                                </span>
+                                <span className="advStat">
+                                    <span className="advStat__value">{best.takesTrick ? "yes" : "no"}</span>
+                                    <span className="advStat__label">takes the trick now</span>
+                                </span>
+                                <span className="advStat">
+                                    <span className="advStat__value">{advice.facts.legalMoveCount}</span>
+                                    <span className="advStat__label">legal plays</span>
+                                </span>
+                            </div>
+
+                        </>
+                    )}
+                </section>
+            </div>
+            {advice.problems.length === 0 && (
+                <div className={`advReasoning${alternatives.length ? "" : " advReasoning--single"}`}>
+                    <section className="ui-panel advPanel advReasons">
+                        <h3>Why this play</h3>
+                        {best.rules.length ? (
+                            <ul className="advRules">
+                                {best.rules.map((rule) => (
+                                    <li key={rule.id}>
+                                        <span
+                                            className={`advRule__delta ${rule.delta >= 0 ? "advRule__delta--up" : "advRule__delta--down"}`}
+                                        >
+                                            {rule.delta >= 0 ? "+" : ""}
+                                            {rule.delta.toFixed(1)}
+                                        </span>
+                                        <span className="advRule__body">
+                                            <span className="advRule__id">
+                                                {rule.id}
+                                                {HARMFUL_RULES[rule.id] && (
+                                                    <span
+                                                        className="advTag advTag--warn"
+                                                        title={HARMFUL_RULES[rule.id]}
+                                                    >
+                                                        measured harmful
+                                                    </span>
+                                                )}
+                                            </span>
+                                            <span className="advRule__plain">{rule.plain}</span>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="advNote">
+                                No rule had anything to say here — every legal play scores the
+                                same, so this one is arbitrary.
+                            </p>
+                        )}
+
+
                     </section>
+                    {alternatives.length > 0 && (
+                        <section className="ui-panel advPanel advAlternatives">
+                            <h3>Other legal plays</h3>
+                            <ul className="advAlts">
+                                {alternatives.map((candidate) => (
+                                    <li key={moveKey(candidate.move)}>
+                                        <CardRow cards={candidate.move} size="sm" />
+                                        <span className="advAlt__score">
+                                            {candidate.score.toFixed(1)}
+                                        </span>
+                                        <span className="advAlt__why">
+                                            {candidate.rules.length
+                                                ? candidate.rules
+                                                    .slice()
+                                                    .sort((a, b) => a.delta - b.delta)[0].id
+                                                : "nothing scored it"}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
+
                 </div>
+            )}
+
+
+            <details className="ui-panel advPanel advCaveat">
+                <summary>About these recommendations</summary>
+                <p>
+                    The legal plays come from{" "}
+                    <code>core/comparison.ts</code> &mdash; the same validator the game
+                    runs on &mdash; so nothing suggested here is an illegal move.
+                </p>
+                <p>
+                    The ranking is the playbook heuristic, ported from the offline bot. Over
+                    200 paired deals at 4 players it wins 48.5% against the strongest
+                    hand-written bot in this repo and 59.0% against the plain one. It is not
+                    a solver, and against perfect-information hindsight it picks the truly
+                    optimal move about a third of the time.
+                </p>
+                <p>
+                    The win-probability figure is an uncalibrated estimate, so treat{" "}
+                    {Math.round(PARAMETERS.trump_commit_threshold * 100)}% as a dial rather
+                    than a real probability.
+                </p>
+            </details>
         </div>
     );
 }

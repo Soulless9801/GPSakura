@@ -1,15 +1,13 @@
 .pagination {
     display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
     justify-content: center;
-    margin-top: var(--sep-distance-primary);
+    margin-top: var(--space-5);
 }
+
 .paginationButton {
-    border: var(--border-width) solid var(--bg-color-primary);
-    box-sizing: border-box;
-    display: inline-block;
-    min-width: 1.5em;
-    padding: 0.5em 1em;
-    margin-left: 2px;
+    min-width: var(--control-height);
+    padding: var(--space-2);
     text-align: center;
-    text-decoration: none !important;
 }

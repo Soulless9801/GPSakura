@@ -171,7 +171,7 @@ export default function BlogApp() {
     );
 
     return (
-        <div className="blogAppContainer container-fluid">
+        <div className="blogAppContainer">
             <div className="text-center text-lg-start" style={{marginBottom: "var(--sep-distance-primary)"}}>
                 <Modal id="blogMenuModal" title="Blog Menu" description={blogMenu} buttonText="Blog Menu" scrollable={false}/>
             </div>

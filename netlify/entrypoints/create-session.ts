@@ -1,1 +1,1 @@
-export { handler } from "../functions/create-session";
+export { default } from "../functions/create-session";

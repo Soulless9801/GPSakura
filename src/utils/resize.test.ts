@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { convertToPixels } from "./resize";
+import { convertToPixels, observeElementSize } from "./resize";
 
 describe("convertToPixels", () => {
     const context = { getBoundingClientRect: () => ({ width: 400 }) } as unknown as HTMLElement;
@@ -64,5 +64,37 @@ describe("convertToPixels", () => {
         expect(convertToPixels("+1.50REM")).toBe(30);
         expect(convertToPixels("1e2px")).toBe(100);
         expect(convertToPixels("1.2oops!")).toBeNaN();
+    });
+});
+
+describe("observeElementSize", () => {
+    afterEach(() => { vi.unstubAllGlobals(); });
+
+    it("resizes the canvas when its container changes and disconnects on cleanup", () => {
+        const observe = vi.fn();
+        const disconnect = vi.fn();
+        let notify: (() => void) | undefined;
+        class Observer {
+            constructor(callback: () => void) { notify = callback; }
+            observe = observe;
+            disconnect = disconnect;
+        }
+        vi.stubGlobal("ResizeObserver", Observer);
+        const element = {} as Element;
+        const resize = vi.fn();
+        const stop = observeElementSize(element, resize);
+        expect(observe).toHaveBeenCalledWith(element);
+        notify?.();
+        expect(resize).toHaveBeenCalledOnce();
+        stop();
+        expect(disconnect).toHaveBeenCalledOnce();
+    });
+
+    it("allows the existing window resize fallback when observation is unavailable", () => {
+        vi.stubGlobal("ResizeObserver", undefined);
+        const resize = vi.fn();
+        expect(() => { observeElementSize({} as Element, resize)(); }).not.toThrow();
+        expect(() => { observeElementSize(null, resize)(); }).not.toThrow();
+        expect(resize).not.toHaveBeenCalled();
     });
 });

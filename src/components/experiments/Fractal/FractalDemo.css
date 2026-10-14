@@ -1,4 +1,3 @@
 .fractalDemoLabel {
-    margin-right: var(--sep-distance-secondary);
+    margin-right: var(--space-2);
 }
-

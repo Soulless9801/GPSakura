@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import crypto from 'crypto';
-import type { HandlerEvent } from '@netlify/functions';
 
 dotenv.config();
 
@@ -31,13 +30,13 @@ function newClientId(): string {
     return `player_${crypto.randomBytes(8).toString('hex')}`;
 }
 
-export const handler = async (event: HandlerEvent) => {
+export default async function handler(request: Request): Promise<Response> {
 
     try {
 
         let body;
         try {
-            body = JSON.parse(event.body || '{}');
+            body = JSON.parse((await request.text()) || '{}');
         } catch {
             return errorJSON("create-session: Invalid JSON body", 400);
         }
@@ -65,4 +64,4 @@ export const handler = async (event: HandlerEvent) => {
         const message = error instanceof Error ? error.message : String(error);
         return errorJSON(`create-session: Internal server error ${message}`, 500);
     }
-};
+}

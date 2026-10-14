@@ -8,12 +8,12 @@ interface FreqGuesserProps {
     components: number;
     className?: string;
     style?: CSSProperties;
-    colorTransition?: number;
+
 }
 
 interface CanvasState { ctx: CanvasRenderingContext2D; width: number; height: number; }
 
-export default function FreqGuesser({ signal, width, height, components, className = "", style = {}, colorTransition = 300 }: FreqGuesserProps) {
+export default function FreqGuesser({ signal, width, height, components, className = "", style = {} }: FreqGuesserProps) {
 
     const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -39,33 +39,14 @@ export default function FreqGuesser({ signal, width, height, components, classNa
         resizeCanvas();
     }, []);
 
-    const lastTimeRef = useRef(performance.now());
-
-    const colorRafRef = useRef<number | null>(null);
-
 	const currentColorRef = useRef<RGB>([0, 0, 0]);
     const secondaryColorRef = useRef<RGB>([0, 0, 0]);
-	const targetCurrentColorRef = useRef<RGB>([0, 0, 0]);
-    const targetSecondaryColorRef = useRef<RGB>([0, 0, 0]);
-	const transitionProgressRef = useRef(1);
 
-	useEffect(() => {
-		const rgb = readColor();
-		currentColorRef.current = rgb[0];
-		targetCurrentColorRef.current = rgb[0];
+    useEffect(() => {
+        const rgb = readColor();
+        currentColorRef.current = rgb[0];
         secondaryColorRef.current = rgb[1];
-        targetSecondaryColorRef.current = rgb[1];
-
-		const onStorage = () => {
-			const rgb = readColor();
-			targetCurrentColorRef.current = rgb[0];
-            targetSecondaryColorRef.current = rgb[1];
-			transitionProgressRef.current = 0;
-		};
-		window.addEventListener("themeStorage", onStorage);
-		return () => { window.removeEventListener("themeStorage", onStorage); };
-
-	}, [readColor]);
+    }, []);
 
     const getCTX = (): CanvasState | null => {
         const canvas = canvasRef.current;
@@ -116,20 +97,6 @@ export default function FreqGuesser({ signal, width, height, components, classNa
         
     }, [components]);
 
-    const fillSignal = () => {
-            
-        const state = getCTX();
-        if (!state) {return;}
-        const { ctx, width: W, height: H } = state;
-
-        ctx.globalCompositeOperation = "source-in";
-
-        ctx.fillStyle = rgbToCss(currentColorRef.current);
-        ctx.fillRect(0, 0, W, H);
-
-        ctx.globalCompositeOperation = "source-over";
-    };
-
     const drawSignal = useCallback(() => {
         
         const state = getCTX();
@@ -157,8 +124,7 @@ export default function FreqGuesser({ signal, width, height, components, classNa
 
         ctx.stroke();
 
-        fillSignal();
-    }, [signal, components]);
+    }, [signal, components, drawAxis]);
 
     useEffect(() => {
 
@@ -177,51 +143,15 @@ export default function FreqGuesser({ signal, width, height, components, classNa
     }, [resizeCanvas, width, height, signal])
 
     useEffect(() => {
-    
-        lastTimeRef.current = performance.now();
-
-        const loop = (now: number): void => {
-            const last = lastTimeRef.current || now;
-            const dt = now - last;
-            lastTimeRef.current = now;
-
-            if (transitionProgressRef.current < 1) {
-                const inc = colorTransition > 0 ? dt / colorTransition : 1;
-                transitionProgressRef.current = Math.min(1, transitionProgressRef.current + inc);
-
-                const t = transitionProgressRef.current;
-
-                const a = currentColorRef.current;
-                const b = targetCurrentColorRef.current;
-
-                currentColorRef.current = [
-                    a[0] + (b[0] - a[0]) * t,
-                    a[1] + (b[1] - a[1]) * t,
-                    a[2] + (b[2] - a[2]) * t,
-                ];
-
-                const x = secondaryColorRef.current;
-                const y = targetSecondaryColorRef.current;
-                
-                secondaryColorRef.current = [
-                    x[0] + (y[0] - x[0]) * t,
-                    x[1] + (y[1] - x[1]) * t,
-                    x[2] + (y[2] - x[2]) * t,
-                ];
-
-                fillSignal();
-            }
-
-            colorRafRef.current = window.requestAnimationFrame(loop);
+        const repaintTheme = () => {
+            const rgb = readColor();
+            currentColorRef.current = rgb[0];
+            secondaryColorRef.current = rgb[1];
+            drawSignal();
         };
-
-        colorRafRef.current = window.requestAnimationFrame(loop);
-
-        return () => {
-            if (colorRafRef.current !== null) {window.cancelAnimationFrame(colorRafRef.current);}
-        };
-
-    }, [colorTransition]);
+        window.addEventListener('themeStorage', repaintTheme);
+        return () => { window.removeEventListener('themeStorage', repaintTheme); };
+    }, [drawSignal]);
 
     return (
 		<div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

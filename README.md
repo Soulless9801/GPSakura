@@ -12,30 +12,6 @@ npm test           # watch mode
 npm run coverage   # tests + coverage, enforces the floors in vitest.config.ts
 ```
 
-Tests live next to the code (`*.test.ts`, `*.test.tsx`) and under `netlify/functions`. Component
-tests opt in to jsdom with a `// @vitest-environment jsdom` comment on the first line; everything
-else runs in plain Node. Shared helpers for the Shengji engine are in `src/test/`.
-
-All previously expected failures are now ordinary regression tests. [AUDIT.md](AUDIT.md) and
-[REMAINING_BUGS.md](REMAINING_BUGS.md) record the fixes and remaining unpinned issues.
-
-## Production build
-
-`npm run build` typechecks application sources with `tsconfig.build.json`, then Vite bundles
-the application from `index.html` into `dist/`. Unit tests, specs, and `src/test/` are excluded
-from the production TypeScript roots. `npm run typecheck` still checks the full `src/` tree,
-including tests. Vitest configuration and coverage settings live separately in `vitest.config.ts`.
-
-Vite checks its actual production module graph and rejects unit test files, test libraries and
-test helpers if they are imported into the build. The interactive Shengji Test panel and its
-test-case generator are application features and remain available in production, loaded on demand.
-
-Netlify discovers functions only in `netlify/entrypoints/`. That directory contains seven small
-handler re-exports; keep tests and implementation helpers in `netlify/functions/`, outside the
-discovery directory. Esbuild traces each handler's runtime imports. The `included_files` settings
-in `netlify.toml` copy only the filesystem-loaded Firebase JSON and Codeforces CSV fallbacks to
-their respective functions. Application source, tests and coverage are not copied as extra assets.
-
 ## Credits
 
 ### Core Framework

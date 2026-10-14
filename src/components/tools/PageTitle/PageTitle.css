@@ -1,18 +1,26 @@
 .pageIntroContainer {
-  	text-align: center;
+    text-align: center;
+    padding-block: clamp(2.5rem, 6vw, 5rem) var(--space-6);
 }
 
 .pageTitle {
-  	font-size: 80px;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.1;
+    margin: 0 0 var(--space-4);
+    overflow-wrap: anywhere;
 }
 
 .pageDescript {
-  	font-size: 16px;
+    color: var(--color-muted);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 auto;
+    max-width: 42rem;
 }
 
 .pageIntroDiv {
-	width:10%;
-	margin-left: auto;
-	margin-right: auto;
-	border-width: 2px;
+    width: 3rem;
+    margin: var(--space-5) auto 0;
 }

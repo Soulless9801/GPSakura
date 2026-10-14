@@ -29,3 +29,11 @@ export function convertToPixels(input: number | string, context: HTMLElement = d
             return value; 
     }
 }
+
+// Canvas backing stores must follow layout changes as well as window resizes.
+export function observeElementSize(element: Element | null, onResize: () => void): () => void {
+    if (!element || typeof ResizeObserver === "undefined") {return () => {};}
+    const observer = new ResizeObserver(() => { onResize(); });
+    observer.observe(element);
+    return () => { observer.disconnect(); };
+}

@@ -1,4 +1,34 @@
+.textParserContainer {
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+
 .textParserBlock {
     display: block;
-    margin-bottom: 1em;
+    margin-bottom: var(--space-4);
+}
+
+.textParserContainer a {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.textParserContainer blockquote {
+    border-left: 2px solid var(--color-border-strong);
+    padding-left: var(--space-4);
+    color: var(--color-muted);
+}
+
+.textParserContainer pre, .textParserContainer .katex-display {
+    overflow-x: auto;
+}
+
+.textParserContainer img {
+    max-width: 100%;
+    height: auto;
+}
+
+.textParserContainer code {
+    font-family: var(--font-mono);
+    color: inherit;
 }

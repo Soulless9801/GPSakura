@@ -4,9 +4,9 @@ import Navbar from '/src/components/tools/Navbar/Navbar';
 
 export default function AppLayout() {
     return (
-        <div>
+        <div className="app-shell">
             <Navbar />
-            <Outlet />
+            <main className="page-shell"><Outlet /></main>
         </div>
     );
 }

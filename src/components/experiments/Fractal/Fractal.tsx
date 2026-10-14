@@ -1,3 +1,4 @@
+import { observeElementSize } from "/src/utils/resize";
 import { useRef, useEffect, useCallback, memo, type CSSProperties } from "react";
 import { rgbToCss, readColor, type RGB } from "/src/utils/colors";
 import { debounce } from "/src/utils/debounce";
@@ -12,7 +13,7 @@ interface FractalProps {
 	speed: number;
 	angle: number;
 	lineWidth?: number;
-	colorTransition?: number;
+
 	className?: string;
 	style?: CSSProperties;
 }
@@ -29,7 +30,6 @@ export default memo(function Fractal({
 	speed,
 	angle,
 	lineWidth = 1,
-	colorTransition = 300,
 	className = "",
 	style = {},
 }: FractalProps) {
@@ -65,30 +65,16 @@ export default memo(function Fractal({
 	// Render Refs
 
 	const rafRef = useRef<number | null>(null);
-	const lastTimeRef = useRef(performance.now());
 
 	// Color Refs
 
-	const colorRafRef = useRef<number | null>(null);
 
 	const currentColorRef = useRef<RGB>([0, 0, 0]);
-	const targetColorRef = useRef<RGB>([0, 0, 0]);
-	const transitionProgressRef = useRef(1);
 
-	useEffect(() => {
-		const rgb = readColor();
-		currentColorRef.current = rgb[0];
-		targetColorRef.current = rgb[0];
-
-		const onStorage = () => {
-			const rgb = readColor();
-			targetColorRef.current = rgb[0];
-			transitionProgressRef.current = 0;
-		};
-		window.addEventListener("themeStorage", onStorage);
-		return () => { window.removeEventListener("themeStorage", onStorage); };
-
-	}, [readColor]);
+    useEffect(() => {
+        const rgb = readColor();
+        currentColorRef.current = rgb[0];
+    }, []);
 
 	const getCTX = (): CanvasState | null => {
         const canvas = canvasRef.current;
@@ -507,51 +493,26 @@ export default memo(function Fractal({
 		}, 150);
 
 		window.addEventListener("resize", debouncedResize);
+        const stopObservingSize = observeElementSize(wrapperRef.current, debouncedResize);
 
 		return () => {
 			debouncedResize.cancel();
 			window.removeEventListener("resize", debouncedResize);
+            stopObservingSize();
 			if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 		};
 
 	}, [type, drawSierpinski, drawKoch, drawFern, drawDragon, drawPythagoras, resizeCanvas]);
 
-	useEffect(() => {
-
-		lastTimeRef.current = performance.now();
-
-		const loop = (now: number): void => {
-			const last = lastTimeRef.current || now;
-            const dt = now - last;
-            lastTimeRef.current = now;
-
-			if (transitionProgressRef.current < 1) {
-				const inc = colorTransition > 0 ? dt / colorTransition : 1;
-				transitionProgressRef.current = Math.min(1, transitionProgressRef.current + inc);
-
-				const t = transitionProgressRef.current;
-				const a = currentColorRef.current;
-				const b = targetColorRef.current;
-
-				currentColorRef.current = [
-					a[0] + (b[0] - a[0]) * t,
-					a[1] + (b[1] - a[1]) * t,
-					a[2] + (b[2] - a[2]) * t,
-				];
-
-				fillFractal();
-			}
-
-			colorRafRef.current = requestAnimationFrame(loop);
-		};
-
-		colorRafRef.current = requestAnimationFrame(loop);
-
-		return () => {
-			if (colorRafRef.current) {cancelAnimationFrame(colorRafRef.current);}
-		};
-
-	}, [colorTransition]);
+    useEffect(() => {
+        const repaintTheme = () => {
+            const rgb = readColor();
+            currentColorRef.current = rgb[0];
+            fillFractal();
+        };
+        window.addEventListener('themeStorage', repaintTheme);
+        return () => { window.removeEventListener('themeStorage', repaintTheme); };
+    }, [fillFractal]);
 
 	return (
 		<div ref={wrapperRef} className={`relative ${className}`} style={{ ...style, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

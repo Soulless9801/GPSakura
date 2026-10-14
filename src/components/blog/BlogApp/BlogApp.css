@@ -1,50 +1,21 @@
 .blogAppContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    padding: var(--sep-distance-primary);
     overflow-anchor: none;
 }
+
 .blogHeader {
     display: flex;
     flex-direction: column;
-    align-items: start;
-    justify-content: space-between;
-    gap: var(--sep-distance-primary);
+    align-items: stretch;
+    gap: var(--space-5);
 }
-.blogLabelLR {
-    margin-left: var(--sep-distance-secondary);
-    margin-right: var(--sep-distance-secondary);
+
+.blogHeader > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
 }
-.blogLabelR {
-    margin-right: var(--sep-distance-secondary);
-}
-.blogLabelL {
-    margin-left: var(--sep-distance-secondary);
-}
-.blogLengthMenu {
-    border: var(--border-width) solid var(--primary-color);
-    border-radius: var(--table-border-radius-secondary);
-    background-color: transparent;
-    color: inherit;
-}
-.blogSortDirectionButton{
-    transition: var(--transition-timers);
-    background: transparent;
-    border: var(--border-width) solid var(--primary-color);
-    color: var(--primary-color);
-    cursor: pointer;
-    padding: var(--padding-dropdown);
-    border-radius: var(--table-border-radius-secondary);
-    margin-right: var(--sep-distance-primary);
-}
-.blogSortDirectionButton:hover {
-    background-color: var(--bg-color-hover);
-    color: var(--primary-color);
-}
-.blogSortMenu {
-    border: var(--border-width) solid var(--primary-color);
-    border-radius: var(--table-border-radius-secondary);
-    background-color: transparent;
-    color: inherit;
+
+.blogHeader .customSelectWrapper {
+    flex-wrap: wrap;
 }

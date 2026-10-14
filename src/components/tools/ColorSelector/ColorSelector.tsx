@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { hexToRGB, rgbToHex, normalizeHex, hsvToRGB, hexToHsv, type HSV, type RGB } from "/src/utils/colors";
 import type { CSSProperties } from "react";
 
@@ -218,11 +218,11 @@ export function RGBInput({ value, onSubmit, onChange, getFieldStyle, disabled = 
 
 	return (
 		<div className="colorSelectorMenuSection colorSelectorMenuSectionCompact">
-			<label className="colorSelectorRGBField">
+			<div className="colorSelectorRGBField">
 				<div className="colorSelectorRGBFieldRow">
 					{channels.map(({ label, index }) => (
-						<Fragment key={index}>
-							<label>{label}</label>
+						<label className="colorSelectorRGBChannel" key={index}>
+							<span>{label}</span>
 								<Form
 								init={rgb[index]}
 								min={0}
@@ -233,10 +233,10 @@ export function RGBInput({ value, onSubmit, onChange, getFieldStyle, disabled = 
 								disabled={disabled}
 								notifyOnInitChange={false}
 							/>
-						</Fragment>
+						</label>
 					))}
 				</div>
-			</label>
+			</div>
 		</div>
 	);
 }
@@ -251,7 +251,7 @@ function ColorMenu({ value, onSelect, disabled = false }: ColorMenuProps) {
 	return (
 		<div className="colorSelectorMenu">
 			<div className="colorSelectorMenuSection">
-				<div className="colorSelectorMenuHero" style={{ background: `linear-gradient(135deg, ${value}, rgba(255, 255, 255, 0.16))` }}>
+				<div className="colorSelectorMenuHero">
 					<div className="colorSelectorMenuHeroCopy">
 						<span className="colorSelectorMenuEyebrow">current color</span>
 						<strong>{value.toUpperCase()}</strong>
@@ -319,7 +319,7 @@ export default function ColorSelector({
 	};
 
 	return (
-		<div className={`colorSelector${disabled ? " disabled" : ""}`}>
+		<div className={`ui-panel ui-stack colorSelector${disabled ? " disabled" : ""}`}>
 			<div className="colorSelectorHeader">
 				<span className="colorSelectorLabel">{label}</span>
 				<span className="colorSelectorHex">{hex_color.toUpperCase()}</span>

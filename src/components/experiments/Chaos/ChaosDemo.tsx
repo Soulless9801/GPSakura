@@ -120,7 +120,6 @@ export default function ChaosDemo() {
                     pitch={pitch * (Math.PI / 180)}
                     yaw={yaw * (Math.PI / 180)}
                     refresh={refresh}
-                    //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
                 />
             )}
             {dim === 3 && (

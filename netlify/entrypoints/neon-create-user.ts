@@ -1,1 +1,1 @@
-export { handler } from "../functions/neon-create-user";
+export { default } from "../functions/neon-create-user";

@@ -9,7 +9,7 @@
     "test:run": "vitest run",
     "coverage": "vitest run --coverage",
     "build": "tsc -p tsconfig.build.json && vite build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.functions.json",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -27,7 +27,7 @@
     "datatables.net-react": "^1.0.1",
     "dotenv": "^17.2.0",
     "drizzle-orm": "^0.45.2",
-    "firebase": "^12.19.0",
+    "firebase": "^13.0.0",
     "jquery": "^3.7.1",
     "katex": "^0.18.9",
     "motion": "^12.23.7",

@@ -83,7 +83,7 @@ export default function Slider({ min, max, value, onChange, label, unit, step = 
                         <div className="customSliderLabel">
                             <span>{label}</span>
                             <Form init={internalValue} min={min} max={max} step={step} places={places} disabled={disabled} onChange={updateValue} />
-                            <span>{unit ? unit : ""}</span>
+                            {unit && <span>{unit}</span>}
                         </div>
                     )}
                     <div className="customSliderTrackWrapper" onPointerDown={startDrag}>

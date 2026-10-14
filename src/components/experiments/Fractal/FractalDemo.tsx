@@ -65,7 +65,6 @@ export default function FractalDemo() {
             depth={depth}
             speed={speed}
             angle={angle}
-            //style={{ borderRadius: 'var(--table-border-radius-secondary)', border: '1px solid var(--primary-color)', transition: 'var(--transition-timers)' }}
         />
     );
 

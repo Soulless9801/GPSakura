@@ -1,1 +1,1 @@
-export { handler } from "../functions/ably-auth";
+export { default } from "../functions/ably-auth";

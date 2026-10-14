@@ -1,1 +1,1 @@
-export { handler } from "../functions/firebase-collection-query";
+export { default } from "../functions/firebase-collection-query";

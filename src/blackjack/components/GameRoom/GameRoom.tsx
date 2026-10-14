@@ -168,7 +168,7 @@ export default function GameRoom() {
     }, [gameId]);
 
     return (
-        <div className="bjg-wrapper">
+        <div className="ui-panel ui-stack bjg-wrapper">
             <div className="bjg-labels">
                 <p>PlayerID: {identity?.clientId}</p>
                 <p>GameID: {gameId}</p>
@@ -193,7 +193,7 @@ export default function GameRoom() {
             <div>
                 <p>Money: {money}</p>
             </div>
-            <div className="bjg-actions">
+            <div className="ui-cluster bjg-actions">
                 <button onClick={() => { void loadGame().catch(() => undefined); }} className="bjg-button">
                     Load Game
                 </button>

@@ -8,7 +8,6 @@ import type { Identity } from "../../src/utils/verify";
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import type { HandlerEvent } from '@netlify/functions';
 //TODO: add money and betting
 import { games, players } from "../../db/schema";
 
@@ -59,13 +58,13 @@ function genSeed() : number { // TODO: use better seed generation method
     return Math.floor(Math.random() * 1000000);
 }
 
-export async function handler(event: HandlerEvent) {
+export default async function handler(request: Request): Promise<Response> {
 
     try {
 
         // get action data
 
-        const body = JSON.parse(event.body || "{}");
+        const body = JSON.parse((await request.text()) || "{}");
 
         const identity : Identity | null = body.identity || null;
         if (!identity) {return errorJSON("Missing identity", 400);}

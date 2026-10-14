@@ -1,0 +1,53 @@
+/* Components own interaction motion. Theme changes use ONE root snapshot fade,
+   never a color transition on every descendant. Override package presets here. */
+@layer app-motion {
+    *, *::before, *::after {
+        transition: var(--interaction-transitions), var(--component-transitions) !important;
+    }
+    :root[data-theme-changing],
+    :root[data-theme-changing] *,
+    :root[data-theme-changing] *::before,
+    :root[data-theme-changing] *::after {
+        transition: none !important;
+    }
+    /* Vendor widgets must participate in the root capture, not create a second
+       snapshot with a separate timeline. */
+    :root[data-theme-changing] * {
+        view-transition-name: none !important;
+    }
+}
+
+/* Reset non-inherited behavior explicitly; descendants must not copy animations. */
+:where(*, *::before, *::after) {
+    --interaction-transitions: outline-offset 0s;
+    --component-transitions: visibility 0s;
+}
+
+:where(a, button, input, select, textarea, .customNumberInput, .dt-paging-button) {
+    --interaction-transitions: background-color var(--interaction-duration) ease,
+                               color var(--interaction-duration) ease,
+                               border-color var(--interaction-duration) ease,
+                               box-shadow var(--interaction-duration) ease;
+}
+
+/* Crossfade the new opaque page over the old one. Avoid the browser's additive
+   blend and geometry animation, which can brighten colors or move containers. */
+:root[data-theme-changing]::view-transition-group(root) {
+    animation: none;
+}
+:root[data-theme-changing]::view-transition-old(root) {
+    animation: none;
+    opacity: 1;
+    mix-blend-mode: normal;
+}
+:root[data-theme-changing]::view-transition-new(root) {
+    animation: theme-reveal var(--motion-duration) var(--motion-easing) both;
+    mix-blend-mode: normal;
+}
+:root::view-transition {
+    pointer-events: none;
+}
+@keyframes theme-reveal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

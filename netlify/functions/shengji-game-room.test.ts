@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 
-import type { HandlerEvent } from "@netlify/functions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { post } from "../../src/test/http";
 
 import RNG from "../../src/entities/rng";
 import { deserialize } from "../../src/utils/serial";
@@ -83,8 +84,8 @@ vi.mock("ably", () => ({
     },
 }));
 
-import { handler as sessionHandler } from "./create-session";
-import { handler } from "./shengji-game-room";
+import sessionHandler from "../entrypoints/create-session";
+import handler from "../entrypoints/shengji-game-room";
 
 const sign = (clientId: string): string => crypto.createHmac("sha256", SECRET).update(clientId).digest("hex");
 
@@ -109,8 +110,8 @@ async function raw(
         identity: { clientId, signature: options.signature ?? sign(clientId) },
         ...(payload ? { payload } : {}),
     };
-    const res = await handler({ body: JSON.stringify(body) } as HandlerEvent);
-    return { status: res.statusCode, json: JSON.parse(res.body) as Record<string, unknown> };
+    const res = await handler(post(JSON.stringify(body)));
+    return { status: res.status, json: (await res.json()) as Record<string, unknown> };
 }
 
 /** like `raw`, but first lets any rate-limit window lapse */
@@ -153,9 +154,9 @@ beforeEach(() => {
 
 describe("request validation", () => {
     it("requires an identity", async () => {
-        const res = await handler({ body: JSON.stringify({ action: "state", roomId: ROOM }) } as HandlerEvent);
-        expect(res.statusCode).toBe(400);
-        expect(JSON.parse(res.body).error).toBe("Missing identity");
+        const res = await handler(post(JSON.stringify({ action: "state", roomId: ROOM })));
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe("Missing identity");
     });
 
     it("requires a client id and a room id", async () => {
@@ -177,8 +178,8 @@ describe("request validation", () => {
     });
 
     it("reports unparseable bodies as a 500", async () => {
-        const res = await handler({ body: "{oops" } as HandlerEvent);
-        expect(res.statusCode).toBe(500);
+        const res = await handler(post("{oops"));
+        expect(res.status).toBe(500);
     });
 });
 
@@ -701,9 +702,9 @@ describe("authorisation", () => {
     // to obtain a signature for somebody else's id.
     it("a signature cannot be minted for someone else's id, so their hand stays private", async () => {
         await dealt();
-        const minted = await sessionHandler({ body: JSON.stringify({ action: "sign", clientId: "p1" }) } as HandlerEvent);
-        expect(minted?.statusCode).toBe(400);
-        const { signature } = JSON.parse(minted?.body ?? "{}") as { signature?: string };
+        const minted = await sessionHandler(post(JSON.stringify({ action: "sign", clientId: "p1" })));
+        expect(minted?.status).toBe(400);
+        const { signature } = (await minted.json()) as { signature?: string };
 
         fake.clock.now += 5000;
         const stolen = await raw("p1", "hand", undefined, { signature: signature ?? "" });
@@ -713,8 +714,8 @@ describe("authorisation", () => {
 
     it("an identity issued by the server works in the room", async () => {
         await startGame();
-        const issued = await sessionHandler({ body: JSON.stringify({ action: "issue" }) } as HandlerEvent);
-        const { clientId, signature } = JSON.parse(issued?.body ?? "{}") as { clientId: string; signature: string };
+        const issued = await sessionHandler(post(JSON.stringify({ action: "issue" })));
+        const { clientId, signature } = (await issued.json()) as { clientId: string; signature: string };
 
         fake.clock.now += 5000;
         const res = await raw(clientId, "state", undefined, { signature });

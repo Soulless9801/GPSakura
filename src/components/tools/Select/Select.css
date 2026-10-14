@@ -1,91 +1,76 @@
 .customSelectWrapper {
     display: inline-flex;
     align-items: center;
+    gap: var(--space-2);
+    max-width: 100%;
+    min-width: 0;
 }
 
 .customSelect {
     position: relative;
-    display: inline-block;
+    min-width: 0;
 }
 
 .customSelectSelected {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5em;
+    gap: var(--space-3);
+    width: 100%;
     text-align: left;
-    transition: var(--transition-timers);
-    cursor: pointer;
-    padding: var(--padding-dropdown);
-    background-color: transparent;
-    border: var(--border-width) solid var(--primary-color);
-    border-radius: var(--table-border-radius-secondary);
-    user-select: none;
-    white-space: nowrap;
-}
-
-.customSelectSelected:hover {
-    background-color: var(--bg-color-hover);
 }
 
 .customSelectArrow {
-    flex: 0 0 auto;
-    margin-left: 0.5em;
-    display: inline-flex;
-    align-items: center;
+    color: var(--color-muted);
+    font-size: 0.85em;
 }
 
 .customSelectOptions {
-    transition: var(--dropdown-timers), var(--transition-timers) !important;
-    opacity: 0;
-    padding: 0px;
-    transform: translateY(-10px);
-    display: block;
-    pointer-events: none;
     position: absolute;
+    z-index: 200;
     top: 100%;
     left: 0;
     min-width: 100%;
-    overflow-y: auto;
-    background: var(--bg-color-secondary);
-    z-index: 127;
-    border-radius: var(--table-border-radius-secondary);
-    box-shadow: 2px 2px 2px 2px var(--bg-color-primary);
-}
-
-.customSelectOptions.right {
-    right: 0;
-    left: auto;
+    width: max-content;
+    max-width: min(22rem, 85vw);
+    padding: var(--space-1);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-popover);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    pointer-events: none;
+    --component-transitions: var(--dropdown-timers);
 }
 
 .customSelectOptions.show {
     opacity: 1;
     visibility: visible;
-    pointer-events: all;
     transform: translateY(0);
+    pointer-events: auto;
+}
+
+.customSelectOptions.right {
+    left: auto;
+    right: 0;
 }
 
 .customSelectOption {
-    display: flex;
-    align-items: center;
-    transition: var(--transition-timers) !important;
-    padding: var(--padding-dropdown);
-    cursor: pointer;
-    margin: 4px;
-    border-radius: inherit;
-    white-space: nowrap;
+    display: block;
+    width: 100%;
     text-align: left;
+    border: 0;
+    background: transparent;
 }
 
-.customSelectOption:hover,
 .customSelectOption.selected {
-    background: var(--bg-color-hover);
+    background: var(--color-hover);
+    color: var(--color-accent);
 }
 
-.customSelectLabelR {
-    margin-right: var(--sep-distance-secondary);
-}
-
-.customSelectLabelL {
-    margin-left: var(--sep-distance-secondary);
+.customSelectLabelR, .customSelectLabelL {
+    color: var(--color-muted);
+    font-size: 0.9rem;
 }
