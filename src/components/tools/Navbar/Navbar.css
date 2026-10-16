@@ -101,6 +101,11 @@
 .nav-link-wrapper {
     border: 1px solid transparent;
     border-radius: var(--radius-control);
+    --component-transitions: border-color var(--interaction-duration) ease;
+}
+
+.nav-link-wrapper:hover, .nav-link-wrapper:focus-within {
+    border-color: var(--color-text);
 }
 
 @media (max-width: 767.98px) {

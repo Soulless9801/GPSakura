@@ -5,6 +5,7 @@
 
 .customSlider {
     user-select: none;
+    --component-transitions: color var(--interaction-duration) ease;
 }
 
 .customSlider.disabled {
@@ -30,6 +31,7 @@
 
 .customSliderTrackWrapper {
     touch-action: none;
+    --component-transitions: opacity var(--interaction-duration) ease;
     position: relative;
     height: 1rem;
     margin-inline: calc(var(--slider-thumb-radius) / 2);
