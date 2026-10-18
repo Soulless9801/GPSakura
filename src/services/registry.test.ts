@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
-import { getNextTheme, getThemes } from './themeRegistry';
+import { getNextTheme, getThemes } from './registry';
 
 const styles: HTMLStyleElement[] = [];
 function addCSS(css: string): HTMLStyleElement {

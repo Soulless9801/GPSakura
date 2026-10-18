@@ -5,9 +5,11 @@ import { useState, useEffect, useRef } from 'react';
 import './ThreeD.css';
 
 import ColorSelector from '/src/components/tools/ColorSelector/ColorSelector';
+import Slider from '/src/components/tools/Slider/Slider';
+import { createFallingLeaves, DEFAULT_LEAF_COUNT, MAX_LEAF_COUNT } from './FallingLeaves';
 import DemoFrame from '/src/components/tools/DemoFrame/DemoFrame';
 import { observeElementSize } from '/src/utils/resize';
-import { createSakuraTree, DEFAULT_BLOSSOM_COLOR, DEFAULT_WOOD_COLOR } from './sakuraTree';
+import { createSakuraTree, DEFAULT_BLOSSOM_COLOR, DEFAULT_WOOD_COLOR } from './SakuraTree';
 import { syncViewport } from './viewport';
 import type { ChaosAttractor } from '/src/components/experiments/Chaos/Chaos';
 
@@ -25,6 +27,8 @@ interface Chaos3DProps {
 export default function ThreeD() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const treeRef = useRef<ReturnType<typeof createSakuraTree> | null>(null);
+    const leavesRef = useRef<ReturnType<typeof createFallingLeaves> | null>(null);
+    const [leafCount, setLeafCount] = useState(DEFAULT_LEAF_COUNT);
     const resetViewRef = useRef<(() => void) | null>(null);
     const [blossomColor, setBlossomColor] = useState(DEFAULT_BLOSSOM_COLOR);
     const [woodColor, setWoodColor] = useState(DEFAULT_WOOD_COLOR);
@@ -54,6 +58,9 @@ export default function ThreeD() {
         controls.maxPolarAngle = Math.PI / 2;
         const bounds = new THREE.Box3().setFromObject(sakura.tree).getBoundingSphere(new THREE.Sphere());
         controls.target.copy(bounds.center);
+        const leaves = createFallingLeaves(sakura.canopies, DEFAULT_BLOSSOM_COLOR);
+        leavesRef.current = leaves;
+        scene.add(leaves.group);
 
         function resetView() {
             const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
@@ -88,27 +95,37 @@ export default function ThreeD() {
         window.addEventListener('resize', resize);
 
         let frame = 0;
-        function animate() {
+        let lastTime = performance.now();
+        function animate(now: number) {
             frame = window.requestAnimationFrame(animate);
+            // Cap elapsed time after a hidden tab resumes; avoid teleporting leaves.
+            leaves.update(Math.min(Math.max((now - lastTime) / 1000, 0), 0.05));
+            lastTime = now;
             resize();
             controls.update();
             renderer.render(scene, camera);
         }
-        animate();
+        animate(lastTime);
 
         return () => {
             stopObserving();
             window.removeEventListener('resize', resize);
             window.cancelAnimationFrame(frame);
             controls.dispose();
+            leaves.dispose();
             sakura.dispose();
             renderer.dispose();
             treeRef.current = null;
+            leavesRef.current = null;
             resetViewRef.current = null;
         };
     }, []);
 
-    useEffect(() => { treeRef.current?.blossoms.color.set(blossomColor); }, [blossomColor]);
+    useEffect(() => {
+        treeRef.current?.blossoms.color.set(blossomColor);
+        leavesRef.current?.setColor(blossomColor);
+    }, [blossomColor]);
+    useEffect(() => { leavesRef.current?.setCount(leafCount); }, [leafCount]);
     useEffect(() => { treeRef.current?.wood.color.set(woodColor); }, [woodColor]);
 
     return (
@@ -120,9 +137,8 @@ export default function ThreeD() {
                 <ColorSelector label="Leaves & blossoms" value={blossomColor} onChange={setBlossomColor} />
                 <ColorSelector label="Wood" value={woodColor} onChange={setWoodColor} />
                 <section className="ui-panel ui-stack threed-guide">
-                    <h2>Sakura tree</h2>
-                    <p>Drag to orbit. Scroll or pinch to zoom.</p>
-                    <button type="button" onClick={() => { resetViewRef.current?.(); }}>Reset view</button>
+                    <Slider label="Leaves" min={0} max={MAX_LEAF_COUNT} value={leafCount} onChange={setLeafCount} />
+                    <button type="button" onClick={() => { resetViewRef.current?.(); }}>Reset View</button>
                 </section>
             </div>
         </section>

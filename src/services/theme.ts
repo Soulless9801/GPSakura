@@ -1,7 +1,7 @@
 import lightImage from '/static/favicon.png';
 import darkImage from '/static/favicom.png';
 import { flushSync } from 'react-dom';
-import { DEFAULT_THEME, getNextTheme, getThemes } from './themeRegistry';
+import { DEFAULT_THEME, getNextTheme, getThemes } from './registry';
 
 export type Theme = string;
 const THEME_STORAGE_KEY = 'theme';

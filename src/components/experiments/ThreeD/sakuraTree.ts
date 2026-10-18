@@ -63,11 +63,12 @@ export function createSakuraTree() {
         [[-0.9, 3.65, -1], [0.85, 0.65, 0.8]],
         [[1.05, 3.75, -1], [0.75, 0.55, 0.75]],
     ];
-    crowns.forEach(([position, scale], index) => {
+    const canopies = crowns.map(([position, scale], index) => {
         const crown = mesh(crownGeometry, blossoms);
         crown.position.set(...position);
         crown.scale.set(...scale);
         crown.rotation.set(0.13 * index, 0.7 * index, 0.17 * index);
+        return crown;
     });
 
     const petalGeometry = new THREE.IcosahedronGeometry(0.11, 0);
@@ -84,6 +85,7 @@ export function createSakuraTree() {
         tree,
         wood,
         blossoms,
+        canopies,
         dispose() {
             for (const geometry of geometries) {geometry.dispose();}
             wood.dispose();

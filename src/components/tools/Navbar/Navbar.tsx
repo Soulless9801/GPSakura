@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router';
 import { useState } from 'react';
 import { getTheme, isDarkTheme, themeImage, toggleTheme } from '/src/services/theme';
 
-import { getNextTheme } from '/src/services/themeRegistry';
+import { getNextTheme } from '../../../services/registry';
 
 import Select, { type SelectOption } from '/src/components/tools/Select/Select';
 
