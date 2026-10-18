@@ -5,11 +5,13 @@ import { useState, useEffect, useRef } from 'react';
 import './ThreeD.css';
 
 import ColorSelector from '/src/components/tools/ColorSelector/ColorSelector';
+import Select from '/src/components/tools/Select/Select';
 import Slider from '/src/components/tools/Slider/Slider';
 import { createFallingLeaves, DEFAULT_LEAF_COUNT, MAX_LEAF_COUNT } from './FallingLeaves';
 import DemoFrame from '/src/components/tools/DemoFrame/DemoFrame';
 import { observeElementSize } from '/src/utils/resize';
-import { createSakuraTree, DEFAULT_BLOSSOM_COLOR, DEFAULT_WOOD_COLOR } from './SakuraTree';
+import { createTreeModel, type TreeDefinition, type TreeModel } from './TreeTemplate';
+import { TREE_MODELS } from './models';
 import { syncViewport } from './viewport';
 import type { ChaosAttractor } from '/src/components/experiments/Chaos/Chaos';
 
@@ -26,12 +28,17 @@ interface Chaos3DProps {
 
 export default function ThreeD() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const treeRef = useRef<ReturnType<typeof createSakuraTree> | null>(null);
+    const treeRef = useRef<TreeModel | null>(null);
     const leavesRef = useRef<ReturnType<typeof createFallingLeaves> | null>(null);
     const [leafCount, setLeafCount] = useState(DEFAULT_LEAF_COUNT);
     const resetViewRef = useRef<(() => void) | null>(null);
-    const [blossomColor, setBlossomColor] = useState(DEFAULT_BLOSSOM_COLOR);
-    const [woodColor, setWoodColor] = useState(DEFAULT_WOOD_COLOR);
+    const [model, setModel] = useState(TREE_MODELS[0]);
+    const switchModelRef = useRef<((definition: TreeDefinition) => void) | null>(null);
+    const [palettes, setPalettes] = useState<Record<string, TreeDefinition['colors']>>({});
+    const colors = palettes[model.id] ?? model.colors;
+    const setColor = (channel: 'foliage' | 'wood', value: string) => {
+        setPalettes(previous => ({ ...previous, [model.id]: { ...(previous[model.id] ?? model.colors), [channel]: value } }));
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -42,9 +49,10 @@ export default function ThreeD() {
         const scene = new THREE.Scene();
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
         const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-        const sakura = createSakuraTree();
-        treeRef.current = sakura;
-        scene.add(sakura.tree);
+        let activeModel = TREE_MODELS[0];
+        let tree = createTreeModel(activeModel);
+        treeRef.current = tree;
+        scene.add(tree.tree);
         scene.add(new THREE.HemisphereLight(0xffffff, 0x807080, 2));
         const sunlight = new THREE.DirectionalLight(0xffffff, 3);
         sunlight.position.set(-3, 7, 5);
@@ -56,11 +64,31 @@ export default function ThreeD() {
         controls.minDistance = 4;
         controls.maxDistance = 30;
         controls.maxPolarAngle = Math.PI / 2;
-        const bounds = new THREE.Box3().setFromObject(sakura.tree).getBoundingSphere(new THREE.Sphere());
+        const bounds = new THREE.Box3().setFromObject(tree.tree).getBoundingSphere(new THREE.Sphere());
         controls.target.copy(bounds.center);
-        const leaves = createFallingLeaves(sakura.canopies, DEFAULT_BLOSSOM_COLOR);
+        let leaves = createFallingLeaves(tree.canopies, activeModel.colors.foliage);
         leavesRef.current = leaves;
         scene.add(leaves.group);
+
+        switchModelRef.current = definition => {
+            if (definition.id === activeModel.id) {return;}
+            const nextTree = createTreeModel(definition);
+            const nextLeaves = createFallingLeaves(nextTree.canopies, definition.colors.foliage);
+            const nextBounds = new THREE.Box3().setFromObject(nextTree.tree).getBoundingSphere(new THREE.Sphere());
+            // Preserve orbit and relative zoom while centering differently sized models.
+            camera.position.sub(controls.target).multiplyScalar(nextBounds.radius / bounds.radius).add(nextBounds.center);
+            controls.target.copy(nextBounds.center);
+            bounds.copy(nextBounds);
+            scene.remove(tree.tree, leaves.group);
+            tree.dispose();
+            leaves.dispose();
+            tree = nextTree;
+            leaves = nextLeaves;
+            activeModel = definition;
+            treeRef.current = tree;
+            leavesRef.current = leaves;
+            scene.add(tree.tree, leaves.group);
+        };
 
         function resetView() {
             const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
@@ -113,29 +141,36 @@ export default function ThreeD() {
             window.cancelAnimationFrame(frame);
             controls.dispose();
             leaves.dispose();
-            sakura.dispose();
+            tree.dispose();
             renderer.dispose();
             treeRef.current = null;
             leavesRef.current = null;
             resetViewRef.current = null;
+            switchModelRef.current = null;
         };
     }, []);
 
+    useEffect(() => { switchModelRef.current?.(model); }, [model]);
     useEffect(() => {
-        treeRef.current?.blossoms.color.set(blossomColor);
-        leavesRef.current?.setColor(blossomColor);
-    }, [blossomColor]);
-    useEffect(() => { leavesRef.current?.setCount(leafCount); }, [leafCount]);
-    useEffect(() => { treeRef.current?.wood.color.set(woodColor); }, [woodColor]);
+        treeRef.current?.foliage.color.set(colors.foliage);
+        leavesRef.current?.setColor(colors.foliage);
+    }, [model, colors.foliage]);
+    useEffect(() => { leavesRef.current?.setCount(leafCount); }, [model, leafCount]);
+    useEffect(() => { treeRef.current?.wood.color.set(colors.wood); }, [model, colors.wood]);
 
     return (
         <section className="demo-layout threed-container">
             <DemoFrame>
-                <canvas ref={canvasRef} className="threed-canvas" aria-label="Interactive geometric sakura tree" />
+                <canvas ref={canvasRef} className="threed-canvas" aria-label={`Interactive geometric ${model.label.toLowerCase()}`} />
             </DemoFrame>
             <div className="ui-stack threed-controls">
-                <ColorSelector label="Leaves & blossoms" value={blossomColor} onChange={setBlossomColor} />
-                <ColorSelector label="Wood" value={woodColor} onChange={setWoodColor} />
+                <section className="ui-panel">
+                    <Select labelL="Model" defaultValue={model.id}
+                        options={TREE_MODELS.map(definition => ({ value: definition.id, label: definition.label }))}
+                        onChange={option => { setModel(TREE_MODELS.find(definition => definition.id === option.value) ?? TREE_MODELS[0]); }} />
+                </section>
+                <ColorSelector label="Leaves & blossoms" value={colors.foliage} onChange={value => { setColor('foliage', value); }} />
+                <ColorSelector label="Wood" value={colors.wood} onChange={value => { setColor('wood', value); }} />
                 <section className="ui-panel ui-stack threed-guide">
                     <Slider label="Leaves" min={0} max={MAX_LEAF_COUNT} value={leafCount} onChange={setLeafCount} />
                     <button type="button" onClick={() => { resetViewRef.current?.(); }}>Reset View</button>
