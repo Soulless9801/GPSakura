@@ -1,5 +1,5 @@
-import lightImage from '/favicon.png';
-import darkImage from '/favicom.png';
+import lightImage from '/static/favicon.png';
+import darkImage from '/static/favicom.png';
 import { flushSync } from 'react-dom';
 import { DEFAULT_THEME, getNextTheme, getThemes } from './themeRegistry';
 

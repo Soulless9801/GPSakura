@@ -54,4 +54,8 @@ export default defineConfig({
   define: {
     __DEV__: false,
   },
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
 });

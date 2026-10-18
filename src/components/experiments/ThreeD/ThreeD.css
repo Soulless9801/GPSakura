@@ -1,19 +1,26 @@
 .threed-canvas {
+    display: block;
     width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.threed-controls {
     height: 100%;
 }
 
-.threed-container {
-    align-items: stretch;
+.threed-guide {
+    flex: 1;
+    justify-content: flex-end;
 }
 
-.threed-stage {
-    position: relative;
-    width: 100%;
-    min-height: clamp(20rem, 60vh, 44rem);
+.threed-guide h2 {
+    font-size: 1rem;
+    margin: 0;
 }
 
-.threed-stage > canvas {
-    position: absolute;
-    inset: 0;
+.threed-guide p {
+    color: var(--color-muted);
+    margin: 0;
 }

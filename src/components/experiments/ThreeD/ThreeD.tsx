@@ -5,6 +5,10 @@ import { useState, useEffect, useRef } from 'react';
 import './ThreeD.css';
 
 import ColorSelector from '/src/components/tools/ColorSelector/ColorSelector';
+import DemoFrame from '/src/components/tools/DemoFrame/DemoFrame';
+import { observeElementSize } from '/src/utils/resize';
+import { createSakuraTree, DEFAULT_BLOSSOM_COLOR, DEFAULT_WOOD_COLOR } from './sakuraTree';
+import { syncViewport } from './viewport';
 import type { ChaosAttractor } from '/src/components/experiments/Chaos/Chaos';
 
 interface Chaos3DProps {
@@ -19,94 +23,109 @@ interface Chaos3DProps {
 }
 
 export default function ThreeD() {
-
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const materialRef = useRef<THREE.MeshBasicMaterial | null>(null);
-
-    const [color, setColor] = useState("#3b82f6");
+    const treeRef = useRef<ReturnType<typeof createSakuraTree> | null>(null);
+    const resetViewRef = useRef<(() => void) | null>(null);
+    const [blossomColor, setBlossomColor] = useState(DEFAULT_BLOSSOM_COLOR);
+    const [woodColor, setWoodColor] = useState(DEFAULT_WOOD_COLOR);
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) {return;}
-        const canvasElement = canvas;
+        const stage = canvas?.parentElement;
+        if (!canvas || !stage) {return;}
+        const display = stage;
 
         const scene = new THREE.Scene();
-        
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+        const sakura = createSakuraTree();
+        treeRef.current = sakura;
+        scene.add(sakura.tree);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x807080, 2));
+        const sunlight = new THREE.DirectionalLight(0xffffff, 3);
+        sunlight.position.set(-3, 7, 5);
+        scene.add(sunlight);
 
-        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-        scene.add(camera);
-
-        const renderer_size = new THREE.Vector2();
-
-        function syncRendererSize() {
-            const nextWidth = Math.max(1, Math.floor(canvasElement.clientWidth));
-            const nextHeight = Math.max(1, Math.floor(canvasElement.clientHeight));
-
-            renderer.getSize(renderer_size);
-
-            if (renderer_size.x !== nextWidth || renderer_size.y !== nextHeight) {
-                renderer.setSize(nextWidth, nextHeight, false);
-                renderer.setViewport(0, 0, nextWidth, nextHeight);
-                camera.aspect = nextWidth / nextHeight;
-                camera.updateProjectionMatrix();
-            }
-        }
-
-        syncRendererSize();
-        window.addEventListener('resize', syncRendererSize);
-
-        const controls = new OrbitControls(camera, renderer.domElement);
+        const controls = new OrbitControls(camera, canvas);
         controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
+        controls.enablePan = false;
+        controls.minDistance = 4;
+        controls.maxDistance = 30;
+        controls.maxPolarAngle = Math.PI / 2;
+        const bounds = new THREE.Box3().setFromObject(sakura.tree).getBoundingSphere(new THREE.Sphere());
+        controls.target.copy(bounds.center);
 
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color });
-        materialRef.current = material;
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+        function resetView() {
+            const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+            const limitingFov = Math.min(halfFov, Math.atan(Math.tan(halfFov) * camera.aspect));
+            const distance = bounds.radius / Math.sin(limitingFov) * 1.08;
+            // Flush any orbit damping before restoring the default view.
+            controls.enableDamping = false;
+            controls.reset();
+            controls.target.copy(bounds.center);
+            camera.position.copy(bounds.center).add(new THREE.Vector3(0.8, 0.45, 1).normalize().multiplyScalar(distance));
+            camera.lookAt(bounds.center);
+            controls.update();
+            controls.enableDamping = true;
+        }
+        resetViewRef.current = resetView;
+        syncViewport(renderer, camera, stage);
+        resetView();
 
-        camera.position.set(0, 0, 5);
-        
-        camera.lookAt(0, 0, 0);
+        function resize() {
+            const oldAspect = camera.aspect;
+            syncViewport(renderer, camera, display);
+            // Preserve the user's orbit/zoom while keeping the same horizontal
+            // framing when a narrow viewport becomes the limiting dimension.
+            const scale = Math.max(1, 1 / camera.aspect) / Math.max(1, 1 / oldAspect);
+            camera.position.sub(controls.target).multiplyScalar(scale).add(controls.target);
+        }
+        const stopObserving = observeElementSize(display, () => {
+            resize();
+            controls.update();
+            renderer.render(scene, camera);
+        });
+        window.addEventListener('resize', resize);
 
-        let frame: number | null = null;
-
-        function animate(): void {
+        let frame = 0;
+        function animate() {
             frame = window.requestAnimationFrame(animate);
-            syncRendererSize();
-
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-
+            resize();
             controls.update();
             renderer.render(scene, camera);
         }
-
         animate();
 
         return () => {
-            window.removeEventListener('resize', syncRendererSize);
-            if (frame !== null) {window.cancelAnimationFrame(frame);}
+            stopObserving();
+            window.removeEventListener('resize', resize);
+            window.cancelAnimationFrame(frame);
             controls.dispose();
-            geometry.dispose();
-            material.dispose();
+            sakura.dispose();
             renderer.dispose();
-            materialRef.current = null;
+            treeRef.current = null;
+            resetViewRef.current = null;
         };
     }, []);
 
-    useEffect(() => {
-        if (!materialRef.current) {return;}
-        materialRef.current.color.set(color);
-    }, [color]);
+    useEffect(() => { treeRef.current?.blossoms.color.set(blossomColor); }, [blossomColor]);
+    useEffect(() => { treeRef.current?.wood.color.set(woodColor); }, [woodColor]);
 
     return (
-        <div className="demo-layout threed-container">
-            <div className="ui-frame threed-stage"><canvas ref={canvasRef} className="threed-canvas" /></div>
-            <ColorSelector value={color} onChange={(newColor) => { setColor(newColor); }} />
-        </div>
+        <section className="demo-layout threed-container">
+            <DemoFrame>
+                <canvas ref={canvasRef} className="threed-canvas" aria-label="Interactive geometric sakura tree" />
+            </DemoFrame>
+            <div className="ui-stack threed-controls">
+                <ColorSelector label="Leaves & blossoms" value={blossomColor} onChange={setBlossomColor} />
+                <ColorSelector label="Wood" value={woodColor} onChange={setWoodColor} />
+                <section className="ui-panel ui-stack threed-guide">
+                    <h2>Sakura tree</h2>
+                    <p>Drag to orbit. Scroll or pinch to zoom.</p>
+                    <button type="button" onClick={() => { resetViewRef.current?.(); }}>Reset view</button>
+                </section>
+            </div>
+        </section>
     );
 }
 
