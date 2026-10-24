@@ -17,6 +17,7 @@
 */
 
 import * as THREE from 'three';
+import { createWoodGeometry } from './WoodGeometry';
 
 export type Point3 = readonly [number, number, number];
 export type Branch = readonly [from: Point3, to: Point3, bottomRadius: number, topRadius: number];
@@ -48,26 +49,12 @@ export function createTreeModel(definition: TreeDefinition) {
         return part;
     }
 
-    function branch([from, to, bottom, top]: Branch) {
-        const start = new THREE.Vector3(...from);
-        const end = new THREE.Vector3(...to);
-        const direction = end.clone().sub(start);
-        const part = mesh(new THREE.CylinderGeometry(top, bottom, direction.length(), 6), wood);
-        part.position.copy(start.add(end).multiplyScalar(0.5));
-        part.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-    }
-
     // Shared stage dimensions match the falling-leaf landing area.
     const base = mesh(new THREE.CylinderGeometry(2.65, 2.8, 0.18, 10), stone);
     base.position.y = 0.09;
-    definition.branches.forEach(branch);
-    const roots = definition.roots ?? { count: 5, reach: 0.75, height: 0.55, radius: 0.18 };
-    for (let i = 0; i < roots.count; i++) {
-        const angle = i * Math.PI * 2 / roots.count;
-        branch([[Math.cos(angle) * roots.reach, 0.2, Math.sin(angle) * roots.reach], [0, roots.height, 0], 0.035, roots.radius]);
-    }
+    mesh(createWoodGeometry(definition), wood);
 
-    const crownGeometry = new THREE.IcosahedronGeometry(1, 1);
+    const crownGeometry = new THREE.IcosahedronGeometry(1, 0);
     const canopies = definition.crowns.map(([position, scale, rotation], index) => {
         const crown = mesh(crownGeometry, foliage);
         crown.position.set(...position);
