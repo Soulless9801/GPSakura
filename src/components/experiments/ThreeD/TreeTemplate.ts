@@ -18,10 +18,12 @@
 
 import * as THREE from 'three';
 import { createWoodGeometry } from './WoodGeometry';
+import { createCrownGeometry, type CrownShape } from './CrownGeometry';
 
 export type Point3 = readonly [number, number, number];
 export type Branch = readonly [from: Point3, to: Point3, bottomRadius: number, topRadius: number];
-export type Crown = readonly [position: Point3, scale: Point3, rotation?: Point3];
+// Cone: radius 1, height 2 along Y. Frond: length 2 along Z. Omit shape for a faceted cluster.
+export type Crown = readonly [position: Point3, scale: Point3, rotation?: Point3, shape?: CrownShape];
 
 /** A model supplies its shape and palette; the template owns Three.js resources. */
 export interface TreeDefinition {
@@ -54,16 +56,20 @@ export function createTreeModel(definition: TreeDefinition) {
     base.position.y = 0.09;
     mesh(createWoodGeometry(definition), wood);
 
-    const crownGeometry = new THREE.IcosahedronGeometry(1, 0);
-    const canopies = definition.crowns.map(([position, scale, rotation], index) => {
+    const crownGeometries = new Map<CrownShape, THREE.BufferGeometry>();
+    const canopies = definition.crowns.map(([position, scale, rotation, shape = 'cluster'], index) => {
+        let crownGeometry = crownGeometries.get(shape);
+        if (!crownGeometry) {
+            crownGeometry = createCrownGeometry(shape);
+            crownGeometries.set(shape, crownGeometry);
+        }
         const crown = mesh(crownGeometry, foliage);
         crown.position.set(...position);
         crown.scale.set(...scale);
-        crown.rotation.set(...(rotation ?? [0.13 * index, 0.7 * index, 0.17 * index]));
+        crown.rotation.set(...(rotation ?? (shape === 'cluster' ? [0.13 * index, 0.7 * index, 0.17 * index] : [0, 0, 0])));
         return crown;
     });
-    // Track shared geometries even when a model has no crowns or ground leaves.
-    geometries.add(crownGeometry);
+    // Track the shared petal geometry even when a model has no ground leaves.
     const petalGeometry = new THREE.IcosahedronGeometry(0.11, 0);
     geometries.add(petalGeometry);
     for (let i = 0; i < (definition.groundLeaves ?? 16); i++) {

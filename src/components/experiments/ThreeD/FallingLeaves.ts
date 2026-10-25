@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { sampleCrownPoint } from './CrownGeometry';
 
 export const DEFAULT_LEAF_COUNT = 10;
 export const MAX_LEAF_COUNT = 200;
@@ -24,8 +25,7 @@ export function createFallingLeaves(canopies: readonly THREE.Mesh[], color: stri
 
     function respawn(leaf: Leaf) {
         const canopy = canopies[Math.floor(random() * canopies.length)];
-        // The central part of each faceted crown is safely inside its surface.
-        leaf.origin.set((random() - 0.5) * 0.6, (random() - 0.5) * 0.6, (random() - 0.5) * 0.6);
+        sampleCrownPoint(canopy.geometry, leaf.origin, random);
         canopy.localToWorld(leaf.origin);
         leaf.landing.copy(leaf.origin);
         leaf.landing.x += (random() - 0.5) * 0.6;

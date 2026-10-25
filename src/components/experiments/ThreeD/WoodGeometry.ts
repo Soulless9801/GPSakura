@@ -69,7 +69,9 @@ export function createWoodGeometry(definition: TreeDefinition) {
     const remaining = new Set(definition.branches);
     const pieces: THREE.BufferGeometry[] = [];
     const samePoint = (a: Branch[0], b: Branch[0]) => a.every((value, axis) => Math.abs(value - b[axis]) < 1e-5);
-    const ordered = [...definition.branches].sort((a, b) => a[0][1] - b[0][1] || b[2] - a[2]);
+    const hasParent = (branch: Branch) => definition.branches.some(parent => parent !== branch && samePoint(parent[1], branch[0]));
+    const ordered = [...definition.branches].sort((a, b) => Number(hasParent(a)) - Number(hasParent(b))
+        || a[0][1] - b[0][1] || b[2] - a[2]);
     for (const first of ordered) {
         if (!remaining.has(first)) {continue;}
         let branch: Branch | undefined = first;
