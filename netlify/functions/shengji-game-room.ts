@@ -99,6 +99,11 @@ export default async function handler(request: Request): Promise<Response> {
         const signature : string = String(identity.signature || '').trim();
 
         const roomId : string = String(body.roomId || '').trim();
+        
+        // Validate roomId format to prevent injection attacks
+        if (!roomId || !/^[a-zA-Z0-9_-]+$/.test(roomId)) {
+            return errorJSON("Invalid roomId", 400);
+        }
         const action : string = String(body.action || '').trim();
         const payload : PublishData = typeof body.payload === "object" && body.payload !== null ? body.payload : {};
 
@@ -152,9 +157,27 @@ export default async function handler(request: Request): Promise<Response> {
             const paused = missing.length > 0;
             // A state broadcast makes clients recheck presence. Do not publish unchanged
             // state, or a disconnected player causes a request/broadcast feedback loop.
+            // However, we must also check if the game is already in the correct state before publishing,
+            // to avoid race conditions where a player reconnects between checking presence and publishing.
             if (game.getState().paused !== paused) {
                 game.setPaused(paused);
                 await savePublish(game);
+            } else if (paused && missing.length > 0) {
+                // In case of a race where we were paused but presence has changed,
+                // verify again before updating the presence. 
+                // Check if we had a race condition.
+                const currentPresence = await channel.presence.get();
+                const currentItems: PresenceItem[] = currentPresence.items as PresenceItem[];
+                const currentMissing = players.filter(player => !currentItems.some(item => item.clientId === player));
+                if (currentMissing.length !== missing.length) {
+                    // There was a change in presence between our first check and now
+                    // Recheck the paused status and update only if necessary
+                    const newPaused = currentMissing.length > 0;
+                    if (game.getState().paused !== newPaused) {
+                        game.setPaused(newPaused);
+                        await savePublish(game);
+                    }
+                }
             }
 
             return successJSON({});

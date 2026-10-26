@@ -142,6 +142,7 @@ export default function ThreeD() {
             controls.dispose();
             leaves.dispose();
             tree.dispose();
+            // Dispose of the renderer to free WebGL resources during component unmount
             renderer.dispose();
             treeRef.current = null;
             leavesRef.current = null;
@@ -155,7 +156,7 @@ export default function ThreeD() {
         treeRef.current?.foliage.color.set(colors.foliage);
         leavesRef.current?.setColor(colors.foliage);
     }, [model, colors.foliage]);
-    useEffect(() => { leavesRef.current?.setCount(leafCount); }, [model, leafCount]);
+    useEffect(() => { leavesRef.current?.setCount(Math.min(MAX_LEAF_COUNT, Math.max(0, leafCount))); }, [model, leafCount]);
     useEffect(() => { treeRef.current?.wood.color.set(colors.wood); }, [model, colors.wood]);
 
     return (

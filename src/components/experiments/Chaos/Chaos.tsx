@@ -61,7 +61,7 @@ export default function Chaos({
         if (width) {wrapper.style.width = typeof width === "number" ? `${String(width)}px` : width;}
         if (height) {wrapper.style.height = typeof height === "number" ? `${String(height)}px` : height;}
 
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const cssW = canvas.clientWidth || wrapper.clientWidth;
         const cssH = canvas.clientHeight || wrapper.clientHeight;
         canvas.width = Math.floor(cssW * dpr);

@@ -32,9 +32,39 @@ describe("neon-create-user", () => {
         db.insert.mockClear();
     });
 
-    it("inserts an anonymous player with 1000 starting money", async () => {
+    it("inserts an anonymous player with 1000 starting money when no username provided", async () => {
         db.returning.mockResolvedValue([{ player_id: 7, money: 1000 }]);
         await handler(event);
+        expect(db.insert).toHaveBeenCalledWith(players);
+        expect(db.values).toHaveBeenCalledWith({ username: "anonymous", money: 1000 });
+    });
+
+    it("inserts a player with the provided username when valid", async () => {
+        db.returning.mockResolvedValue([{ player_id: 7, money: 1000 }]);
+        
+        // Create a new request with a username in the body
+        const requestBody = JSON.stringify({ username: "player123" });
+        const customEvent = new Request("http://localhost/.netlify/functions/neon-create-user", {
+            method: "POST",
+            body: requestBody
+        });
+        
+        await handler(customEvent);
+        expect(db.insert).toHaveBeenCalledWith(players);
+        expect(db.values).toHaveBeenCalledWith({ username: "player123", money: 1000 });
+    });
+
+    it("inserts an anonymous player when invalid username provided (empty string)", async () => {
+        db.returning.mockResolvedValue([{ player_id: 7, money: 1000 }]);
+        
+        // Create a new request with an invalid username
+        const requestBody = JSON.stringify({ username: "" });
+        const customEvent = new Request("http://localhost/.netlify/functions/neon-create-user", {
+            method: "POST",
+            body: requestBody
+        });
+        
+        await handler(customEvent);
         expect(db.insert).toHaveBeenCalledWith(players);
         expect(db.values).toHaveBeenCalledWith({ username: "anonymous", money: 1000 });
     });
