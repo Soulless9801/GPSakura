@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { sampleCrownPoint } from './CrownGeometry';
+import { seededRandom } from '/src/utils/random';
 
 export const DEFAULT_LEAF_COUNT = 10;
 export const MAX_LEAF_COUNT = 200;
@@ -14,16 +15,18 @@ type Leaf = {
     age: number;
     fallDuration: number;
     phase: number;
+    random: () => number;
 };
 
 // One bounded pool: a leaf's geometry, material and mesh survive every respawn.
-export function createFallingLeaves(canopies: readonly THREE.Mesh[], color: string, random = Math.random) {
+export function createFallingLeaves(canopies: readonly THREE.Mesh[], color: string, seed: string | number | (() => number) = 'tree-leaves') {
     const group = new THREE.Group();
     const geometry = new THREE.OctahedronGeometry(1, 0);
     const leaves: Leaf[] = [];
     let count = 0;
 
     function respawn(leaf: Leaf) {
+        const random = leaf.random;
         const canopy = canopies[Math.floor(random() * canopies.length)];
         sampleCrownPoint(canopy.geometry, leaf.origin, random);
         canopy.localToWorld(leaf.origin);
@@ -43,6 +46,7 @@ export function createFallingLeaves(canopies: readonly THREE.Mesh[], color: stri
         const t = Math.min(leaf.age / leaf.fallDuration, 1);
         const sway = Math.sin(Math.PI * t);
         leaf.mesh.position.lerpVectors(leaf.origin, leaf.landing, t);
+        if (t === 1) {leaf.mesh.position.copy(leaf.landing);}
         leaf.mesh.position.x += Math.sin(leaf.age * 1.7 + leaf.phase) * 0.22 * sway;
         leaf.mesh.position.z += Math.cos(leaf.age * 1.3 + leaf.phase) * 0.18 * sway;
         const flutter = Math.min((1 - t) * 5, 1);
@@ -63,7 +67,9 @@ export function createFallingLeaves(canopies: readonly THREE.Mesh[], color: stri
         mesh.scale.set(0.065, 0.014, 0.12);
         mesh.visible = false;
         group.add(mesh);
-        leaves.push({ mesh, origin: new THREE.Vector3(), landing: new THREE.Vector3(), age: 0, fallDuration: 7, phase: 0 });
+        // Separate streams keep one leaf's respawn independent of frame rate and pool size.
+        const random = typeof seed === 'function' ? seed : seededRandom(`${String(seed)}:leaf:${String(i)}`);
+        leaves.push({ mesh, origin: new THREE.Vector3(), landing: new THREE.Vector3(), age: 0, fallDuration: 7, phase: 0, random });
     }
 
     return {
@@ -76,7 +82,7 @@ export function createFallingLeaves(canopies: readonly THREE.Mesh[], color: stri
                 if (i >= count && i < next) {
                     respawn(leaf);
                     // Start at different stages, so the scene never releases a batch at once.
-                    leaf.age = random() * (leaf.fallDuration + GROUND_HOLD + FADE_DURATION);
+                    leaf.age = leaf.random() * (leaf.fallDuration + GROUND_HOLD + FADE_DURATION);
                     draw(leaf);
                 }
             }

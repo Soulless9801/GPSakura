@@ -82,4 +82,44 @@ describe('falling leaf particles', () => {
         for (const dispose of disposers) {expect(dispose).toHaveBeenCalledOnce();}
         expect(leaves.group.children).toHaveLength(0);
     });
+
+    it('recreates the same seeded particles and trajectories through multiple respawns', () => {
+        const canopy = new THREE.Mesh();
+        canopy.position.y = 3;
+        const first = createFallingLeaves([canopy], '#ffffff', 'sakura');
+        const second = createFallingLeaves([canopy], '#123456', 'sakura');
+        const other = createFallingLeaves([canopy], '#ffffff', 'oak');
+        for (const pool of [first, second, other]) {pool.setCount(10);}
+        expect(first.group.children[0].position.equals(second.group.children[0].position)).toBe(true);
+        expect(first.group.children[0].position.equals(other.group.children[0].position)).toBe(false);
+        first.update(90);
+        for (let i = 0; i < 90 * 60; i++) {second.update(1 / 60);}
+        for (let i = 0; i < 10; i++) {
+            const a = first.group.children[i] as THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
+            const b = second.group.children[i] as typeof a;
+            expect(a.position.distanceTo(b.position)).toBeLessThan(1e-9);
+            expect(a.rotation.x).toBeCloseTo(b.rotation.x, 9);
+            expect(a.rotation.y).toBeCloseTo(b.rotation.y, 9);
+            expect(a.rotation.z).toBeCloseTo(b.rotation.z, 9);
+            expect(a.material.opacity).toBeCloseTo(b.material.opacity, 9);
+        }
+        for (const pool of [first, second, other]) {pool.dispose();}
+        canopy.geometry.dispose();
+        (canopy.material as THREE.Material).dispose();
+    });
+
+    it('uses deterministic defaults and keeps existing leaves independent of extra particles', () => {
+        const canopy = new THREE.Mesh();
+        canopy.position.y = 3;
+        const small = createFallingLeaves([canopy], '#ffffff');
+        const large = createFallingLeaves([canopy], '#ffffff');
+        small.setCount(1);
+        large.setCount(MAX_LEAF_COUNT);
+        for (const pool of [small, large]) {pool.update(100);}
+        expect(small.group.children[0].position.equals(large.group.children[0].position)).toBe(true);
+        small.dispose();
+        large.dispose();
+        canopy.geometry.dispose();
+        (canopy.material as THREE.Material).dispose();
+    });
 });

@@ -66,14 +66,14 @@ export default function ThreeD() {
         controls.maxPolarAngle = Math.PI / 2;
         const bounds = new THREE.Box3().setFromObject(tree.tree).getBoundingSphere(new THREE.Sphere());
         controls.target.copy(bounds.center);
-        let leaves = createFallingLeaves(tree.canopies, activeModel.colors.foliage);
+        let leaves = createFallingLeaves(tree.canopies, activeModel.colors.foliage, activeModel.id);
         leavesRef.current = leaves;
         scene.add(leaves.group);
 
         switchModelRef.current = definition => {
             if (definition.id === activeModel.id) {return;}
             const nextTree = createTreeModel(definition);
-            const nextLeaves = createFallingLeaves(nextTree.canopies, definition.colors.foliage);
+            const nextLeaves = createFallingLeaves(nextTree.canopies, definition.colors.foliage, definition.id);
             const nextBounds = new THREE.Box3().setFromObject(nextTree.tree).getBoundingSphere(new THREE.Sphere());
             // Preserve orbit and relative zoom while centering differently sized models.
             camera.position.sub(controls.target).multiplyScalar(nextBounds.radius / bounds.radius).add(nextBounds.center);

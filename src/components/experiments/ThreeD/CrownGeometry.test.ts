@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { createCrownGeometry, sampleCrownPoint, type CrownShape } from './CrownGeometry';
+import { seededRandom } from '/src/utils/random';
 
 describe('shared crown shapes', () => {
     it.each<CrownShape>(['cluster', 'cone', 'frond'])('spawns particles inside the closed %s surface', shape => {
@@ -10,8 +11,7 @@ describe('shared crown shapes', () => {
         mesh.updateMatrixWorld(true);
         const point = new THREE.Vector3();
         const ray = new THREE.Raycaster();
-        let seed = 17;
-        const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+        const random = seededRandom(17);
         for (let i = 0; i < 100; i++) {
             sampleCrownPoint(geometry, point, random);
             for (const direction of [new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0)]) {
