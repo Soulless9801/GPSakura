@@ -6,7 +6,7 @@
     width: 100px;
     height: 140px;
     padding: 0;
-    border: 1px solid var(--color-border-strong);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
     background: var(--color-card);
     position: relative;
@@ -16,9 +16,14 @@
     --component-transitions: translate var(--interaction-duration) ease;
 }
 
+.sj-card:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-border-strong);
+}
+
 .sj-card.selected, .sj-card.selected:hover {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent);
     translate: 0 -10px;
 }
 
