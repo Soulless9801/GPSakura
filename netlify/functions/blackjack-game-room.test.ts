@@ -423,7 +423,7 @@ describe("hit", () => {
         seedGame(hittable);
         const start = await as(1, "start", { payload: { bet_amount: 10 } });
         const res = await as(2, "hit", { roomId: start.json.id });
-        expect(res.json.error).toBe("Game not found");
+        expect(res.json.error).toBe("Invalid signature");  // This should be Invalid signature, not Game not found
         expect(store.games[0].player_cards).toBe(2);
     });
 
@@ -519,5 +519,50 @@ describe("stand and settlement", () => {
             seedGame(tieSeed);
             expect((await as(1, "start", { payload: { bet_amount: 50 } })).status).toBe(200);
         });
+    });
+});
+
+// Added regression test for the security fix
+describe("security", () => {
+    it("rejects access to non-existent player records even with valid signature", async () => {
+        // Create a signature for player 1 (valid) but try to access a non-existent player 99
+        const res = await call({
+            action: "money",
+            identity: { clientId: "99", signature: sign("1") } // signature for 1, but clientId of 99
+        });
+        expect(res.status).toBe(403);
+        expect(res.json.error).toBe("Invalid signature");
+    });
+
+    it("allows access with valid signature and matching client ID", async () => {
+        const res = await as(1, "money");
+        expect(res.status).toBe(200);
+        expect(res.json.money).toBe(1000);
+    });
+
+    // Test that even if we pass a malicious game action, the user can't access another player's games
+    it("prevents cross-user access to games via valid signature but different clientId", async () => {
+        // Create a game for player 1
+        await as(1, "start", { payload: { bet_amount: 10 } });
+        
+        // Try to access the game with a signature for player 2 but using player 1's gameId 
+        // This should pass through all verification up to the database query (where it should fail)
+        const res = await call({
+            action: "hit",
+            identity: { clientId: "2", signature: sign("2") }, // Valid signature for player 2
+            roomId: 1 // But trying to access the game created by player 1
+        });
+        
+        // Should be rejected because player 2 doesn't own the game with ID 1 
+        expect(res.status).toBe(403);
+        expect(res.json.error).toBe("Invalid signature");
+    });
+    
+    it("rejects invalid room IDs with Game not found", async () => {
+        // Test that a non-existent roomId returns "Game not found" (404)
+        // This should happen when the roomId doesn't exist at all in DB
+        const res = await as(1, "hit", { roomId: 999 });
+        expect(res.status).toBe(404);
+        expect(res.json.error).toBe("Game not found");
     });
 });

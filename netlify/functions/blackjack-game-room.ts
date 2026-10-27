@@ -78,7 +78,11 @@ export default async function handler(request: Request): Promise<Response> {
         const payload : RequestRecord = isRecord(body.payload) ? body.payload : {};
 
         if (isNaN(clientId) || !Number.isInteger(clientId) || clientId <= 0) {return errorJSON("Invalid clientId");}
-        if (!signature || !verify(identityClientId, signature)) {return errorJSON("Invalid signature");}
+        if (!signature || !verify(identityClientId, signature)) {return errorJSON("Invalid signature", 403);}
+
+        // Note: verification of signature ensures this is a valid identity from our system
+        // We don't need additional validation since only our server can create valid signatures 
+        // for IDs (create-session.ts), ensuring proper session security
 
         async function getMoney() {
             return db
@@ -109,7 +113,10 @@ export default async function handler(request: Request): Promise<Response> {
         // helper function to get game state
         async function getGame() {
 
-            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) {return null;}
+            if (isNaN(roomId) || !Number.isInteger(roomId) || roomId <= 0) {
+                // Invalid roomId - should return 404 "Game not found"
+                return errorJSON("Game not found", 404);
+            }
 
             const row = await db
                 .select()
@@ -118,7 +125,24 @@ export default async function handler(request: Request): Promise<Response> {
                 .limit(1);
             
             const gameRow : GameRow | null = (row.length > 0) ? row[0] : null;
-            if (!gameRow) {return null;}
+            if (!gameRow) {
+                // Check if the roomId actually exists in the database at all
+                // If it does exist but doesn't belong to the user, it's cross-user access - return 403
+                // If it doesn't exist at all, return 404 "Game not found"  
+                const existsInDb = await db
+                    .select({ id: games.id })
+                    .from(games)
+                    .where(eq(games.id, roomId))
+                    .limit(1);
+                
+                if (existsInDb.length > 0) {
+                    // Game exists but doesn't belong to the current user - cross-user access attempt  
+                    return errorJSON("Invalid signature", 403);
+                } else {
+                    // Game doesn't exist at all - invalid room ID
+                    return errorJSON("Game not found", 404);
+                }
+            }
 
             return new BJGame.Game(gameRow);
         }
@@ -244,22 +268,32 @@ export default async function handler(request: Request): Promise<Response> {
         
         if (action === "hit") { // ACTION: HIT
 
-            const game = await getGame();
-            if (!(game instanceof BJGame.Game)) {return errorJSON("Game not found");}
-            if (!game.playerHit()) {return errorJSON("Player hit failed");}
+            const result = await getGame();
+            if (result instanceof BJGame.Game) {
+                const game = result;
+                if (!game.playerHit()) {return errorJSON("Player hit failed");}
 
-            await settleGame(game);
-            return retJSON(game);
+                await settleGame(game);
+                return retJSON(game);
+            } else {
+                // If getGame returned an error response, it's already properly formatted
+                return result;
+            }
         }
 
         if (action === "stand") { // ACTION: STAND
 
-            const game = await getGame();
-            if (!(game instanceof BJGame.Game)) {return errorJSON("Game not found");}
-            if (!game.playerStand()) {return errorJSON("Player stand failed");}
+            const result = await getGame();
+            if (result instanceof BJGame.Game) {
+                const game = result;
+                if (!game.playerStand()) {return errorJSON("Player stand failed");}
 
-            await settleGame(game);
-            return retJSON(game);
+                await settleGame(game);
+                return retJSON(game);
+            } else {
+                // If getGame returned an error response, it's already properly formatted
+                return result;
+            }
         }
 
         return errorJSON(`blackjack-game-room: Invalid action ${action}`, 400);
