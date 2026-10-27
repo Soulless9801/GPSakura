@@ -118,18 +118,25 @@ describe("verify helpers", () => {
             expect(storage.getItem("sig")).toBe("fresh-sig");
         });
 
-        it("replaces the identity when verification fails with an error status", async () => {
+        it.each([429, 500, 503])("preserves the identity without issuing another when verification returns %s", async status => {
             storage.setItem("id", "client-1");
             storage.setItem("sig", "abc");
-            responses.push(reply(500, { error: "boom" }));
-            expect(await getIdentity("id", "sig", gen)).toEqual(fresh);
+            responses.push(reply(status, 'Temporarily unavailable'));
+            const spy = vi.fn(gen);
+            expect(await getIdentity("id", "sig", spy)).toBeNull();
+            expect(spy).not.toHaveBeenCalled();
+            expect(storage.getItem("id")).toBe("client-1");
+            expect(storage.getItem("sig")).toBe("abc");
         });
 
-        it("replaces the identity when the verify response is not the expected shape", async () => {
+        it("preserves the identity when the verify response is not the expected shape", async () => {
             storage.setItem("id", "client-1");
             storage.setItem("sig", "abc");
             responses.push(reply(200, { nope: true }));
-            expect(await getIdentity("id", "sig", gen)).toEqual(fresh);
+            const spy = vi.fn(gen);
+            expect(await getIdentity("id", "sig", spy)).toBeNull();
+            expect(spy).not.toHaveBeenCalled();
+            expect(storage.getItem("sig")).toBe("abc");
         });
 
         it("needs both halves stored to reuse an identity", async () => {

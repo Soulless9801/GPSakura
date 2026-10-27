@@ -47,10 +47,12 @@ export async function getIdentity(clientIdLoc: string, sigLoc: string, gen: () =
             }),
         });
 
-        if (ver.ok) {
-            const data = deserialize<{ valid?: boolean } | null>(await ver.text());
-            if (data?.valid === true) {return { clientId, signature };}
-        }
+        // A throttled or unavailable verifier has not invalidated this identity.
+        // Preserve it and avoid amplifying the failure with another issuance/DB write.
+        if (!ver.ok) {return null;}
+        const data = deserialize<{ valid?: boolean } | null>(await ver.text());
+        if (data?.valid === true) {return { clientId, signature };}
+        if (data?.valid !== false) {return null;}
     }
 
     const identity = await gen();

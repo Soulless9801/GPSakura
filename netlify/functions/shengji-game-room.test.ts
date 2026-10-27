@@ -31,16 +31,13 @@ const fake = vi.hoisted(() => {
     };
 
     const redis = {
-        incr: (key: string) => {
+        eval: vi.fn((_script: string, [key]: string[], [seconds]: number[]) => {
             sweep(key);
             const next = Number(kv.get(key) ?? 0) + 1;
             kv.set(key, next);
+            if (next === 1 || !expiry.has(key)) {expiry.set(key, clock.now + seconds * 1000);}
             return Promise.resolve(next);
-        },
-        expire: (key: string, seconds: number) => {
-            expiry.set(key, clock.now + seconds * 1000);
-            return Promise.resolve(1);
-        },
+        }),
         get: (key: string) => {
             sweep(key);
             return Promise.resolve(kv.get(key) ?? null);
@@ -184,8 +181,8 @@ describe("request validation", () => {
 });
 
 describe("rate limiting", () => {
-    it("allows one request per client, room and action per window", async () => {
-        expect((await raw("p0", "state")).json.error).toBe("Game not found"); // let through
+    it("allows a small read burst per client, room and action per window", async () => {
+        for (let i = 0; i < 5; i++) {expect((await raw("p0", "state")).status).not.toBe(429);}
         const again = await raw("p0", "state");
         expect(again.status).toBe(429);
         expect(again.json.error).toBe("Rate limit exceeded");
@@ -216,6 +213,27 @@ describe("rate limiting", () => {
         await raw("p0", "state");
         const key = `rl:${ROOM}:p0:state`;
         expect(fake.expiry.get(key)).toBe(fake.clock.now + 1000);
+        fake.clock.now += 200;
+        await raw("p0", "state");
+        expect(fake.expiry.get(key)).toBe(fake.clock.now + 800);
+    });
+
+    it("repairs a legacy counter whose expiry was lost", async () => {
+        const key = `rl:${ROOM}:p0:state`;
+        fake.kv.set(key, 10);
+        expect((await raw("p0", "state")).status).toBe(429);
+        expect(fake.expiry.get(key)).toBe(fake.clock.now + 1000);
+        fake.clock.now += 1001;
+        expect((await raw("p0", "state")).status).not.toBe(429);
+    });
+
+    it("returns a retry interval for a throttled mutation", async () => {
+        await raw("p0", "draw");
+        const res = await handler(post(JSON.stringify({
+            action: "draw", roomId: ROOM, identity: { clientId: "p0", signature: sign("p0") },
+        })));
+        expect(res.status).toBe(429);
+        expect(res.headers.get('Retry-After')).toBe('1');
     });
 
     it("`connection` is shared by the whole room", async () => {
@@ -237,8 +255,8 @@ describe("rate limiting", () => {
     });
 
     it("a client is still limited when it sends valid requests too fast", async () => {
-        await raw("p0", "state");
-        expect((await raw("p0", "state")).status).toBe(429);
+        await raw("p0", "draw");
+        expect((await raw("p0", "draw")).status).toBe(429);
     });
 });
 

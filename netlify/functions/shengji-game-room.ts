@@ -47,14 +47,16 @@ function getRedis() {
 }
 
 async function rateLimit(redis: Redis, key: string, limit: number, windowSeconds: number) {
-    const count = await redis.incr(key);
-    if (count === 1) {
-        await redis.expire(key, windowSeconds);
-    }
-    if (count > limit) {
-        return false;
-    }
-    return true;
+    // Increment + expiry must be atomic: a failed separate EXPIRE could otherwise
+    // leave a permanent lockout. Also repair legacy counters with a missing TTL.
+    const count = await redis.eval<[number], number>(`
+        local count = redis.call('INCR', KEYS[1])
+        if count == 1 or redis.call('TTL', KEYS[1]) < 0 then
+            redis.call('EXPIRE', KEYS[1], ARGV[1])
+        end
+        return count
+    `, [key], [windowSeconds]);
+    return count <= limit;
 }
 
 const GAME_KEY_PREFIX = "game:";
@@ -77,8 +79,12 @@ async function saveGame(redis: Redis, roomId: string, serGame: string) {
     await redis.set(GAME_KEY_PREFIX + roomId, serGame);
 }
 
-const RATE_LIMIT_RULES: Record<string, [number, number]> = { // TODO: fine-tune these rules based on actual usage patterns
+// Netlify limits aggregate traffic per IP; these immediate, authenticated limits
+// protect individual game actions. Read bursts occur during joins/state updates.
+const RATE_LIMIT_RULES: Record<string, [number, number]> = {
     default: [1, 1],
+    state: [5, 1],
+    hand: [5, 1],
 };
 
 export default async function handler(request: Request): Promise<Response> {
@@ -122,7 +128,11 @@ export default async function handler(request: Request): Promise<Response> {
         // rate limit check
         const key : string = `rl:${roomId}:${roomSpecific.has(action) ? "global" : clientId}:${action}`;
         const isAllowed : boolean = await rateLimit(redis, key, limit, windowSeconds);
-        if (!isAllowed) {return errorJSON("Rate limit exceeded", 429);}
+        if (!isAllowed) {
+            const response = errorJSON("Rate limit exceeded", 429);
+            response.headers.set('Retry-After', String(windowSeconds));
+            return response;
+        }
 
         // get room live object
 

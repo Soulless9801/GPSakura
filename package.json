@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "@netlify/edge-functions": "^4.0.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/jquery": "^4.0.1",
@@ -59,6 +60,7 @@
     "jsdom": "^30.1.2",
     "protobufjs": ">=8.0.2",
     "typescript-eslint": "^8.59.4",
+    "urlpattern-polyfill": "^10.1.0",
     "vite": "^8.0.16",
     "vitest": "^4.1.10"
   },
