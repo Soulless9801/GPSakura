@@ -7,11 +7,11 @@ import './ThreeD.css';
 import ColorSelector from '/src/components/tools/ColorSelector/ColorSelector';
 import Select from '/src/components/tools/Select/Select';
 import Slider from '/src/components/tools/Slider/Slider';
-import { createFallingLeaves, DEFAULT_LEAF_COUNT, MAX_LEAF_COUNT } from './FallingLeaves';
+import { createFallingLeaves, DEFAULT_LEAF_COUNT, MAX_LEAF_COUNT } from './TreeD';
 import DemoFrame from '/src/components/tools/DemoFrame/DemoFrame';
 import { observeElementSize } from '/src/utils/resize';
-import { createTreeModel, type TreeDefinition, type TreeModel } from './TreeTemplate';
-import { TREE_MODELS } from './models';
+import { createTreeModel, type TreeDefinition, type TreeModel } from './TreeD';
+import { TREE_MODELS } from './TreeD';
 import { syncViewport } from './viewport';
 import type { ChaosAttractor } from '/src/components/experiments/Chaos/Chaos';
 

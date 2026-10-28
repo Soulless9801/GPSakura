@@ -1,4 +1,4 @@
-import type { Crown, TreeDefinition } from './TreeTemplate';
+import type { Crown, TreeDefinition } from '../TreeTemplate';
 
 const fronds: Crown[] = Array.from({ length: 9 }, (_, index) => {
     const angle = index / 9 * Math.PI * 2;

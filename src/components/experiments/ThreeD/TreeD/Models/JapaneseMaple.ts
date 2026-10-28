@@ -1,4 +1,4 @@
-import type { TreeDefinition } from './TreeTemplate';
+import type { TreeDefinition } from '../TreeTemplate';
 
 // Low forks and broad, shallow crown layers suggest a spreading autumn maple.
 export const japaneseMaple: TreeDefinition = {

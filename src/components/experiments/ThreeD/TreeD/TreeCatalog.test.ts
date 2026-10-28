@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { TREE_MODELS } from './models';
+import { TREE_MODELS } from './Models';
 import { createTreeModel } from './TreeTemplate';
 
 describe('playground tree catalog', () => {

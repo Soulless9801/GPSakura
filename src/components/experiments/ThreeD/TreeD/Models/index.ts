@@ -1,4 +1,4 @@
-import type { TreeDefinition } from './TreeTemplate';
+import type { TreeDefinition } from '../TreeTemplate';
 import { sakuraTree } from './SakuraTree';
 import { oakTree } from './OakTree';
 import { norwaySpruce } from './NorwaySpruce';

@@ -1,4 +1,4 @@
-import type { TreeDefinition } from './TreeTemplate';
+import type { TreeDefinition } from '../TreeTemplate';
 
 // Overlapping tiers and a single leader keep the evergreen silhouette legible.
 export const norwaySpruce: TreeDefinition = {

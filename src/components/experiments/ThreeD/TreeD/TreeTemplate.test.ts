@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { createTreeModel, type TreeDefinition } from './TreeTemplate';
-import { TREE_MODELS } from './models';
+import { TREE_MODELS } from './Models';
 import { createFallingLeaves } from './FallingLeaves';
 
 describe('tree model template', () => {

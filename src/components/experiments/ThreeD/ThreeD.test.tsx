@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import * as THREE from 'three';
 import ThreeD from './ThreeD';
-import { TREE_MODELS } from './models';
+import { TREE_MODELS } from './TreeD';
 
 const rendering = vi.hoisted(() => ({ created: vi.fn(), render: vi.fn(), dispose: vi.fn() }));
 vi.mock('three', async importOriginal => {

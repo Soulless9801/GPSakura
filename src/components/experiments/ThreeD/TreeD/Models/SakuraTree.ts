@@ -1,4 +1,4 @@
-import type { TreeDefinition, Point3, Branch } from './TreeTemplate';
+import type { TreeDefinition, Point3, Branch } from '../TreeTemplate';
 
 const limbs: [Point3, Point3, Point3][] = [
     [[-0.2, 1.4, 0.05], [-1.05, 2.25, 0.1], [-1.9, 2.9, 0.2]],

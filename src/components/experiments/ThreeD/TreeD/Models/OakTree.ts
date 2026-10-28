@@ -1,4 +1,4 @@
-import type { TreeDefinition } from './TreeTemplate';
+import type { TreeDefinition } from '../TreeTemplate';
 
 // A stout trunk and wide, rounded crown distinguish the oak from the sakura.
 export const oakTree: TreeDefinition = {

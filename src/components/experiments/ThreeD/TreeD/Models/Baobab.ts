@@ -1,4 +1,4 @@
-import type { Branch, Crown, Point3, TreeDefinition } from './TreeTemplate';
+import type { Branch, Crown, Point3, TreeDefinition } from '../TreeTemplate';
 
 const limbs: Branch[] = [];
 const tufts: Crown[] = [];
