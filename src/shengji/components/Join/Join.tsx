@@ -17,7 +17,7 @@ export default function Join() {
     const prevUser = localStorage.getItem("sjUsername");
 
     const joinRoom = useCallback(() => {
-        if (!tempId || !username) {return;}
+        if (!tempId || !username || !/^[a-zA-Z0-9_-]+$/.test(tempId.trim())) {return;}
         localStorage.setItem("sjRoomId", tempId);
         localStorage.setItem("sjUsername", username);
         setRoomId(tempId);

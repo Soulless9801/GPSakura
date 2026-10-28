@@ -445,8 +445,11 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
         const channel = channelRef.current;
         if (!channel) {return;}
         runAsync(() => channel.presence.update({ username, team }));
-        runAsync(() => changeUsername(username));
     }, [username, team]);
+
+    useEffect(() => {
+        runAsync(() => changeUsername(username));
+    }, [username]);
 
     // Ably connection
 
@@ -603,8 +606,8 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 <div className="ui-panel ui-stack sjg-lobby">
                     <PlayerList players={players} teams={teams} />
                     <div className="sjg-button__group">
-                        <button onClick={() => { setTeam(p => 1 - Math.abs(p)); }}>{team === -1 ? `Join Game` : `Switch Team`}</button>
-                        <button onClick={() => { runAsync(startGame); }}>Start Game</button>
+                        <button className="sjg-button__game" onClick={() => { setTeam(p => 1 - Math.abs(p)); }}>{team === -1 ? `Join Game` : `Switch Team`}</button>
+                        <button className="sjg-button__game" onClick={() => { runAsync(startGame); }}>Start Game</button>
                     </div>
                 </div>
             )}
