@@ -63,6 +63,14 @@ describe("ably-auth", () => {
         expect(ably.createTokenRequest.mock.calls[0][0]).toMatchObject({ clientId: "alice" });
     });
 
+    it("limits capabilities to room-specific channels rather than wildcard", async () => {
+        await handler(request({ clientId: "alice", signature: sign("alice") }));
+        const { capability } = ably.createTokenRequest.mock.calls[0][0] as { capability: Record<string, string[]> };
+        // Check that the capability is restricted to room-specific channels, not wildcard
+        expect(Object.keys(capability)).toEqual(['room:*:shengji']);
+        expect(capability['room:*:shengji']).toEqual(['subscribe', 'presence']);
+    });
+
     it("never lets the browser publish: subscribe and presence only", async () => {
         await handler(request({ clientId: "alice", signature: sign("alice") }));
         const { capability } = ably.createTokenRequest.mock.calls[0][0] as { capability: Record<string, string[]> };

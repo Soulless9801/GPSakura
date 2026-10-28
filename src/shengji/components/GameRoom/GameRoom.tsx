@@ -478,7 +478,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
 
         if (!ably) {return;}
         const options: Ably.ChannelOptions = { modes: ['SUBSCRIBE', 'PRESENCE', 'PRESENCE_SUBSCRIBE'] };
-        const channel = ably.channels.get(`room_${roomId}`, options);
+        const channel = ably.channels.get(`room:${roomId}:shengji`, options);
         channelRef.current = channel;
         setIds(null);
         setGame(null);
@@ -519,7 +519,7 @@ export default function GameRoom({ roomId, username }: { roomId: string, usernam
                 }).catch(() => undefined);
             });
 
-            // console.log(`Joined room_${roomId} as ${username} on team ${team ? "1" : "2"}`);
+            // console.log(`Joined room:${roomId}:shengji as ${username} on team ${team ? "1" : "2"}`);
 
             await channel.subscribe('state_change', (msg) => { // game state updated
                 if (cancelled) {return;}

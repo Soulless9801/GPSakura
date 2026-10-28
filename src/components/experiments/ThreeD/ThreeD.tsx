@@ -236,6 +236,11 @@ export function Chaos3D({
         controls.dampingFactor = 0.05;
 
         const state = { ...attractor.start };
+        // Validate maxdepth input to prevent invalid numeric inputs from causing memory allocation issues
+        if (typeof maxdepth !== 'number' || !Number.isFinite(maxdepth) || maxdepth < 1) {
+            // If maxdepth is invalid, fallback to a default value or return early
+            return;
+        }
         const max_points = Math.min(50000, maxdepth);
         const pos = new Float32Array(max_points * 3);
         const colors = new Float32Array(max_points * 3);

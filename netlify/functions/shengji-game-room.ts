@@ -136,7 +136,7 @@ export default async function handler(request: Request): Promise<Response> {
 
         // get room live object
 
-        const channel: Ably.Channel = ably.channels.get(`room_${roomId}`);
+        const channel: Ably.Channel = ably.channels.get(`room:${roomId}:shengji`);
 
         // helper function to get game state
         async function getGame() {

@@ -270,7 +270,7 @@ describe("starting a game", () => {
         expect(state.info.get("p1")?.username).toBe("P1");
 
         const change = fake.ably.published.find((m) => m.event === "state_change");
-        expect(change?.channel).toBe(`room_${ROOM}`);
+        expect(change?.channel).toBe(`room:${ROOM}:shengji`);
         expect(typeof change?.data.timestamp).toBe("number");
     });
 

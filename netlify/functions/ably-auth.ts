@@ -26,7 +26,7 @@ export default async function handler(request: Request): Promise<Response> {
         const tokenRequest = await client.auth.createTokenRequest({
             clientId,
             capability: {
-                '*': ['subscribe', 'presence'],
+                'room:*:shengji': ['subscribe', 'presence'],
             },
         });
 

@@ -83,6 +83,11 @@
     border-left: 2px solid var(--color-border);
 }
 
+.sjg-play__player p {
+    font-size: 1rem;
+    margin: 0;
+}
+
 .sjg-play__player.active p {
     color: var(--color-success);
 }
