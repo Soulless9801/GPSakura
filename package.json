@@ -62,7 +62,7 @@
     "typescript-eslint": "^8.59.4",
     "urlpattern-polyfill": "^10.1.0",
     "vite": "^8.0.16",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   },
   "overrides": {
     "@grpc/grpc-js": ">=1.13.6"
