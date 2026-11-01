@@ -9,8 +9,11 @@ import '/src/index.css';
 
 import App from './App';
 import { initializeTheme } from './services/theme';
+import { installRequestErrorObserver } from './services/requestErrors';
 
 initializeTheme();
+const stopRequestObserver = installRequestErrorObserver();
+if (import.meta.hot) { import.meta.hot.dispose(stopRequestObserver); }
 
 const root = document.getElementById('root');
 
