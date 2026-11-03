@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';
 import Chaos from '../components/experiments/Chaos/Chaos';
+import type { ChaosAttractor } from '../components/experiments/Chaos/Chaos';
 import Fractal from '../components/experiments/Fractal/Fractal';
 import ParticleNetwork from '../components/experiments/ParticleNetwork/ParticleNetwork';
 import GameOfLife from '../components/experiments/GameOfLife/GameOfLife';
@@ -57,4 +58,34 @@ it.each([
     paints.length = 0;
     window.dispatchEvent(new Event('themeStorage'));
     expect(paints).toEqual([]);
+});
+
+const testAttractor: ChaosAttractor = {
+    dims: 3,
+    params: { sigma: 10, rho: 28, beta: 8 / 3 },
+    step: (x: number, _y: number, _z: number, _p: Record<string, number>): [number, number, number] => [x, 0, 0],
+    speedFactor: 5000,
+    scaleFactor: 5,
+    start: { x: 0.1, y: 0.1, z: 0.1 },
+    view: { x: 0, y: 0, z: 0 },
+};
+
+it('calls cancelAnimationFrame when refresh prop changes', () => {
+    const cancelSpy = vi.fn();
+    vi.stubGlobal('cancelAnimationFrame', cancelSpy);
+
+    // rafRef.current will store 1 because requestAnimationFrame returns 1
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
+
+    const { rerender } = render(<Chaos attractor={testAttractor} refresh={false} />);
+
+    // Record calls made during initial mount
+    const initialCalls = cancelSpy.mock.calls.length;
+
+    act(() => { rerender(<Chaos attractor={testAttractor} refresh={true} />); });
+
+    // After the refresh prop changes, cancelAnimationFrame must be called
+    // to stop the old animation loop and restart from attractor.start.
+    // With the bug, refresh is never destructured so this call never happens.
+    expect(cancelSpy.mock.calls.length).toBeGreaterThan(initialCalls);
 });

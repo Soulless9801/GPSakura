@@ -238,8 +238,15 @@ export function Chaos3D({
         const state = { ...attractor.start };
         // Validate maxdepth input to prevent invalid numeric inputs from causing memory allocation issues
         if (typeof maxdepth !== 'number' || !Number.isFinite(maxdepth) || maxdepth < 1) {
-            // If maxdepth is invalid, fallback to a default value or return early
-            return;
+            // If maxdepth is invalid, still return a cleanup function to dispose the
+            // renderer, controls, and resize listener that were allocated before validation.
+            return () => {
+                window.removeEventListener('resize', syncRendererSize);
+                controls.dispose();
+                renderer.dispose();
+                startColorRef.current = null;
+                endColorRef.current = null;
+            };
         }
         const max_points = Math.min(50000, maxdepth);
         const pos = new Float32Array(max_points * 3);

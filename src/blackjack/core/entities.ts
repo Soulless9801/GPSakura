@@ -11,6 +11,7 @@ function validateCard(card: Card): boolean {
 }
 
 function pointValue(card: Card): number {
+    if (card.suit === "jokers") {return 0;}
     if (card.rank > 1 && card.rank < 11) {return card.rank;}
     if (card.rank > 10 && card.rank < 14) {return 10;}
     if (card.rank === 14) {return 11;}

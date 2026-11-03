@@ -101,4 +101,18 @@ describe('Chaos3D', () => {
             />);
         }).not.toThrow();
     });
+
+    it('disposes renderer on unmount even after invalid maxdepth triggers early return', () => {
+        const { unmount } = render(<Chaos3D
+            attractor={fakeAttractor}
+            maxdepth={NaN}
+            startColor="#0000ff"
+            endColor="#ff0000"
+        />);
+        // A renderer was created (the mock fires in the constructor)
+        expect(rendering.created).toHaveBeenCalledOnce();
+        unmount();
+        // Cleanup must dispose the renderer even though maxdepth was invalid
+        expect(rendering.dispose).toHaveBeenCalledOnce();
+    });
 });

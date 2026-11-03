@@ -5,8 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { post } from "../../src/test/http";
 
-vi.mock("dotenv", () => ({ default: { config: vi.fn() } }));
-
 const fb = vi.hoisted(() => {
     class Timestamp {
         constructor(private readonly ms: number) {}
@@ -39,6 +37,8 @@ vi.mock("firebase/firestore", () => ({
     getDocs: fb.getDocs,
 }));
 
+import { firebaseConfig } from "./firebase-collection-query";
+
 import handler from "../entrypoints/firebase-collection-query";
 
 const jsonPost = (body: unknown): Request => post(JSON.stringify(body));
@@ -54,6 +54,16 @@ describe("firebase-collection-query", () => {
     beforeEach(() => {
         fb.getApps.mockReturnValue([]);
         fb.getDocs.mockReset();
+    });
+
+    it("populates firebaseConfig from env before Firestore initialisation", () => {
+        // In local dev the credentials live in .env.  dotenv.config() must
+        // run before the destructuring at lines 10-19 so FirebaseConfig is
+        // populated.  Every sibling function follows this pattern.
+        process.env.FIREBASE_API_KEY = "test-api-key";
+        // The source destructured BEFORE dotenv.config(), so the captured
+        // value is undefined even though the env var exists now.
+        expect(firebaseConfig.apiKey).toBe(process.env.FIREBASE_API_KEY);
     });
 
     describe("live Firestore", () => {

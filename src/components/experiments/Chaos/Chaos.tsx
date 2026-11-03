@@ -42,6 +42,7 @@ export default function Chaos({
     yaw = 0,
     speed = 1,
     lineWidth = 1,
+    refresh,
     className = "",
     style = {},
 }: ChaosProps) {
@@ -231,7 +232,7 @@ export default function Chaos({
 			if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
 		};
 
-	}, [drawChaos, resizeCanvas]);
+	}, [drawChaos, resizeCanvas, refresh]);
 
     useEffect(() => {
         const repaintTheme = () => {

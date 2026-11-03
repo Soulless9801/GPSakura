@@ -73,6 +73,13 @@ describe("Hand", () => {
         expect(hand.getCardCount()).toBe(1);
     });
 
+    it("scores a big joker (rank 2) as zero", () => {
+        const hand = new Hand();
+        hand.addCard(card("jokers", 2));
+        expect(hand.getHandValue()).toBe(0);
+        expect(hand.getCardCount()).toBe(1);
+    });
+
     it("round-trips through JSON via deserialize()", () => {
         const hand = handOf(14, 5, 10);
         const data = JSON.parse(JSON.stringify(hand)) as Parameters<typeof Hand.deserialize>[0];

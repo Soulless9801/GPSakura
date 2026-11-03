@@ -1,4 +1,7 @@
 import dotenv from 'dotenv';
+
+dotenv.config();
+
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -7,30 +10,16 @@ import * as fireStore from 'firebase/firestore';
 
 import { errorJSON, successJSON } from './data/json.ts';
 
-const {
-    FIREBASE_API_KEY,
-    FIREBASE_AUTH_DOMAIN,
-    FIREBASE_DATABASE_URL,
-    FIREBASE_PROJECT_ID,
-    FIREBASE_STORAGE_BUCKET,
-    FIREBASE_MESSAGING_SENDER_ID,
-    FIREBASE_APP_ID,
-    FIREBASE_MEASUREMENT_ID,
-} = process.env;
-
 export const firebaseConfig = {
-    apiKey: FIREBASE_API_KEY,
-    authDomain: FIREBASE_AUTH_DOMAIN,
-    databaseURL: FIREBASE_DATABASE_URL,
-    projectId: FIREBASE_PROJECT_ID,
-    storageBucket: FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
-    appId: FIREBASE_APP_ID,
-    measurementId: FIREBASE_MEASUREMENT_ID,
+    get apiKey() { return process.env.FIREBASE_API_KEY; },
+    get authDomain() { return process.env.FIREBASE_AUTH_DOMAIN; },
+    get databaseURL() { return process.env.FIREBASE_DATABASE_URL; },
+    get projectId() { return process.env.FIREBASE_PROJECT_ID; },
+    get storageBucket() { return process.env.FIREBASE_STORAGE_BUCKET; },
+    get messagingSenderId() { return process.env.FIREBASE_MESSAGING_SENDER_ID; },
+    get appId() { return process.env.FIREBASE_APP_ID; },
+    get measurementId() { return process.env.FIREBASE_MEASUREMENT_ID; },
 };
-
-
-dotenv.config();
 
 export default async function handler(request: Request): Promise<Response> {
 
@@ -44,8 +33,22 @@ export default async function handler(request: Request): Promise<Response> {
 
     let firebaseApp;
 
-    if (!firebase.getApps().length) {firebaseApp = firebase.initializeApp(firebaseConfig);}
-    else {firebaseApp = firebase.getApp();}
+    if (!firebase.getApps().length) {
+        const cfg = {
+            apiKey: firebaseConfig.apiKey,
+            authDomain: firebaseConfig.authDomain,
+            databaseURL: firebaseConfig.databaseURL,
+            projectId: firebaseConfig.projectId,
+            storageBucket: firebaseConfig.storageBucket,
+            messagingSenderId: firebaseConfig.messagingSenderId,
+            appId: firebaseConfig.appId,
+            measurementId: firebaseConfig.measurementId,
+        };
+        firebaseApp = firebase.initializeApp(cfg);
+    }
+    else {
+        firebaseApp = firebase.getApp();
+    }
 
     const col : string = String(body.col || "").trim();
     const loc : string = String(body.loc || "").trim();
