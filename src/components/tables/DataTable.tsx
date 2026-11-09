@@ -1,8 +1,7 @@
 import { useRef, type ReactNode } from 'react';
-import $ from 'jquery';
 
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
-import DataTable from 'datatables.net-react';
+import DataTable, { type DataTableRef } from 'datatables.net-react';
 import DT from 'datatables.net-dt';
 import type { Config as DataTableConfig } from 'datatables.net';
 
@@ -23,7 +22,7 @@ interface CustomDataTableProps {
 
 export default function CustomDataTable({ title, rows, columns, options = {}, html, id }: CustomDataTableProps) {
 
-    const tableRef = useRef(null);
+    const tableRef = useRef<DataTableRef>(null);
 
     options = {
         scrollX: true,
@@ -59,8 +58,7 @@ export default function CustomDataTable({ title, rows, columns, options = {}, ht
                         ]}
                         defaultIndex={0}
                         onChange={e => {
-                            const table = $(`#${id}`).DataTable();
-                            table.page.len(Number(e.value)).draw();
+                            tableRef.current?.dt()?.page.len(Number(e.value)).draw();
                         }}
                         labelL="Showing"
                         labelR="entries per page"
@@ -73,8 +71,7 @@ export default function CustomDataTable({ title, rows, columns, options = {}, ht
                             type="search" 
                             placeholder="" 
                             onChange={e => {
-                                const table = $(`#${id}`).DataTable();
-                                table.search(e.target.value).draw();
+                                tableRef.current?.dt()?.search(e.target.value).draw();
                             }}
                             className="table-search"
                         />

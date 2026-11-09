@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import $ from 'jquery';
-import 'datatables.net';
+import DataTable from 'datatables.net';
 
 import { escapeHtml, linkHtml } from '/src/utils/html';
 
 import CustomDataTable from '/src/components/tables/DataTable';
 
-const sorters = $.fn.dataTable.ext.oSort as Record<string, (a: string, b: string) => number>;
+const sorters = DataTable.ext.type.order as Record<string, (a: string, b: string) => number>;
 
 sorters['rating-asc'] = (a: string, b: string): number => {
     if (a === 'unrated') {a = '0';}
