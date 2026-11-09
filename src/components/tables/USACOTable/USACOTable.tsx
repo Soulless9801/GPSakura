@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import $ from 'jquery';
-import 'datatables.net';
+import DataTable from 'datatables.net';
 
 import { formatDate } from '/src/utils/time';
 import { deserialize } from '/src/utils/serial';
@@ -24,7 +23,7 @@ const divisionRank = (value: string): number => {
     return divisionOrder[value.toLowerCase() as Division];
 };
 
-const sorters = $.fn.dataTable.ext.oSort as Record<string, (a: string, b: string) => number>;
+const sorters = DataTable.ext.type.order as Record<string, (a: string, b: string) => number>;
 
 sorters['division-asc'] = (a: string, b: string): number => divisionRank(a) - divisionRank(b);
 
